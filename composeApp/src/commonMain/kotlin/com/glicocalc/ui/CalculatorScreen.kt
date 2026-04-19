@@ -88,6 +88,7 @@ fun CalculatorScreen(
     modifier: Modifier = Modifier
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
+    val resolveMealTypeName = rememberMealTypeNameResolver()
     val mealItems = remember { mutableStateListOf<MealItem>(MealItem()) }
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
 
@@ -133,11 +134,6 @@ fun CalculatorScreen(
         }
 
         if (mealTypes.isNotEmpty()) {
-            MealTypeSelector(
-                mealTypes = mealTypes,
-                selectedMealTypeId = selectedMealTypeId,
-                onMealTypeSelected = { selectedMealTypeId = it }
-            )
             Spacer(modifier = Modifier.height(24.dp))
         }
 
@@ -213,6 +209,16 @@ fun CalculatorScreen(
                 }
             }
         }
+
+        if (mealTypes.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            MealTypeSelector(
+                mealTypes = mealTypes,
+                selectedMealTypeId = selectedMealTypeId,
+                onMealTypeSelected = { selectedMealTypeId = it },
+                resolveMealTypeName = resolveMealTypeName
+            )
+        }
     }
 }
 
@@ -221,7 +227,8 @@ fun CalculatorScreen(
 private fun MealTypeSelector(
     mealTypes: List<MealType>,
     selectedMealTypeId: Long?,
-    onMealTypeSelected: (Long) -> Unit
+    onMealTypeSelected: (Long) -> Unit,
+    resolveMealTypeName: (String) -> String
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedMealType = mealTypes.firstOrNull { it.id == selectedMealTypeId } ?: mealTypes.first()
@@ -237,7 +244,7 @@ private fun MealTypeSelector(
             modifier = Modifier.weight(1f)
         ) {
             OutlinedTextField(
-                value = "${selectedMealType.name} • ${formatHour(selectedMealType.hourOfDay.toInt())}",
+                value = "${resolveMealTypeName(selectedMealType.name)} • ${formatHour(selectedMealType.hourOfDay.toInt())}",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(Strings.mealTypeSelector()) },
@@ -250,7 +257,7 @@ private fun MealTypeSelector(
             ) {
                 mealTypes.forEach { mealType ->
                     DropdownMenuItem(
-                        text = { Text("${mealType.name} • ${formatHour(mealType.hourOfDay.toInt())}") },
+                        text = { Text("${resolveMealTypeName(mealType.name)} • ${formatHour(mealType.hourOfDay.toInt())}") },
                         onClick = {
                             onMealTypeSelected(mealType.id)
                             expanded = false
@@ -326,6 +333,12 @@ fun MealItemRow(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Box(modifier = Modifier.weight(1.5f)) {
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -430,10 +443,6 @@ fun MealItemRow(
                 modifier = Modifier.weight(0.8f),
                 suffix = { Text("g") }
             )
-
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
-            }
         }
         
         item.selectedDish?.let { composition ->

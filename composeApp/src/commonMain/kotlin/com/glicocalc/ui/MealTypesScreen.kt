@@ -38,6 +38,7 @@ fun MealTypesScreen(
     onDeleteMealType: (id: Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val resolveMealTypeName = rememberMealTypeNameResolver()
     var showAddMealTypeDialog by remember { mutableStateOf(false) }
     var mealTypeToEdit by remember { mutableStateOf<MealType?>(null) }
 
@@ -81,7 +82,7 @@ fun MealTypesScreen(
             }
             items(mealTypes) { mealType ->
                 ListItem(
-                    headlineContent = { Text(mealType.name) },
+                    headlineContent = { Text(resolveMealTypeName(mealType.name)) },
                     supportingContent = {
                         Text("${formatHour(mealType.hourOfDay.toInt())} • ${formatDecimal(mealType.targetCarbs)}g")
                     },
@@ -110,7 +111,7 @@ fun MealTypesScreen(
 
         mealTypeToEdit?.let { mealType ->
             MealTypeEditorDialog(
-                initialName = mealType.name,
+                initialName = resolveMealTypeName(mealType.name),
                 initialTargetCarbs = formatDecimal(mealType.targetCarbs),
                 initialHourOfDay = mealType.hourOfDay.toString(),
                 onDismiss = { mealTypeToEdit = null },
