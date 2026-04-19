@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulator</string>
+    <string name="nav_dishes">Jedi</string>
+    <string name="nav_foods">Živila</string>
+    <string name="total_carbs">Skupni ogljikovi hidrati</string>
+    <string name="foods_on_plate">Živila na krožniku</string>
+    <string name="add_another_food_to_meal">Dodaj še eno živilo obroku</string>
+    <string name="weight">Teža</string>
+    <string name="carbs">Ogljikovi hidrati</string>
+    <string name="delete">Izbriši</string>
+    <string name="base_foods_title">Osnovna živila</string>
+    <string name="add_food">Dodaj živilo</string>
+    <string name="search_food_placeholder">Poišči živilo...</string>
+    <string name="food_deleted">Živilo izbrisano</string>
+    <string name="undo">Razveljavi</string>
+    <string name="edit">Uredi</string>
+    <string name="add_food_title">Dodaj živilo</string>
+    <string name="edit_food_title">Uredi živilo</string>
+    <string name="food_name">Ime živila</string>
+    <string name="carbs_per_100g_label">Ogljikovi hidrati na 100 g</string>
+    <string name="save">Shrani</string>
+    <string name="cancel">Prekliči</string>
+    <string name="dishes_title">Jedi (Recepti)</string>
+    <string name="add_dish">Dodaj jed</string>
+    <string name="new_dish_title">Nova jed</string>
+    <string name="edit_dish_title">Uredi jed</string>
+    <string name="close">Zapri</string>
+    <string name="dish_name_label">Ime jedi (npr. sarma)</string>
+    <string name="composition_ingredients">Sestava (Sestavine)</string>
+    <string name="ingredient">Sestavina</string>
+    <string name="delete_row">Izbriši vrstico</string>
+    <string name="add_ingredient">Dodaj sestavino</string>
+    <string name="meal_item_label">Živilo %1$d</string>
+    <string name="carbs_per_100g">%1$s g ogljikovih hidratov / 100 g</string>
+    <string name="carbs_percent">%1$s%% ogljikovih hidratov</string>
+</resources>

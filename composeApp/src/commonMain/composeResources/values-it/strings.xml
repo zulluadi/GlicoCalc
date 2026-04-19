@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Calcolatore</string>
+    <string name="nav_dishes">Piatti</string>
+    <string name="nav_foods">Alimenti</string>
+    <string name="total_carbs">Carboidrati totali</string>
+    <string name="foods_on_plate">Alimenti nel piatto</string>
+    <string name="add_another_food_to_meal">Aggiungi un altro alimento al pasto</string>
+    <string name="weight">Peso</string>
+    <string name="carbs">Carboidrati</string>
+    <string name="delete">Elimina</string>
+    <string name="base_foods_title">Alimenti base</string>
+    <string name="add_food">Aggiungi alimento</string>
+    <string name="search_food_placeholder">Cerca alimento...</string>
+    <string name="food_deleted">Alimento eliminato</string>
+    <string name="undo">Annulla</string>
+    <string name="edit">Modifica</string>
+    <string name="add_food_title">Aggiungi alimento</string>
+    <string name="edit_food_title">Modifica alimento</string>
+    <string name="food_name">Nome alimento</string>
+    <string name="carbs_per_100g_label">Carboidrati per 100 g</string>
+    <string name="save">Salva</string>
+    <string name="cancel">Annulla</string>
+    <string name="dishes_title">Piatti (Ricette)</string>
+    <string name="add_dish">Aggiungi piatto</string>
+    <string name="new_dish_title">Nuovo piatto</string>
+    <string name="edit_dish_title">Modifica piatto</string>
+    <string name="close">Chiudi</string>
+    <string name="dish_name_label">Nome del piatto (es. Involtini di cavolo)</string>
+    <string name="composition_ingredients">Composizione (Ingredienti)</string>
+    <string name="ingredient">Ingrediente</string>
+    <string name="delete_row">Elimina riga</string>
+    <string name="add_ingredient">Aggiungi ingrediente</string>
+    <string name="meal_item_label">Alimento %1$d</string>
+    <string name="carbs_per_100g">%1$s g carboidrati / 100 g</string>
+    <string name="carbs_percent">%1$s%% carboidrati</string>
+</resources>

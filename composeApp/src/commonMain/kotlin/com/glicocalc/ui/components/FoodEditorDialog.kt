@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.glicocalc.ui.Strings
 
 @Composable
 fun FoodEditorDialog(
@@ -20,20 +21,20 @@ fun FoodEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialName.isEmpty()) "Adaugă Aliment" else "Editează Aliment") },
+        title = { Text(if (initialName.isEmpty()) Strings.addFoodTitle() else Strings.editFoodTitle()) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nume Aliment") },
+                    label = { Text(Strings.foodName()) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = carbsText,
                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) carbsText = it },
-                    label = { Text("Glucide per 100g") },
+                    label = { Text(Strings.carbsPer100gLabel()) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     suffix = { Text("g") }
@@ -48,12 +49,12 @@ fun FoodEditorDialog(
                     onDismiss()
                 }
             ) {
-                Text("Salvează")
+                Text(Strings.save())
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Anulează")
+                Text(Strings.cancel())
             }
         }
     )

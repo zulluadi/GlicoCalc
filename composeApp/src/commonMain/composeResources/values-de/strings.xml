@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Rechner</string>
+    <string name="nav_dishes">Gerichte</string>
+    <string name="nav_foods">Lebensmittel</string>
+    <string name="total_carbs">Gesamte Kohlenhydrate</string>
+    <string name="foods_on_plate">Lebensmittel auf dem Teller</string>
+    <string name="add_another_food_to_meal">Weiteres Lebensmittel zur Mahlzeit hinzufügen</string>
+    <string name="weight">Gewicht</string>
+    <string name="carbs">Kohlenhydrate</string>
+    <string name="delete">Löschen</string>
+    <string name="base_foods_title">Grundlegende Lebensmittel</string>
+    <string name="add_food">Lebensmittel hinzufügen</string>
+    <string name="search_food_placeholder">Lebensmittel suchen...</string>
+    <string name="food_deleted">Lebensmittel gelöscht</string>
+    <string name="undo">Rückgängig</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="add_food_title">Lebensmittel hinzufügen</string>
+    <string name="edit_food_title">Lebensmittel bearbeiten</string>
+    <string name="food_name">Name des Lebensmittels</string>
+    <string name="carbs_per_100g_label">Kohlenhydrate pro 100 g</string>
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="dishes_title">Gerichte (Rezepte)</string>
+    <string name="add_dish">Gericht hinzufügen</string>
+    <string name="new_dish_title">Neues Gericht</string>
+    <string name="edit_dish_title">Gericht bearbeiten</string>
+    <string name="close">Schließen</string>
+    <string name="dish_name_label">Gerichtsname (z. B. Kohlrouladen)</string>
+    <string name="composition_ingredients">Zusammensetzung (Zutaten)</string>
+    <string name="ingredient">Zutat</string>
+    <string name="delete_row">Zeile löschen</string>
+    <string name="add_ingredient">Zutat hinzufügen</string>
+    <string name="meal_item_label">Lebensmittel %1$d</string>
+    <string name="carbs_per_100g">%1$s g Kohlenhydrate / 100 g</string>
+    <string name="carbs_percent">%1$s%% Kohlenhydrate</string>
+</resources>

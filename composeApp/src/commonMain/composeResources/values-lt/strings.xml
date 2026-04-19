@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Skaičiuoklė</string>
+    <string name="nav_dishes">Patiekalai</string>
+    <string name="nav_foods">Produktai</string>
+    <string name="total_carbs">Bendras angliavandenių kiekis</string>
+    <string name="foods_on_plate">Produktai lėkštėje</string>
+    <string name="add_another_food_to_meal">Pridėti dar vieną produktą į valgį</string>
+    <string name="weight">Svoris</string>
+    <string name="carbs">Angliavandeniai</string>
+    <string name="delete">Šalinti</string>
+    <string name="base_foods_title">Pagrindiniai produktai</string>
+    <string name="add_food">Pridėti produktą</string>
+    <string name="search_food_placeholder">Ieškoti produkto...</string>
+    <string name="food_deleted">Produktas pašalintas</string>
+    <string name="undo">Anuliuoti</string>
+    <string name="edit">Redaguoti</string>
+    <string name="add_food_title">Pridėti produktą</string>
+    <string name="edit_food_title">Redaguoti produktą</string>
+    <string name="food_name">Produkto pavadinimas</string>
+    <string name="carbs_per_100g_label">Angliavandeniai / 100 g</string>
+    <string name="save">Išsaugoti</string>
+    <string name="cancel">Atšaukti</string>
+    <string name="dishes_title">Patiekalai (Receptai)</string>
+    <string name="add_dish">Pridėti patiekalą</string>
+    <string name="new_dish_title">Naujas patiekalas</string>
+    <string name="edit_dish_title">Redaguoti patiekalą</string>
+    <string name="close">Uždaryti</string>
+    <string name="dish_name_label">Patiekalo pavadinimas (pvz. kopūstų suktinukai)</string>
+    <string name="composition_ingredients">Sudėtis (Ingredientai)</string>
+    <string name="ingredient">Ingredientas</string>
+    <string name="delete_row">Šalinti eilutę</string>
+    <string name="add_ingredient">Pridėti ingredientą</string>
+    <string name="meal_item_label">Produktas %1$d</string>
+    <string name="carbs_per_100g">%1$s g angliavandenių / 100 g</string>
+    <string name="carbs_percent">%1$s%% angliavandenių</string>
+</resources>

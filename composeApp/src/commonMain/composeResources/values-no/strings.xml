@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulator</string>
+    <string name="nav_dishes">Retter</string>
+    <string name="nav_foods">Matvarer</string>
+    <string name="total_carbs">Totale karbohydrater</string>
+    <string name="foods_on_plate">Matvarer på tallerkenen</string>
+    <string name="add_another_food_to_meal">Legg til en annen matvare i måltidet</string>
+    <string name="weight">Vekt</string>
+    <string name="carbs">Karbohydrater</string>
+    <string name="delete">Slett</string>
+    <string name="base_foods_title">Grunnleggende matvarer</string>
+    <string name="add_food">Legg til matvare</string>
+    <string name="search_food_placeholder">Søk etter matvare...</string>
+    <string name="food_deleted">Matvare slettet</string>
+    <string name="undo">Angre</string>
+    <string name="edit">Rediger</string>
+    <string name="add_food_title">Legg til matvare</string>
+    <string name="edit_food_title">Rediger matvare</string>
+    <string name="food_name">Navn på matvare</string>
+    <string name="carbs_per_100g_label">Karbohydrater per 100 g</string>
+    <string name="save">Lagre</string>
+    <string name="cancel">Avbryt</string>
+    <string name="dishes_title">Retter (Oppskrifter)</string>
+    <string name="add_dish">Legg til rett</string>
+    <string name="new_dish_title">Ny rett</string>
+    <string name="edit_dish_title">Rediger rett</string>
+    <string name="close">Lukk</string>
+    <string name="dish_name_label">Navn på rett (f.eks. kålruller)</string>
+    <string name="composition_ingredients">Sammensetning (Ingredienser)</string>
+    <string name="ingredient">Ingrediens</string>
+    <string name="delete_row">Slett rad</string>
+    <string name="add_ingredient">Legg til ingrediens</string>
+    <string name="meal_item_label">Matvare %1$d</string>
+    <string name="carbs_per_100g">%1$s g karbohydrater / 100 g</string>
+    <string name="carbs_percent">%1$s%% karbohydrater</string>
+</resources>

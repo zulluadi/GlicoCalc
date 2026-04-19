@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulators</string>
+    <string name="nav_dishes">Ēdieni</string>
+    <string name="nav_foods">Produkti</string>
+    <string name="total_carbs">Kopējie ogļhidrāti</string>
+    <string name="foods_on_plate">Produkti uz šķīvja</string>
+    <string name="add_another_food_to_meal">Pievienot maltītei vēl vienu produktu</string>
+    <string name="weight">Svars</string>
+    <string name="carbs">Ogļhidrāti</string>
+    <string name="delete">Dzēst</string>
+    <string name="base_foods_title">Pamatprodukti</string>
+    <string name="add_food">Pievienot produktu</string>
+    <string name="search_food_placeholder">Meklēt produktu...</string>
+    <string name="food_deleted">Produkts dzēsts</string>
+    <string name="undo">Atsaukt</string>
+    <string name="edit">Rediģēt</string>
+    <string name="add_food_title">Pievienot produktu</string>
+    <string name="edit_food_title">Rediģēt produktu</string>
+    <string name="food_name">Produkta nosaukums</string>
+    <string name="carbs_per_100g_label">Ogļhidrāti uz 100 g</string>
+    <string name="save">Saglabāt</string>
+    <string name="cancel">Atcelt</string>
+    <string name="dishes_title">Ēdieni (Receptes)</string>
+    <string name="add_dish">Pievienot ēdienu</string>
+    <string name="new_dish_title">Jauns ēdiens</string>
+    <string name="edit_dish_title">Rediģēt ēdienu</string>
+    <string name="close">Aizvērt</string>
+    <string name="dish_name_label">Ēdiena nosaukums (piem., kāpostu tīteņi)</string>
+    <string name="composition_ingredients">Sastāvs (Sastāvdaļas)</string>
+    <string name="ingredient">Sastāvdaļa</string>
+    <string name="delete_row">Dzēst rindu</string>
+    <string name="add_ingredient">Pievienot sastāvdaļu</string>
+    <string name="meal_item_label">Produkts %1$d</string>
+    <string name="carbs_per_100g">%1$s g ogļhidrātu / 100 g</string>
+    <string name="carbs_percent">%1$s%% ogļhidrātu</string>
+</resources>

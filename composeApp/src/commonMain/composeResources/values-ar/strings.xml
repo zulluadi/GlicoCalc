@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">الحاسبة</string>
+    <string name="nav_dishes">الأطباق</string>
+    <string name="nav_foods">الأطعمة</string>
+    <string name="total_carbs">إجمالي الكربوهيدرات</string>
+    <string name="foods_on_plate">الأطعمة في الطبق</string>
+    <string name="add_another_food_to_meal">إضافة طعام آخر إلى الوجبة</string>
+    <string name="weight">الوزن</string>
+    <string name="carbs">الكربوهيدرات</string>
+    <string name="delete">حذف</string>
+    <string name="base_foods_title">الأطعمة الأساسية</string>
+    <string name="add_food">إضافة طعام</string>
+    <string name="search_food_placeholder">ابحث عن طعام...</string>
+    <string name="food_deleted">تم حذف الطعام</string>
+    <string name="undo">تراجع</string>
+    <string name="edit">تعديل</string>
+    <string name="add_food_title">إضافة طعام</string>
+    <string name="edit_food_title">تعديل الطعام</string>
+    <string name="food_name">اسم الطعام</string>
+    <string name="carbs_per_100g_label">الكربوهيدرات لكل 100 غ</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="dishes_title">الأطباق (الوصفات)</string>
+    <string name="add_dish">إضافة طبق</string>
+    <string name="new_dish_title">طبق جديد</string>
+    <string name="edit_dish_title">تعديل الطبق</string>
+    <string name="close">إغلاق</string>
+    <string name="dish_name_label">اسم الطبق (مثال: ملفوف محشي)</string>
+    <string name="composition_ingredients">المكونات</string>
+    <string name="ingredient">مكون</string>
+    <string name="delete_row">حذف الصف</string>
+    <string name="add_ingredient">إضافة مكون</string>
+    <string name="meal_item_label">طعام %1$d</string>
+    <string name="carbs_per_100g">%1$s غ كربوهيدرات / 100 غ</string>
+    <string name="carbs_percent">%1$s%% كربوهيدرات</string>
+</resources>

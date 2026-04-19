@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Calculateur</string>
+    <string name="nav_dishes">Plats</string>
+    <string name="nav_foods">Aliments</string>
+    <string name="total_carbs">Glucides totaux</string>
+    <string name="foods_on_plate">Aliments dans l'assiette</string>
+    <string name="add_another_food_to_meal">Ajouter un autre aliment au repas</string>
+    <string name="weight">Poids</string>
+    <string name="carbs">Glucides</string>
+    <string name="delete">Supprimer</string>
+    <string name="base_foods_title">Aliments de base</string>
+    <string name="add_food">Ajouter un aliment</string>
+    <string name="search_food_placeholder">Rechercher un aliment...</string>
+    <string name="food_deleted">Aliment supprimé</string>
+    <string name="undo">Annuler</string>
+    <string name="edit">Modifier</string>
+    <string name="add_food_title">Ajouter un aliment</string>
+    <string name="edit_food_title">Modifier l'aliment</string>
+    <string name="food_name">Nom de l'aliment</string>
+    <string name="carbs_per_100g_label">Glucides pour 100 g</string>
+    <string name="save">Enregistrer</string>
+    <string name="cancel">Annuler</string>
+    <string name="dishes_title">Plats (Recettes)</string>
+    <string name="add_dish">Ajouter un plat</string>
+    <string name="new_dish_title">Nouveau plat</string>
+    <string name="edit_dish_title">Modifier le plat</string>
+    <string name="close">Fermer</string>
+    <string name="dish_name_label">Nom du plat (ex. Choux farcis)</string>
+    <string name="composition_ingredients">Composition (Ingrédients)</string>
+    <string name="ingredient">Ingrédient</string>
+    <string name="delete_row">Supprimer la ligne</string>
+    <string name="add_ingredient">Ajouter un ingrédient</string>
+    <string name="meal_item_label">Aliment %1$d</string>
+    <string name="carbs_per_100g">%1$s g glucides / 100 g</string>
+    <string name="carbs_percent">%1$s%% glucides</string>
+</resources>

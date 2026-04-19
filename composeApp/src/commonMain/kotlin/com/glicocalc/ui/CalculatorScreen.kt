@@ -91,6 +91,7 @@ fun CalculatorScreen(
     onSelectBaseFood: (Long) -> BaseFood?,
     modifier: Modifier = Modifier
 ) {
+    val resolveFoodName = rememberBaseFoodNameResolver()
     val mealItems = remember { mutableStateListOf<MealItem>(MealItem()) }
 
     val totalCarbs = remember(mealItems.toList()) {
@@ -113,7 +114,7 @@ fun CalculatorScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Total Glucide",
+                    text = Strings.totalCarbs(),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -128,7 +129,7 @@ fun CalculatorScreen(
         }
 
         Text(
-            text = "Alimente în farfurie",
+            text = Strings.foodsOnPlate(),
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
         )
@@ -143,6 +144,7 @@ fun CalculatorScreen(
                     item = item,
                     dishes = dishes,
                     baseFoods = baseFoods,
+                    resolveFoodName = resolveFoodName,
                     onSelectDish = onSelectDish,
                     onSelectBaseFood = onSelectBaseFood,
                     onUpdate = { updated -> mealItems[index] = updated },
@@ -168,7 +170,7 @@ fun CalculatorScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Adaugă alt aliment la masă")
+                    Text(Strings.addAnotherFoodToMeal())
                 }
             }
         }
@@ -182,6 +184,7 @@ fun MealItemRow(
     item: MealItem,
     dishes: List<Dish>,
     baseFoods: List<BaseFood>,
+    resolveFoodName: (String) -> String,
     onSelectDish: (Long) -> DishWithComposition?,
     onSelectBaseFood: (Long) -> BaseFood?,
     onUpdate: (MealItem) -> Unit,
@@ -191,7 +194,9 @@ fun MealItemRow(
     var searchQuery by remember { mutableStateOf(item.displayName) }
 
     LaunchedEffect(item.selectedDish, item.selectedBaseFood) {
-        val newDisplayName = item.selectedDish?.dish?.name ?: item.selectedBaseFood?.name ?: ""
+        val newDisplayName = item.selectedDish?.dish?.name
+            ?: item.selectedBaseFood?.name?.let(resolveFoodName)
+            ?: ""
         if (newDisplayName != searchQuery) {
             searchQuery = newDisplayName
         }
@@ -204,7 +209,13 @@ fun MealItemRow(
                 dishes.filter { it.name.removeDiacritics().contains(normalizedQuery, ignoreCase = true) }
             }
             val matchingFoods = if (searchQuery.isEmpty()) baseFoods else {
-                baseFoods.filter { it.name.removeDiacritics().contains(normalizedQuery, ignoreCase = true) }
+                baseFoods.filter { food ->
+                    matchesBaseFoodQuery(
+                        rawName = food.name,
+                        localizedName = resolveFoodName(food.name),
+                        query = searchQuery
+                    )
+                }
             }
             matchingDishes to matchingFoods
         }
@@ -226,7 +237,7 @@ fun MealItemRow(
                         },
                         label = {
                             Text(
-                                text = "Aliment ${index + 1}",
+                                text = Strings.mealItemLabel(index + 1),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         },
@@ -259,9 +270,9 @@ fun MealItemRow(
                             }
                             filteredFoodList.forEach { food ->
                                 DropdownMenuItem(
-                                    text = { Text(food.name) },
+                                    text = { Text(resolveFoodName(food.name)) },
                                     onClick = {
-                                        searchQuery = food.name
+                                        searchQuery = resolveFoodName(food.name)
                                         onUpdate(
                                             syncMealItem(
                                                 item = item,
@@ -289,7 +300,7 @@ fun MealItemRow(
                 },
                 label = {
                     Text(
-                        text = "Gramaj",
+                        text = Strings.weight(),
                         style = MaterialTheme.typography.bodySmall
                     )
                 },
@@ -309,7 +320,7 @@ fun MealItemRow(
                 },
                 label = {
                     Text(
-                        text = "Glucide",
+                        text = Strings.carbs(),
                         style = MaterialTheme.typography.bodySmall
                     )
                 },
@@ -319,13 +330,13 @@ fun MealItemRow(
             )
 
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Șterge", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
             }
         }
         
         item.selectedDish?.let { composition ->
             Text(
-                text = "${((CarbCalculator.calculateCarbsPercentage(composition.components) * 10).toInt() / 10.0)}% GL",
+                text = Strings.carbsPercent(((CarbCalculator.calculateCarbsPercentage(composition.components) * 10).toInt() / 10.0).toString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -333,7 +344,7 @@ fun MealItemRow(
         }
         item.selectedBaseFood?.let { food ->
             Text(
-                text = "${food.carbsPer100g}% GL",
+                text = Strings.carbsPercent(food.carbsPer100g.toString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)

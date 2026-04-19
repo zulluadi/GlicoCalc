@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Calculadora</string>
+    <string name="nav_dishes">Pratos</string>
+    <string name="nav_foods">Alimentos</string>
+    <string name="total_carbs">Carboidratos totais</string>
+    <string name="foods_on_plate">Alimentos no prato</string>
+    <string name="add_another_food_to_meal">Adicionar outro alimento à refeição</string>
+    <string name="weight">Peso</string>
+    <string name="carbs">Carboidratos</string>
+    <string name="delete">Excluir</string>
+    <string name="base_foods_title">Alimentos base</string>
+    <string name="add_food">Adicionar alimento</string>
+    <string name="search_food_placeholder">Buscar alimento...</string>
+    <string name="food_deleted">Alimento excluído</string>
+    <string name="undo">Desfazer</string>
+    <string name="edit">Editar</string>
+    <string name="add_food_title">Adicionar alimento</string>
+    <string name="edit_food_title">Editar alimento</string>
+    <string name="food_name">Nome do alimento</string>
+    <string name="carbs_per_100g_label">Carboidratos por 100 g</string>
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="dishes_title">Pratos (Receitas)</string>
+    <string name="add_dish">Adicionar prato</string>
+    <string name="new_dish_title">Novo prato</string>
+    <string name="edit_dish_title">Editar prato</string>
+    <string name="close">Fechar</string>
+    <string name="dish_name_label">Nome do prato (ex.: Charutos de repolho)</string>
+    <string name="composition_ingredients">Composição (Ingredientes)</string>
+    <string name="ingredient">Ingrediente</string>
+    <string name="delete_row">Excluir linha</string>
+    <string name="add_ingredient">Adicionar ingrediente</string>
+    <string name="meal_item_label">Alimento %1$d</string>
+    <string name="carbs_per_100g">%1$s g carboidratos / 100 g</string>
+    <string name="carbs_percent">%1$s%% carboidratos</string>
+</resources>

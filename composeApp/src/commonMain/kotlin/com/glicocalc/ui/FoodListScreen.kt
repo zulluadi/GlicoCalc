@@ -29,6 +29,9 @@ fun FoodListScreen(
     onUndeleteFood: (String, Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val resolveFoodName = rememberBaseFoodNameResolver()
+    val deletedMessage = Strings.foodDeleted()
+    val undoLabel = Strings.undo()
     var showAddDialog by remember { mutableStateOf(false) }
     var foodToEdit by remember { mutableStateOf<BaseFood?>(null) }
     var searchQuery by remember { mutableStateOf("") }
@@ -39,21 +42,26 @@ fun FoodListScreen(
     val filteredFoods = remember(searchQuery, foods) {
         if (searchQuery.isBlank()) foods
         else {
-            val normalizedQuery = searchQuery.removeDiacritics()
-            foods.filter { it.name.removeDiacritics().contains(normalizedQuery, ignoreCase = true) }
+            foods.filter { food ->
+                matchesBaseFoodQuery(
+                    rawName = food.name,
+                    localizedName = resolveFoodName(food.name),
+                    query = searchQuery
+                )
+            }
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Alimente de Bază") }
+                title = { Text(Strings.baseFoodsTitle()) }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Adaugă Aliment")
+                Icon(Icons.Default.Add, contentDescription = Strings.addFood())
             }
         },
         modifier = modifier
@@ -62,7 +70,7 @@ fun FoodListScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Caută aliment...") },
+                placeholder = { Text(Strings.searchFoodPlaceholder()) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
@@ -71,8 +79,8 @@ fun FoodListScreen(
             LazyColumn {
                 items(filteredFoods) { food ->
                     ListItem(
-                        headlineContent = { Text(food.name) },
-                        supportingContent = { Text("${food.carbsPer100g} g glucide / 100g") },
+                        headlineContent = { Text(resolveFoodName(food.name)) },
+                        supportingContent = { Text(Strings.carbsPer100g(food.carbsPer100g.toString())) },
                         leadingContent = {
                             IconButton(
                                 onClick = {
@@ -80,8 +88,8 @@ fun FoodListScreen(
                                     onDeleteFood(food.id)
                                     scope.launch {
                                         val result = snackbarHostState.showSnackbar(
-                                            message = "Aliment șters",
-                                            actionLabel = "Anulează",
+                                            message = deletedMessage,
+                                            actionLabel = undoLabel,
                                             duration = SnackbarDuration.Short
                                         )
                                         if (result == SnackbarResult.ActionPerformed) {
@@ -93,12 +101,12 @@ fun FoodListScreen(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.Delete, contentDescription = "Șterge", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
                             }
                         },
                         trailingContent = {
                             IconButton(onClick = { foodToEdit = food }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editează")
+                                Icon(Icons.Default.Edit, contentDescription = Strings.edit())
                             }
                         },
                         modifier = Modifier.clickable { foodToEdit = food }

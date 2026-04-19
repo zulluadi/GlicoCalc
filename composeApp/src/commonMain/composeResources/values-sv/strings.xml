@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkylator</string>
+    <string name="nav_dishes">Rätter</string>
+    <string name="nav_foods">Livsmedel</string>
+    <string name="total_carbs">Totala kolhydrater</string>
+    <string name="foods_on_plate">Livsmedel på tallriken</string>
+    <string name="add_another_food_to_meal">Lägg till ett annat livsmedel i måltiden</string>
+    <string name="weight">Vikt</string>
+    <string name="carbs">Kolhydrater</string>
+    <string name="delete">Ta bort</string>
+    <string name="base_foods_title">Baslivsmedel</string>
+    <string name="add_food">Lägg till livsmedel</string>
+    <string name="search_food_placeholder">Sök livsmedel...</string>
+    <string name="food_deleted">Livsmedel borttaget</string>
+    <string name="undo">Ångra</string>
+    <string name="edit">Redigera</string>
+    <string name="add_food_title">Lägg till livsmedel</string>
+    <string name="edit_food_title">Redigera livsmedel</string>
+    <string name="food_name">Livsmedelsnamn</string>
+    <string name="carbs_per_100g_label">Kolhydrater per 100 g</string>
+    <string name="save">Spara</string>
+    <string name="cancel">Avbryt</string>
+    <string name="dishes_title">Rätter (Recept)</string>
+    <string name="add_dish">Lägg till rätt</string>
+    <string name="new_dish_title">Ny rätt</string>
+    <string name="edit_dish_title">Redigera rätt</string>
+    <string name="close">Stäng</string>
+    <string name="dish_name_label">Namn på rätt (t.ex. kåldolmar)</string>
+    <string name="composition_ingredients">Sammansättning (Ingredienser)</string>
+    <string name="ingredient">Ingrediens</string>
+    <string name="delete_row">Ta bort rad</string>
+    <string name="add_ingredient">Lägg till ingrediens</string>
+    <string name="meal_item_label">Livsmedel %1$d</string>
+    <string name="carbs_per_100g">%1$s g kolhydrater / 100 g</string>
+    <string name="carbs_percent">%1$s%% kolhydrater</string>
+</resources>

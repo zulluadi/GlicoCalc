@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Beregner</string>
+    <string name="nav_dishes">Retter</string>
+    <string name="nav_foods">Fødevarer</string>
+    <string name="total_carbs">Samlede kulhydrater</string>
+    <string name="foods_on_plate">Madvarer på tallerkenen</string>
+    <string name="add_another_food_to_meal">Tilføj en anden madvare til måltidet</string>
+    <string name="weight">Vægt</string>
+    <string name="carbs">Kulhydrater</string>
+    <string name="delete">Slet</string>
+    <string name="base_foods_title">Basisfødevarer</string>
+    <string name="add_food">Tilføj madvare</string>
+    <string name="search_food_placeholder">Søg efter madvare...</string>
+    <string name="food_deleted">Madvare slettet</string>
+    <string name="undo">Fortryd</string>
+    <string name="edit">Rediger</string>
+    <string name="add_food_title">Tilføj madvare</string>
+    <string name="edit_food_title">Rediger madvare</string>
+    <string name="food_name">Navn på madvare</string>
+    <string name="carbs_per_100g_label">Kulhydrater pr. 100 g</string>
+    <string name="save">Gem</string>
+    <string name="cancel">Annuller</string>
+    <string name="dishes_title">Retter (Opskrifter)</string>
+    <string name="add_dish">Tilføj ret</string>
+    <string name="new_dish_title">Ny ret</string>
+    <string name="edit_dish_title">Rediger ret</string>
+    <string name="close">Luk</string>
+    <string name="dish_name_label">Navn på ret (f.eks. kåldolmere)</string>
+    <string name="composition_ingredients">Sammensætning (Ingredienser)</string>
+    <string name="ingredient">Ingrediens</string>
+    <string name="delete_row">Slet række</string>
+    <string name="add_ingredient">Tilføj ingrediens</string>
+    <string name="meal_item_label">Madvare %1$d</string>
+    <string name="carbs_per_100g">%1$s g kulhydrater / 100 g</string>
+    <string name="carbs_percent">%1$s%% kulhydrater</string>
+</resources>

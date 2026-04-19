@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulátor</string>
+    <string name="nav_dishes">Ételek</string>
+    <string name="nav_foods">Ételek</string>
+    <string name="total_carbs">Összes szénhidrát</string>
+    <string name="foods_on_plate">Ételek a tányéron</string>
+    <string name="add_another_food_to_meal">Másik étel hozzáadása az étkezéshez</string>
+    <string name="weight">Tömeg</string>
+    <string name="carbs">Szénhidrát</string>
+    <string name="delete">Törlés</string>
+    <string name="base_foods_title">Alap ételek</string>
+    <string name="add_food">Étel hozzáadása</string>
+    <string name="search_food_placeholder">Étel keresése...</string>
+    <string name="food_deleted">Étel törölve</string>
+    <string name="undo">Visszavonás</string>
+    <string name="edit">Szerkesztés</string>
+    <string name="add_food_title">Étel hozzáadása</string>
+    <string name="edit_food_title">Étel szerkesztése</string>
+    <string name="food_name">Étel neve</string>
+    <string name="carbs_per_100g_label">Szénhidrát 100 g-ban</string>
+    <string name="save">Mentés</string>
+    <string name="cancel">Mégse</string>
+    <string name="dishes_title">Ételek (Receptek)</string>
+    <string name="add_dish">Étel hozzáadása</string>
+    <string name="new_dish_title">Új étel</string>
+    <string name="edit_dish_title">Étel szerkesztése</string>
+    <string name="close">Bezárás</string>
+    <string name="dish_name_label">Étel neve (pl. töltött káposzta)</string>
+    <string name="composition_ingredients">Összetétel (Hozzávalók)</string>
+    <string name="ingredient">Hozzávaló</string>
+    <string name="delete_row">Sor törlése</string>
+    <string name="add_ingredient">Hozzávaló hozzáadása</string>
+    <string name="meal_item_label">%1$d. étel</string>
+    <string name="carbs_per_100g">%1$s g szénhidrát / 100 g</string>
+    <string name="carbs_percent">%1$s%% szénhidrát</string>
+</resources>

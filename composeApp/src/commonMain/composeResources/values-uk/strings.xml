@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Калькулятор</string>
+    <string name="nav_dishes">Страви</string>
+    <string name="nav_foods">Продукти</string>
+    <string name="total_carbs">Загальні вуглеводи</string>
+    <string name="foods_on_plate">Продукти на тарілці</string>
+    <string name="add_another_food_to_meal">Додати ще один продукт до прийому їжі</string>
+    <string name="weight">Вага</string>
+    <string name="carbs">Вуглеводи</string>
+    <string name="delete">Видалити</string>
+    <string name="base_foods_title">Базові продукти</string>
+    <string name="add_food">Додати продукт</string>
+    <string name="search_food_placeholder">Шукати продукт...</string>
+    <string name="food_deleted">Продукт видалено</string>
+    <string name="undo">Скасувати</string>
+    <string name="edit">Редагувати</string>
+    <string name="add_food_title">Додати продукт</string>
+    <string name="edit_food_title">Редагувати продукт</string>
+    <string name="food_name">Назва продукту</string>
+    <string name="carbs_per_100g_label">Вуглеводи на 100 г</string>
+    <string name="save">Зберегти</string>
+    <string name="cancel">Скасувати</string>
+    <string name="dishes_title">Страви (Рецепти)</string>
+    <string name="add_dish">Додати страву</string>
+    <string name="new_dish_title">Нова страва</string>
+    <string name="edit_dish_title">Редагувати страву</string>
+    <string name="close">Закрити</string>
+    <string name="dish_name_label">Назва страви (напр. голубці)</string>
+    <string name="composition_ingredients">Склад (Інгредієнти)</string>
+    <string name="ingredient">Інгредієнт</string>
+    <string name="delete_row">Видалити рядок</string>
+    <string name="add_ingredient">Додати інгредієнт</string>
+    <string name="meal_item_label">Продукт %1$d</string>
+    <string name="carbs_per_100g">%1$s г вуглеводів / 100 г</string>
+    <string name="carbs_percent">%1$s%% вуглеводів</string>
+</resources>

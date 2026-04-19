@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulačka</string>
+    <string name="nav_dishes">Jídla</string>
+    <string name="nav_foods">Potraviny</string>
+    <string name="total_carbs">Celkové sacharidy</string>
+    <string name="foods_on_plate">Potraviny na talíři</string>
+    <string name="add_another_food_to_meal">Přidat další potravinu do jídla</string>
+    <string name="weight">Hmotnost</string>
+    <string name="carbs">Sacharidy</string>
+    <string name="delete">Smazat</string>
+    <string name="base_foods_title">Základní potraviny</string>
+    <string name="add_food">Přidat potravinu</string>
+    <string name="search_food_placeholder">Hledat potravinu...</string>
+    <string name="food_deleted">Potravina smazána</string>
+    <string name="undo">Zpět</string>
+    <string name="edit">Upravit</string>
+    <string name="add_food_title">Přidat potravinu</string>
+    <string name="edit_food_title">Upravit potravinu</string>
+    <string name="food_name">Název potraviny</string>
+    <string name="carbs_per_100g_label">Sacharidy na 100 g</string>
+    <string name="save">Uložit</string>
+    <string name="cancel">Zrušit</string>
+    <string name="dishes_title">Jídla (Recepty)</string>
+    <string name="add_dish">Přidat jídlo</string>
+    <string name="new_dish_title">Nové jídlo</string>
+    <string name="edit_dish_title">Upravit jídlo</string>
+    <string name="close">Zavřít</string>
+    <string name="dish_name_label">Název jídla (např. zelné závitky)</string>
+    <string name="composition_ingredients">Složení (Ingredience)</string>
+    <string name="ingredient">Ingredience</string>
+    <string name="delete_row">Smazat řádek</string>
+    <string name="add_ingredient">Přidat ingredienci</string>
+    <string name="meal_item_label">Potravina %1$d</string>
+    <string name="carbs_per_100g">%1$s g sacharidů / 100 g</string>
+    <string name="carbs_percent">%1$s%% sacharidů</string>
+</resources>

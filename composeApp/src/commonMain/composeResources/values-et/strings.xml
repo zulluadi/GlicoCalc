@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulaator</string>
+    <string name="nav_dishes">Road</string>
+    <string name="nav_foods">Toidud</string>
+    <string name="total_carbs">Süsivesikud kokku</string>
+    <string name="foods_on_plate">Toidud taldrikul</string>
+    <string name="add_another_food_to_meal">Lisa toidukorrale veel üks toit</string>
+    <string name="weight">Kaal</string>
+    <string name="carbs">Süsivesikud</string>
+    <string name="delete">Kustuta</string>
+    <string name="base_foods_title">Põhitoidud</string>
+    <string name="add_food">Lisa toit</string>
+    <string name="search_food_placeholder">Otsi toitu...</string>
+    <string name="food_deleted">Toit kustutatud</string>
+    <string name="undo">Võta tagasi</string>
+    <string name="edit">Muuda</string>
+    <string name="add_food_title">Lisa toit</string>
+    <string name="edit_food_title">Muuda toitu</string>
+    <string name="food_name">Toidu nimi</string>
+    <string name="carbs_per_100g_label">Süsivesikud 100 g kohta</string>
+    <string name="save">Salvesta</string>
+    <string name="cancel">Loobu</string>
+    <string name="dishes_title">Road (Retseptid)</string>
+    <string name="add_dish">Lisa roog</string>
+    <string name="new_dish_title">Uus roog</string>
+    <string name="edit_dish_title">Muuda rooga</string>
+    <string name="close">Sulge</string>
+    <string name="dish_name_label">Roa nimi (nt kapsarullid)</string>
+    <string name="composition_ingredients">Koostis (Koostisosad)</string>
+    <string name="ingredient">Koostisosa</string>
+    <string name="delete_row">Kustuta rida</string>
+    <string name="add_ingredient">Lisa koostisosa</string>
+    <string name="meal_item_label">Toit %1$d</string>
+    <string name="carbs_per_100g">%1$s g süsivesikuid / 100 g</string>
+    <string name="carbs_percent">%1$s%% süsivesikuid</string>
+</resources>

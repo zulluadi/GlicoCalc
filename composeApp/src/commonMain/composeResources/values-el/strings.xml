@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Υπολογιστής</string>
+    <string name="nav_dishes">Πιάτα</string>
+    <string name="nav_foods">Τρόφιμα</string>
+    <string name="total_carbs">Συνολικοί υδατάνθρακες</string>
+    <string name="foods_on_plate">Τρόφιμα στο πιάτο</string>
+    <string name="add_another_food_to_meal">Προσθήκη άλλης τροφής στο γεύμα</string>
+    <string name="weight">Βάρος</string>
+    <string name="carbs">Υδατάνθρακες</string>
+    <string name="delete">Διαγραφή</string>
+    <string name="base_foods_title">Βασικά τρόφιμα</string>
+    <string name="add_food">Προσθήκη τροφίμου</string>
+    <string name="search_food_placeholder">Αναζήτηση τροφίμου...</string>
+    <string name="food_deleted">Το τρόφιμο διαγράφηκε</string>
+    <string name="undo">Αναίρεση</string>
+    <string name="edit">Επεξεργασία</string>
+    <string name="add_food_title">Προσθήκη τροφίμου</string>
+    <string name="edit_food_title">Επεξεργασία τροφίμου</string>
+    <string name="food_name">Όνομα τροφίμου</string>
+    <string name="carbs_per_100g_label">Υδατάνθρακες ανά 100 g</string>
+    <string name="save">Αποθήκευση</string>
+    <string name="cancel">Ακύρωση</string>
+    <string name="dishes_title">Πιάτα (Συνταγές)</string>
+    <string name="add_dish">Προσθήκη πιάτου</string>
+    <string name="new_dish_title">Νέο πιάτο</string>
+    <string name="edit_dish_title">Επεξεργασία πιάτου</string>
+    <string name="close">Κλείσιμο</string>
+    <string name="dish_name_label">Όνομα πιάτου (π.χ. λαχανοντολμάδες)</string>
+    <string name="composition_ingredients">Σύνθεση (Συστατικά)</string>
+    <string name="ingredient">Συστατικό</string>
+    <string name="delete_row">Διαγραφή σειράς</string>
+    <string name="add_ingredient">Προσθήκη συστατικού</string>
+    <string name="meal_item_label">Τρόφιμο %1$d</string>
+    <string name="carbs_per_100g">%1$s g υδατάνθρακες / 100 g</string>
+    <string name="carbs_percent">%1$s%% υδατάνθρακες</string>
+</resources>

@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">מחשבון</string>
+    <string name="nav_dishes">מנות</string>
+    <string name="nav_foods">מזונות</string>
+    <string name="total_carbs">סך הפחמימות</string>
+    <string name="foods_on_plate">מזונות בצלחת</string>
+    <string name="add_another_food_to_meal">הוסף מזון נוסף לארוחה</string>
+    <string name="weight">משקל</string>
+    <string name="carbs">פחמימות</string>
+    <string name="delete">מחק</string>
+    <string name="base_foods_title">מזונות בסיס</string>
+    <string name="add_food">הוסף מזון</string>
+    <string name="search_food_placeholder">חפש מזון...</string>
+    <string name="food_deleted">המזון נמחק</string>
+    <string name="undo">בטל</string>
+    <string name="edit">ערוך</string>
+    <string name="add_food_title">הוסף מזון</string>
+    <string name="edit_food_title">ערוך מזון</string>
+    <string name="food_name">שם המזון</string>
+    <string name="carbs_per_100g_label">פחמימות ל-100 גרם</string>
+    <string name="save">שמור</string>
+    <string name="cancel">בטל</string>
+    <string name="dishes_title">מנות (מתכונים)</string>
+    <string name="add_dish">הוסף מנה</string>
+    <string name="new_dish_title">מנה חדשה</string>
+    <string name="edit_dish_title">ערוך מנה</string>
+    <string name="close">סגור</string>
+    <string name="dish_name_label">שם המנה (למשל כרוב ממולא)</string>
+    <string name="composition_ingredients">הרכב (מרכיבים)</string>
+    <string name="ingredient">מרכיב</string>
+    <string name="delete_row">מחק שורה</string>
+    <string name="add_ingredient">הוסף מרכיב</string>
+    <string name="meal_item_label">מזון %1$d</string>
+    <string name="carbs_per_100g">%1$s גרם פחמימות ל-100 גרם</string>
+    <string name="carbs_percent">%1$s%% פחמימות</string>
+</resources>

@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">计算器</string>
+    <string name="nav_dishes">菜品</string>
+    <string name="nav_foods">食物</string>
+    <string name="total_carbs">总碳水</string>
+    <string name="foods_on_plate">盘中食物</string>
+    <string name="add_another_food_to_meal">为这餐再添加一种食物</string>
+    <string name="weight">重量</string>
+    <string name="carbs">碳水</string>
+    <string name="delete">删除</string>
+    <string name="base_foods_title">基础食物</string>
+    <string name="add_food">添加食物</string>
+    <string name="search_food_placeholder">搜索食物...</string>
+    <string name="food_deleted">食物已删除</string>
+    <string name="undo">撤销</string>
+    <string name="edit">编辑</string>
+    <string name="add_food_title">添加食物</string>
+    <string name="edit_food_title">编辑食物</string>
+    <string name="food_name">食物名称</string>
+    <string name="carbs_per_100g_label">每100克碳水</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="dishes_title">菜品（食谱）</string>
+    <string name="add_dish">添加菜品</string>
+    <string name="new_dish_title">新菜品</string>
+    <string name="edit_dish_title">编辑菜品</string>
+    <string name="close">关闭</string>
+    <string name="dish_name_label">菜品名称（例如：卷心菜卷）</string>
+    <string name="composition_ingredients">配方（食材）</string>
+    <string name="ingredient">食材</string>
+    <string name="delete_row">删除行</string>
+    <string name="add_ingredient">添加食材</string>
+    <string name="meal_item_label">食物%1$d</string>
+    <string name="carbs_per_100g">每100克%1$s克碳水</string>
+    <string name="carbs_percent">%1$s%%碳水</string>
+</resources>

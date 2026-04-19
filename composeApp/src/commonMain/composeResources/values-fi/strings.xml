@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Laskuri</string>
+    <string name="nav_dishes">Ruoat</string>
+    <string name="nav_foods">Ruoat</string>
+    <string name="total_carbs">Hiilihydraatit yhteensä</string>
+    <string name="foods_on_plate">Ruoat lautasella</string>
+    <string name="add_another_food_to_meal">Lisää toinen ruoka ateriaan</string>
+    <string name="weight">Paino</string>
+    <string name="carbs">Hiilihydraatit</string>
+    <string name="delete">Poista</string>
+    <string name="base_foods_title">Perusruoat</string>
+    <string name="add_food">Lisää ruoka</string>
+    <string name="search_food_placeholder">Hae ruokaa...</string>
+    <string name="food_deleted">Ruoka poistettu</string>
+    <string name="undo">Kumoa</string>
+    <string name="edit">Muokkaa</string>
+    <string name="add_food_title">Lisää ruoka</string>
+    <string name="edit_food_title">Muokkaa ruokaa</string>
+    <string name="food_name">Ruoan nimi</string>
+    <string name="carbs_per_100g_label">Hiilihydraatit / 100 g</string>
+    <string name="save">Tallenna</string>
+    <string name="cancel">Peruuta</string>
+    <string name="dishes_title">Ruoat (Reseptit)</string>
+    <string name="add_dish">Lisää ruoka</string>
+    <string name="new_dish_title">Uusi ruoka</string>
+    <string name="edit_dish_title">Muokkaa ruokaa</string>
+    <string name="close">Sulje</string>
+    <string name="dish_name_label">Ruoan nimi (esim. kaalikaaryleet)</string>
+    <string name="composition_ingredients">Koostumus (Ainekset)</string>
+    <string name="ingredient">Ainesosa</string>
+    <string name="delete_row">Poista rivi</string>
+    <string name="add_ingredient">Lisää ainesosa</string>
+    <string name="meal_item_label">Ruoka %1$d</string>
+    <string name="carbs_per_100g">%1$s g hiilihydraatteja / 100 g</string>
+    <string name="carbs_percent">%1$s%% hiilihydraatteja</string>
+</resources>

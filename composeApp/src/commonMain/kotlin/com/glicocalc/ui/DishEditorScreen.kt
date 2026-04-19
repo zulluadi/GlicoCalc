@@ -28,6 +28,7 @@ fun DishEditorScreen(
     onSave: (String, List<Pair<Long, Double>>) -> Unit,
     onCancel: () -> Unit
 ) {
+    val resolveFoodName = rememberBaseFoodNameResolver()
     var dishName by remember { mutableStateOf(initialName) }
     val components = remember { mutableStateListOf<ComponentState>().apply { 
         if (initialComponents.isEmpty()) add(ComponentState()) 
@@ -35,7 +36,7 @@ fun DishEditorScreen(
             ComponentState(
                 foodId = foodId, 
                 percentage = percentage.toString(),
-                searchQuery = allBaseFoods.find { it.id == foodId }?.name ?: ""
+                searchQuery = allBaseFoods.find { it.id == foodId }?.name?.let(resolveFoodName) ?: ""
             ) 
         })
     } }
@@ -45,10 +46,10 @@ fun DishEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (initialName.isEmpty()) "Mâncare Nouă" else "Editează Mâncare") },
+                title = { Text(if (initialName.isEmpty()) Strings.newDishTitle() else Strings.editDishTitle()) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.Default.Close, contentDescription = "Închide")
+                        Icon(Icons.Default.Close, contentDescription = Strings.close())
                     }
                 },
                 actions = {
@@ -63,7 +64,7 @@ fun DishEditorScreen(
                         }
                     ) {
                         Text(
-                            text = "SALVEAZĂ",
+                            text = Strings.save().uppercase(),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = if (canSave) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
@@ -82,13 +83,13 @@ fun DishEditorScreen(
             OutlinedTextField(
                 value = dishName,
                 onValueChange = { dishName = it },
-                label = { Text("Nume Mâncare (ex: Sarmale)") },
+                label = { Text(Strings.dishNameLabel()) },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
             
-            Text("Compoziție (Ingrediente)", fontWeight = FontWeight.Bold)
+            Text(Strings.compositionIngredients(), fontWeight = FontWeight.Bold)
             
             LazyColumn(modifier = Modifier.weight(1f)) {
                 itemsIndexed(components) { index, component ->
@@ -106,10 +107,20 @@ fun DishEditorScreen(
                                 val filteredFoods by remember(component.searchQuery, allBaseFoods) {
                                     val normalizedQuery = component.searchQuery.removeDiacritics()
                                     derivedStateOf {
-                                        if (component.searchQuery.isEmpty() || allBaseFoods.any { it.name.removeDiacritics().equals(normalizedQuery, ignoreCase = true) }) {
+                                        if (component.searchQuery.isEmpty() || allBaseFoods.any {
+                                                val localizedName = resolveFoodName(it.name)
+                                                it.name.removeDiacritics().equals(normalizedQuery, ignoreCase = true) ||
+                                                    localizedName.removeDiacritics().equals(normalizedQuery, ignoreCase = true)
+                                            }) {
                                             allBaseFoods
                                         } else {
-                                            allBaseFoods.filter { it.name.removeDiacritics().contains(normalizedQuery, ignoreCase = true) }
+                                            allBaseFoods.filter { food ->
+                                                matchesBaseFoodQuery(
+                                                    rawName = food.name,
+                                                    localizedName = resolveFoodName(food.name),
+                                                    query = component.searchQuery
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -120,7 +131,7 @@ fun DishEditorScreen(
                                         components[index] = component.copy(searchQuery = it)
                                         expanded = true
                                     },
-                                    label = { Text("Aliment") },
+                                    label = { Text(Strings.ingredient()) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                                     modifier = Modifier.menuAnchor().fillMaxWidth()
                                 )
@@ -134,11 +145,11 @@ fun DishEditorScreen(
                                     ) {
                                         filteredFoods.forEach { food ->
                                             DropdownMenuItem(
-                                                text = { Text(food.name) },
+                                                text = { Text(resolveFoodName(food.name)) },
                                                 onClick = {
                                                     components[index] = component.copy(
                                                         foodId = food.id,
-                                                        searchQuery = food.name
+                                                        searchQuery = resolveFoodName(food.name)
                                                     )
                                                     expanded = false
                                                 }
@@ -160,7 +171,7 @@ fun DishEditorScreen(
                         )
 
                         IconButton(onClick = { components.removeAt(index) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Șterge rând", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Default.Delete, contentDescription = Strings.deleteRow(), tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -172,7 +183,7 @@ fun DishEditorScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Adaugă Ingredient")
+                        Text(Strings.addIngredient())
                     }
                 }
 

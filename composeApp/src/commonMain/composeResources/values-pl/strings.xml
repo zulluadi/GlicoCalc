@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Kalkulator</string>
+    <string name="nav_dishes">Dania</string>
+    <string name="nav_foods">Produkty</string>
+    <string name="total_carbs">Łączne węglowodany</string>
+    <string name="foods_on_plate">Produkty na talerzu</string>
+    <string name="add_another_food_to_meal">Dodaj kolejny produkt do posiłku</string>
+    <string name="weight">Masa</string>
+    <string name="carbs">Węglowodany</string>
+    <string name="delete">Usuń</string>
+    <string name="base_foods_title">Produkty podstawowe</string>
+    <string name="add_food">Dodaj produkt</string>
+    <string name="search_food_placeholder">Szukaj produktu...</string>
+    <string name="food_deleted">Produkt usunięty</string>
+    <string name="undo">Cofnij</string>
+    <string name="edit">Edytuj</string>
+    <string name="add_food_title">Dodaj produkt</string>
+    <string name="edit_food_title">Edytuj produkt</string>
+    <string name="food_name">Nazwa produktu</string>
+    <string name="carbs_per_100g_label">Węglowodany na 100 g</string>
+    <string name="save">Zapisz</string>
+    <string name="cancel">Anuluj</string>
+    <string name="dishes_title">Dania (Przepisy)</string>
+    <string name="add_dish">Dodaj danie</string>
+    <string name="new_dish_title">Nowe danie</string>
+    <string name="edit_dish_title">Edytuj danie</string>
+    <string name="close">Zamknij</string>
+    <string name="dish_name_label">Nazwa dania (np. gołąbki)</string>
+    <string name="composition_ingredients">Skład (Składniki)</string>
+    <string name="ingredient">Składnik</string>
+    <string name="delete_row">Usuń wiersz</string>
+    <string name="add_ingredient">Dodaj składnik</string>
+    <string name="meal_item_label">Produkt %1$d</string>
+    <string name="carbs_per_100g">%1$s g węglowodanów / 100 g</string>
+    <string name="carbs_percent">%1$s%% węglowodanów</string>
+</resources>

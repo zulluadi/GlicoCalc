@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Rekenhulp</string>
+    <string name="nav_dishes">Gerechten</string>
+    <string name="nav_foods">Voedsel</string>
+    <string name="total_carbs">Totale koolhydraten</string>
+    <string name="foods_on_plate">Voedsel op het bord</string>
+    <string name="add_another_food_to_meal">Nog een voedingsmiddel aan de maaltijd toevoegen</string>
+    <string name="weight">Gewicht</string>
+    <string name="carbs">Koolhydraten</string>
+    <string name="delete">Verwijderen</string>
+    <string name="base_foods_title">Basisvoedsel</string>
+    <string name="add_food">Voedsel toevoegen</string>
+    <string name="search_food_placeholder">Voedsel zoeken...</string>
+    <string name="food_deleted">Voedsel verwijderd</string>
+    <string name="undo">Ongedaan maken</string>
+    <string name="edit">Bewerken</string>
+    <string name="add_food_title">Voedsel toevoegen</string>
+    <string name="edit_food_title">Voedsel bewerken</string>
+    <string name="food_name">Naam van voedsel</string>
+    <string name="carbs_per_100g_label">Koolhydraten per 100 g</string>
+    <string name="save">Opslaan</string>
+    <string name="cancel">Annuleren</string>
+    <string name="dishes_title">Gerechten (Recepten)</string>
+    <string name="add_dish">Gerecht toevoegen</string>
+    <string name="new_dish_title">Nieuw gerecht</string>
+    <string name="edit_dish_title">Gerecht bewerken</string>
+    <string name="close">Sluiten</string>
+    <string name="dish_name_label">Naam van het gerecht (bv. Koolrolletjes)</string>
+    <string name="composition_ingredients">Samenstelling (Ingrediënten)</string>
+    <string name="ingredient">Ingrediënt</string>
+    <string name="delete_row">Rij verwijderen</string>
+    <string name="add_ingredient">Ingrediënt toevoegen</string>
+    <string name="meal_item_label">Voedsel %1$d</string>
+    <string name="carbs_per_100g">%1$s g koolhydraten / 100 g</string>
+    <string name="carbs_percent">%1$s%% koolhydraten</string>
+</resources>

@@ -26,12 +26,12 @@ fun DishListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mâncăruri (Rețete)") }
+                title = { Text(Strings.dishesTitle()) }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddDish) {
-                Icon(Icons.Default.Add, contentDescription = "Adaugă Mâncare")
+                Icon(Icons.Default.Add, contentDescription = Strings.addDish())
             }
         },
         modifier = modifier
@@ -42,14 +42,14 @@ fun DishListScreen(
                 items(dishesWithCarbs) { dishWithCarbs ->
                     ListItem(
                         headlineContent = { Text(dishWithCarbs.dish.name) },
-                        supportingContent = { Text("${((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0)} g glucide / 100g") },
+                        supportingContent = { Text(Strings.carbsPer100g(((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0).toString())) },
                         trailingContent = {
                             Row {
                                 IconButton(onClick = { onEditDish(dishWithCarbs.dish.id) }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Editează")
+                                    Icon(Icons.Default.Edit, contentDescription = Strings.edit())
                                 }
                                 IconButton(onClick = { onDeleteDish(dishWithCarbs.dish.id) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Șterge", tint = MaterialTheme.colorScheme.error)
+                                    Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
                                 }
                             }
                         },

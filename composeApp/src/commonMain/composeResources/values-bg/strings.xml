@@ -1,0 +1,36 @@
+<resources>
+    <string name="nav_calculator">Калкулатор</string>
+    <string name="nav_dishes">Ястия</string>
+    <string name="nav_foods">Храни</string>
+    <string name="total_carbs">Общи въглехидрати</string>
+    <string name="foods_on_plate">Храни в чинията</string>
+    <string name="add_another_food_to_meal">Добави още храна към храненето</string>
+    <string name="weight">Грамаж</string>
+    <string name="carbs">Въглехидрати</string>
+    <string name="delete">Изтрий</string>
+    <string name="base_foods_title">Основни храни</string>
+    <string name="add_food">Добави храна</string>
+    <string name="search_food_placeholder">Търси храна...</string>
+    <string name="food_deleted">Храната е изтрита</string>
+    <string name="undo">Отмени</string>
+    <string name="edit">Редактирай</string>
+    <string name="add_food_title">Добави храна</string>
+    <string name="edit_food_title">Редактирай храна</string>
+    <string name="food_name">Име на храната</string>
+    <string name="carbs_per_100g_label">Въглехидрати на 100 г</string>
+    <string name="save">Запази</string>
+    <string name="cancel">Отказ</string>
+    <string name="dishes_title">Ястия (Рецепти)</string>
+    <string name="add_dish">Добави ястие</string>
+    <string name="new_dish_title">Ново ястие</string>
+    <string name="edit_dish_title">Редактирай ястие</string>
+    <string name="close">Затвори</string>
+    <string name="dish_name_label">Име на ястието (напр. сарми)</string>
+    <string name="composition_ingredients">Състав (Съставки)</string>
+    <string name="ingredient">Съставка</string>
+    <string name="delete_row">Изтрий реда</string>
+    <string name="add_ingredient">Добави съставка</string>
+    <string name="meal_item_label">Храна %1$d</string>
+    <string name="carbs_per_100g">%1$s г въглехидрати / 100 г</string>
+    <string name="carbs_percent">%1$s%% въглехидрати</string>
+</resources>
