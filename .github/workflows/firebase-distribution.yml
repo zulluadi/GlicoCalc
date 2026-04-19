@@ -29,7 +29,18 @@ jobs:
       - name: Create local.properties and google-services.json
         run: |
           echo "firebaseAppDistribution.appId=${{ secrets.FIREBASE_APP_ID }}" > local.properties
-          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > composeApp/google-services.json
+          # Decode safely handling any newlines or formatting variations
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode --ignore-garbage > composeApp/google-services.json
+          
+          # Validation Step
+          if [ ! -s composeApp/google-services.json ]; then
+            echo "ERROR: google-services.json is EMPTY! Ensure your GOOGLE_SERVICES_JSON_BASE64 secret is correctly set."
+            exit 1
+          fi
+          if ! python3 -c 'import json, sys; json.load(sys.stdin)' < composeApp/google-services.json; then
+            echo "ERROR: google-services.json is NOT valid JSON after decoding. Please re-encode carefully."
+            exit 1
+          fi
 
       - name: Build and Upload to Firebase App Distribution
         env:
