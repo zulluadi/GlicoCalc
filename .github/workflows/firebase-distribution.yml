@@ -27,11 +27,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Create local.properties and google-services.json
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           echo "firebaseAppDistribution.appId=${{ secrets.FIREBASE_APP_ID }}" > local.properties
-          echo "$GOOGLE_SERVICES_JSON" > composeApp/google-services.json
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > composeApp/google-services.json
 
       - name: Build and Upload to Firebase App Distribution
         env:
