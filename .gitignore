@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+*/build/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Local machine configuration
+local.properties
+
+# Android artifacts
+captures/
+*.apk
+*.aab
+
+# Signing and service config
+*.jks
+*.keystore
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Kotlin/Native and Xcode
+*.framework
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+DerivedData/
+
+# Logs
+*.log

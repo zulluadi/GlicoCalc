@@ -1,0 +1,62 @@
+CREATE TABLE BaseFood (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    carbsPer100g REAL NOT NULL
+);
+
+CREATE TABLE Dish (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE DishComponent (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dishId INTEGER NOT NULL,
+    baseFoodId INTEGER NOT NULL,
+    percentage REAL NOT NULL,
+    FOREIGN KEY (dishId) REFERENCES Dish(id),
+    FOREIGN KEY (baseFoodId) REFERENCES BaseFood(id)
+);
+
+-- Queries
+insertBaseFood:
+INSERT INTO BaseFood(name, carbsPer100g) VALUES (?, ?);
+
+updateBaseFood:
+UPDATE BaseFood SET name = ?, carbsPer100g = ? WHERE id = ?;
+
+deleteBaseFood:
+DELETE FROM BaseFood WHERE id = ?;
+
+selectAllBaseFoods:
+SELECT * FROM BaseFood ORDER BY name;
+
+insertDish:
+INSERT INTO Dish(name) VALUES (?);
+
+updateDish:
+UPDATE Dish SET name = ? WHERE id = ?;
+
+deleteDish:
+DELETE FROM Dish WHERE id = ?;
+
+selectAllDishes:
+SELECT * FROM Dish ORDER BY name;
+
+insertDishComponent:
+INSERT INTO DishComponent(dishId, baseFoodId, percentage) VALUES (?, ?, ?);
+
+deleteComponentsByDishId:
+DELETE FROM DishComponent WHERE dishId = ?;
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+selectComponentsByDishId:
+SELECT 
+    DishComponent.*, 
+    BaseFood.name AS foodName, 
+    BaseFood.carbsPer100g AS foodCarbs 
+FROM DishComponent 
+JOIN BaseFood ON DishComponent.baseFoodId = BaseFood.id 
+WHERE dishId = ?;
