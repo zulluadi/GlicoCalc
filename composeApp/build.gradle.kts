@@ -1,8 +1,18 @@
+import java.io.BufferedReader
+
 plugins {
     kotlin("multiplatform")
     id("com.android.application")
     id("org.jetbrains.compose")
     id("com.squareup.sqldelight")
+    id("com.google.gms.google-services") apply false
+    id("com.google.firebase.appdistribution") apply false
+}
+
+val hasGoogleServices = file("google-services.json").exists()
+if (hasGoogleServices) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.appdistribution")
 }
 
 kotlin {
@@ -48,12 +58,15 @@ android {
         applicationId = "com.glicocalc"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "0.2"
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            if (hasGoogleServices) {
+                apply(from = "firebase-config.gradle")
+            }
         }
     }
     compileOptions {

@@ -16,18 +16,17 @@ This keeps the open source repository usable while still preparing the app for s
 
 When you are ready to enable Firebase:
 
-1. Add a real implementation such as `FirebaseTelemetry` in the platform-specific app code.
-2. Keep Firebase config files out of Git:
-   - Android: `google-services.json`
-   - Apple: `GoogleService-Info.plist`
-3. Wire the production build to use `FirebaseTelemetry`.
-4. Keep the default GitHub build on `NoopTelemetry`.
+1.  Place your `google-services.json` in the `composeApp/` directory. The build system will automatically detect it and enable the Firebase plugins.
+2.  Add a real implementation such as `FirebaseTelemetry` in the platform-specific app code.
+3.  Keep Firebase config files out of Git (already added to `.gitignore`).
+4.  For GitHub Actions, add the following **Repository Secrets**:
+    *   `FIREBASE_TOKEN`: Obtain via `firebase login:ci`.
+    *   `FIREBASE_APP_ID`: Your Firebase App ID.
+    *   `FIREBASE_TESTERS`: Comma-separated list of tester emails.
+    *   `GOOGLE_SERVICES_JSON`: The full content of your `google-services.json` file.
 
-## Suggested Next Step
+## Why This Setup?
 
-Use build configuration, not separate app modules, to switch between:
-
-- public or local builds without Firebase
-- private store builds with Firebase
-
-If you later need separate Firebase projects, add environment-based configurations such as `staging` and `production`.
+This setup is **Open Source Friendly**:
+*   **Privacy**: It keeps your private configuration and tester emails out of the public source code.
+*   **Ease of Contribution**: Contributors without Firebase can still build and run the project because the plugins are only applied if the configuration file is found.

@@ -97,6 +97,10 @@ fun DishEditorScreen(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        IconButton(onClick = { components.removeAt(index) }) {
+                            Icon(Icons.Default.Delete, contentDescription = Strings.deleteRow(), tint = MaterialTheme.colorScheme.error)
+                        }
+
                         var expanded by remember { mutableStateOf(false) }
                         
                         Box(modifier = Modifier.weight(1.5f)) {
@@ -169,10 +173,6 @@ fun DishEditorScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(0.7f)
                         )
-
-                        IconButton(onClick = { components.removeAt(index) }) {
-                            Icon(Icons.Default.Delete, contentDescription = Strings.deleteRow(), tint = MaterialTheme.colorScheme.error)
-                        }
                     }
                 }
 

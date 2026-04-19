@@ -1,0 +1,14 @@
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.appdistribution'
+
+firebaseAppDistribution {
+    appId = project.findProperty("firebaseAppDistribution.appId") ?: ""
+    testers = project.findProperty("firebaseAppDistribution.testers") ?: ""
+    releaseNotes = {
+        try {
+            return "git log -n 5 --pretty=format:%s".execute().text
+        } catch (Exception e) {
+            return "New release"
+        }
+    }()
+}

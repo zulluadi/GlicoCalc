@@ -43,14 +43,14 @@ fun DishListScreen(
                     ListItem(
                         headlineContent = { Text(dishWithCarbs.dish.name) },
                         supportingContent = { Text(Strings.carbsPer100g(((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0).toString())) },
+                        leadingContent = {
+                            IconButton(onClick = { onDeleteDish(dishWithCarbs.dish.id) }) {
+                                Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
+                            }
+                        },
                         trailingContent = {
-                            Row {
-                                IconButton(onClick = { onEditDish(dishWithCarbs.dish.id) }) {
-                                    Icon(Icons.Default.Edit, contentDescription = Strings.edit())
-                                }
-                                IconButton(onClick = { onDeleteDish(dishWithCarbs.dish.id) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
-                                }
+                            IconButton(onClick = { onEditDish(dishWithCarbs.dish.id) }) {
+                                Icon(Icons.Default.Edit, contentDescription = Strings.edit())
                             }
                         },
                         modifier = Modifier.clickable { onEditDish(dishWithCarbs.dish.id) }

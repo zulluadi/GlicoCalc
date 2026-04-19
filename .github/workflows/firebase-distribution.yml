@@ -1,0 +1,37 @@
+name: Firebase App Distribution
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for git log release notes
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create local.properties and google-services.json
+        run: |
+          echo "firebaseAppDistribution.appId=${{ secrets.FIREBASE_APP_ID }}" > local.properties
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > composeApp/google-services.json
+
+      - name: Build and Upload to Firebase App Distribution
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: ./gradlew :composeApp:assembleRelease :composeApp:appDistributionUploadRelease -PfirebaseAppDistribution.testers="${{ secrets.FIREBASE_TESTERS }}"
