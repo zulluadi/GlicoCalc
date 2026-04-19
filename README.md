@@ -4,6 +4,12 @@ GlicoCalc is a Kotlin Multiplatform app that helps children with type 1 diabetes
 
 The app is designed as a carb-planning aid. It lets users build a meal from individual foods or saved dishes, then calculates the carbohydrate total based on food composition and entered weight.
 
+## Project Status
+
+- Android build is set up and verified.
+- Shared Kotlin Multiplatform code is in place.
+- An iOS App Store release is planned, but an iOS host app is not yet part of this repository.
+
 ## What It Does
 
 - Calculate meal carbohydrates from food weight.
@@ -51,6 +57,10 @@ See [DISCLAIMER.md](./DISCLAIMER.md) for the full safety notice.
 ```
 
 To install from Android Studio, open the project and run the `composeApp` Android configuration on a device or emulator.
+
+### Local Data
+
+The app stores its food and dish data locally using SQLDelight. No Firebase setup is required for the public GitHub build.
 
 ## Open Source Notes
 
