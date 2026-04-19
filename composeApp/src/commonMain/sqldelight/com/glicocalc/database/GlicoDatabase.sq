@@ -25,6 +25,11 @@ CREATE TABLE MealType (
     hourOfDay INTEGER NOT NULL
 );
 
+CREATE TABLE Setting (
+    key TEXT PRIMARY KEY,
+    content TEXT
+);
+
 -- Queries
 insertBaseFood:
 INSERT INTO BaseFood(name, carbsPer100g) VALUES (?, ?);
@@ -79,3 +84,9 @@ DELETE FROM MealType WHERE id = ?;
 
 selectAllMealTypes:
 SELECT * FROM MealType ORDER BY hourOfDay, name;
+
+getLanguage:
+SELECT content FROM Setting WHERE key = 'language';
+
+setLanguage:
+INSERT OR REPLACE INTO Setting(key, content) VALUES ('language', ?);

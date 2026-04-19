@@ -125,4 +125,12 @@ class GlicoRepository(val database: GlicoDatabase) {
             }
         }
     }
+
+    fun getLanguage(): String? {
+        return queries.getLanguage().executeAsOneOrNull()?.content
+    }
+
+    fun saveLanguage(languageCode: String?) {
+        queries.setLanguage(languageCode)
+    }
 }

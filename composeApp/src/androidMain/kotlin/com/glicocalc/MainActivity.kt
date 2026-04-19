@@ -11,6 +11,7 @@ import com.glicocalc.database.GlicoRepository
 import com.glicocalc.database.GlicoDatabase
 import com.glicocalc.telemetry.NoopTelemetry
 import com.glicocalc.ui.MainApp
+import com.glicocalc.ui.customAppLocale
 
 class MainActivity : ComponentActivity() {
     private var resumeSignal by mutableStateOf(0)
@@ -26,6 +27,9 @@ class MainActivity : ComponentActivity() {
         
         // Seed initial data if empty
         repository.seedInitialData()
+
+        // Load persisted language
+        customAppLocale = repository.getLanguage()
         
         setContent {
             MainApp(

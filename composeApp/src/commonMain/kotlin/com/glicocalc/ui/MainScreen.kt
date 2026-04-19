@@ -174,6 +174,7 @@ fun MainApp(
                     onDismiss = { showLanguageDialog = false },
                     onSelectLanguage = {
                         customAppLocale = it
+                        repository.saveLanguage(it)
                         showLanguageDialog = false
                     }
                 )
