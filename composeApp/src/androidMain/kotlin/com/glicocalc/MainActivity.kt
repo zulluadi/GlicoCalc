@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.glicocalc.database.DatabaseDriverFactory
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.database.GlicoDatabase
+import com.glicocalc.telemetry.NoopTelemetry
 import com.glicocalc.ui.MainApp
 
 class MainActivity : ComponentActivity() {
@@ -22,7 +23,10 @@ class MainActivity : ComponentActivity() {
         repository.seedInitialData()
         
         setContent {
-            MainApp(repository = repository)
+            MainApp(
+                repository = repository,
+                telemetry = NoopTelemetry
+            )
         }
     }
 }

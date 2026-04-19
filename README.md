@@ -58,6 +58,7 @@ Before using or contributing to this project, read:
 
 - [DISCLAIMER.md](./DISCLAIMER.md)
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [docs/firebase-setup.md](./docs/firebase-setup.md)
 
 If you publish screenshots or demo data, avoid real personal or health information.
 

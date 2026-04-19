@@ -2,6 +2,7 @@ package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
@@ -10,17 +11,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.models.DishWithComposition
+import com.glicocalc.telemetry.Telemetry
 import com.glicocalc.ui.theme.GlicoCalcTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainApp(repository: GlicoRepository) {
+fun MainApp(
+    repository: GlicoRepository,
+    telemetry: Telemetry
+) {
     val scope = rememberCoroutineScope()
     var currentScreen by remember { mutableStateOf(Screen.Calculator) }
     var editingDishId by remember { mutableStateOf<Long?>(null) }
 
     val baseFoods by repository.getAllBaseFoods().collectAsState(initial = emptyList())
     val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
+
+    LaunchedEffect(currentScreen) {
+        telemetry.screenViewed(currentScreen.name)
+    }
 
     GlicoCalcTheme {
         Scaffold(
@@ -41,7 +50,7 @@ fun MainApp(repository: GlicoRepository) {
                     NavigationBarItem(
                         selected = currentScreen == Screen.FoodList,
                         onClick = { currentScreen = Screen.FoodList },
-                        icon = { Icon(Icons.Default.List, contentDescription = null) },
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                         label = { Text("Alimente") }
                     )
                 }
@@ -59,19 +68,42 @@ fun MainApp(repository: GlicoRepository) {
                 )
                 Screen.FoodList -> FoodListScreen(
                     foods = baseFoods,
-                    onAddFood = { name, carbs -> scope.launch { repository.insertBaseFood(name, carbs) } },
-                    onEditFood = { id, name, carbs -> scope.launch { repository.updateBaseFood(id, name, carbs) } },
-                    onDeleteFood = { scope.launch { repository.deleteBaseFood(it) } },
-                    onUndeleteFood = { name, carbs -> scope.launch { repository.insertBaseFood(name, carbs) } },
+                    onAddFood = { name, carbs ->
+                        telemetry.action("food_added")
+                        scope.launch { repository.insertBaseFood(name, carbs) }
+                    },
+                    onEditFood = { id, name, carbs ->
+                        telemetry.action("food_edited")
+                        scope.launch { repository.updateBaseFood(id, name, carbs) }
+                    },
+                    onDeleteFood = {
+                        telemetry.action("food_deleted")
+                        scope.launch { repository.deleteBaseFood(it) }
+                    },
+                    onUndeleteFood = { name, carbs ->
+                        telemetry.action("food_restored")
+                        scope.launch { repository.insertBaseFood(name, carbs) }
+                    },
                     modifier = modifier
                 )
                 Screen.Dishes -> {
                     val dishesWithCarbs = remember { repository.getAllDishesWithCarbs() }
                     DishListScreen(
                         dishesWithCarbs = dishesWithCarbs.map { com.glicocalc.database.GlicoRepository.DishWithCarbs(it.dish, it.carbsPer100g) },
-                        onAddDish = { currentScreen = Screen.DishEditor; editingDishId = null },
-                        onEditDish = { id -> currentScreen = Screen.DishEditor; editingDishId = id },
-                        onDeleteDish = { scope.launch { repository.deleteDish(it) } },
+                        onAddDish = {
+                            telemetry.action("dish_editor_opened_new")
+                            currentScreen = Screen.DishEditor
+                            editingDishId = null
+                        },
+                        onEditDish = { id ->
+                            telemetry.action("dish_editor_opened_existing")
+                            currentScreen = Screen.DishEditor
+                            editingDishId = id
+                        },
+                        onDeleteDish = {
+                            telemetry.action("dish_deleted")
+                            scope.launch { repository.deleteDish(it) }
+                        },
                         modifier = modifier
                     )
                 }
@@ -83,6 +115,7 @@ fun MainApp(repository: GlicoRepository) {
                         allBaseFoods = baseFoods.map { com.glicocalc.database.BaseFood(it.id, it.name, it.carbsPer100g) },
                         onCancel = { currentScreen = Screen.Dishes },
                         onSave = { name, components ->
+                            telemetry.action("dish_saved")
                             scope.launch {
                                 if (editingDishId == null) {
                                     repository.insertDishWithComponents(name, components)

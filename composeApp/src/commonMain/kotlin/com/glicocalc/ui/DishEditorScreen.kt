@@ -55,9 +55,9 @@ fun DishEditorScreen(
                     TextButton(
                         enabled = canSave,
                         onClick = {
-                            val validComponents = components.mapNotNull { 
+                            val validComponents = components.mapNotNull {
                                 val p = it.percentage.toDoubleOrNull()
-                                if (it.foodId != null && p != null) it.foodId!! to p else null 
+                                if (it.foodId != null && p != null) it.foodId to p else null
                             }
                             onSave(dishName, validComponents)
                         }
