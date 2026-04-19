@@ -22,12 +22,27 @@ import glicocalc.composeapp.generated.resources.dishes_title
 import glicocalc.composeapp.generated.resources.edit
 import glicocalc.composeapp.generated.resources.edit_dish_title
 import glicocalc.composeapp.generated.resources.edit_food_title
+import glicocalc.composeapp.generated.resources.edit_meal_type_title
 import glicocalc.composeapp.generated.resources.food_deleted
 import glicocalc.composeapp.generated.resources.food_name
 import glicocalc.composeapp.generated.resources.foods_on_plate
 import glicocalc.composeapp.generated.resources.ingredient
 import glicocalc.composeapp.generated.resources.language
+import glicocalc.composeapp.generated.resources.meal_hour
+import glicocalc.composeapp.generated.resources.meal_hour_hint
 import glicocalc.composeapp.generated.resources.meal_item_label
+import glicocalc.composeapp.generated.resources.meal_target_carbs
+import glicocalc.composeapp.generated.resources.meal_type
+import glicocalc.composeapp.generated.resources.meal_type_add_remove_delta
+import glicocalc.composeapp.generated.resources.meal_type_add_to_match
+import glicocalc.composeapp.generated.resources.meal_type_on_target
+import glicocalc.composeapp.generated.resources.meal_type_name
+import glicocalc.composeapp.generated.resources.meal_type_remove_to_match
+import glicocalc.composeapp.generated.resources.meal_type_selector
+import glicocalc.composeapp.generated.resources.meal_types
+import glicocalc.composeapp.generated.resources.meal_types_care_plan_note
+import glicocalc.composeapp.generated.resources.meal_types_description
+import glicocalc.composeapp.generated.resources.no_meal_types_configured
 import glicocalc.composeapp.generated.resources.nav_calculator
 import glicocalc.composeapp.generated.resources.nav_dishes
 import glicocalc.composeapp.generated.resources.nav_foods
@@ -35,6 +50,8 @@ import glicocalc.composeapp.generated.resources.new_dish_title
 import glicocalc.composeapp.generated.resources.save
 import glicocalc.composeapp.generated.resources.search_food_placeholder
 import glicocalc.composeapp.generated.resources.settings
+import glicocalc.composeapp.generated.resources.add_meal_type
+import glicocalc.composeapp.generated.resources.add_meal_type_title
 import org.jetbrains.compose.resources.stringResource
 import glicocalc.composeapp.generated.resources.total_carbs
 import glicocalc.composeapp.generated.resources.undo
@@ -59,7 +76,14 @@ object Strings {
     @Composable fun edit() = stringResource(Res.string.edit)
     @Composable fun addFoodTitle() = stringResource(Res.string.add_food_title)
     @Composable fun editFoodTitle() = stringResource(Res.string.edit_food_title)
+    @Composable fun addMealType() = stringResource(Res.string.add_meal_type)
+    @Composable fun addMealTypeTitle() = stringResource(Res.string.add_meal_type_title)
+    @Composable fun editMealTypeTitle() = stringResource(Res.string.edit_meal_type_title)
     @Composable fun foodName() = stringResource(Res.string.food_name)
+    @Composable fun mealTypeName() = stringResource(Res.string.meal_type_name)
+    @Composable fun mealTargetCarbs() = stringResource(Res.string.meal_target_carbs)
+    @Composable fun mealHour() = stringResource(Res.string.meal_hour)
+    @Composable fun mealHourHint() = stringResource(Res.string.meal_hour_hint)
     @Composable fun carbsPer100gLabel() = stringResource(Res.string.carbs_per_100g_label)
     @Composable fun save() = stringResource(Res.string.save)
     @Composable fun cancel() = stringResource(Res.string.cancel)
@@ -76,7 +100,17 @@ object Strings {
     @Composable fun language() = stringResource(Res.string.language)
     @Composable fun systemDefault() = stringResource(Res.string.system_default)
     @Composable fun settings() = stringResource(Res.string.settings)
+    @Composable fun mealTypes() = stringResource(Res.string.meal_types)
+    @Composable fun mealTypesDescription() = stringResource(Res.string.meal_types_description)
+    @Composable fun mealTypesCarePlanNote() = stringResource(Res.string.meal_types_care_plan_note)
+    @Composable fun noMealTypesConfigured() = stringResource(Res.string.no_meal_types_configured)
+    @Composable fun mealType() = stringResource(Res.string.meal_type)
+    @Composable fun mealTypeSelector() = stringResource(Res.string.meal_type_selector)
     @Composable fun mealItemLabel(index: Int) = stringResource(Res.string.meal_item_label, index)
     @Composable fun carbsPer100g(value: String) = stringResource(Res.string.carbs_per_100g, value)
     @Composable fun carbsPercent(value: String) = stringResource(Res.string.carbs_percent, value)
+    @Composable fun mealTypeAddToMatch(value: String) = stringResource(Res.string.meal_type_add_to_match, value)
+    @Composable fun mealTypeRemoveToMatch(value: String) = stringResource(Res.string.meal_type_remove_to_match, value)
+    @Composable fun mealTypeAddRemoveDelta(value: String) = stringResource(Res.string.meal_type_add_remove_delta, value)
+    @Composable fun mealTypeOnTarget() = stringResource(Res.string.meal_type_on_target)
 }

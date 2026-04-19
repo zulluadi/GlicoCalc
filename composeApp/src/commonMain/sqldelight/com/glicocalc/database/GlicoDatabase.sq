@@ -18,6 +18,13 @@ CREATE TABLE DishComponent (
     FOREIGN KEY (baseFoodId) REFERENCES BaseFood(id)
 );
 
+CREATE TABLE MealType (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    targetCarbs REAL NOT NULL,
+    hourOfDay INTEGER NOT NULL
+);
+
 -- Queries
 insertBaseFood:
 INSERT INTO BaseFood(name, carbsPer100g) VALUES (?, ?);
@@ -60,3 +67,15 @@ SELECT
 FROM DishComponent 
 JOIN BaseFood ON DishComponent.baseFoodId = BaseFood.id 
 WHERE dishId = ?;
+
+insertMealType:
+INSERT INTO MealType(name, targetCarbs, hourOfDay) VALUES (?, ?, ?);
+
+updateMealType:
+UPDATE MealType SET name = ?, targetCarbs = ?, hourOfDay = ? WHERE id = ?;
+
+deleteMealType:
+DELETE FROM MealType WHERE id = ?;
+
+selectAllMealTypes:
+SELECT * FROM MealType ORDER BY hourOfDay, name;

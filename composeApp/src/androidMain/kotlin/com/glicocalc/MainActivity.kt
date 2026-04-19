@@ -3,6 +3,9 @@ package com.glicocalc
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.glicocalc.database.DatabaseDriverFactory
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.database.GlicoDatabase
@@ -10,6 +13,8 @@ import com.glicocalc.telemetry.NoopTelemetry
 import com.glicocalc.ui.MainApp
 
 class MainActivity : ComponentActivity() {
+    private var resumeSignal by mutableStateOf(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -25,8 +30,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             MainApp(
                 repository = repository,
-                telemetry = NoopTelemetry
+                telemetry = NoopTelemetry,
+                resumeSignal = resumeSignal
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        resumeSignal += 1
     }
 }

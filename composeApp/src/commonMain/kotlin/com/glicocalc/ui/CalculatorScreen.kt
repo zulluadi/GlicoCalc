@@ -11,10 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.glicocalc.database.MealType
 import com.glicocalc.logic.CarbCalculator
 import com.glicocalc.logic.removeDiacritics
 import com.glicocalc.database.Dish
@@ -40,15 +43,6 @@ private fun MealItem.carbsPer100g(): Double? {
     val baseFoodCarbs = selectedBaseFood?.carbsPer100g
     val carbsPer100g = dishCarbs ?: baseFoodCarbs
     return carbsPer100g?.takeIf { it > 0.0 }
-}
-
-private fun formatDecimal(value: Double): String {
-    val rounded = kotlin.math.round(value * 10) / 10
-    return if (rounded % 1.0 == 0.0) {
-        rounded.toInt().toString()
-    } else {
-        rounded.toString()
-    }
 }
 
 private fun syncMealItem(
@@ -87,15 +81,25 @@ private fun syncMealItem(
 fun CalculatorScreen(
     dishes: List<Dish>,
     baseFoods: List<BaseFood>,
+    mealTypes: List<MealType>,
     onSelectDish: (Long) -> DishWithComposition?,
     onSelectBaseFood: (Long) -> BaseFood?,
+    resumeSignal: Int,
     modifier: Modifier = Modifier
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
     val mealItems = remember { mutableStateListOf<MealItem>(MealItem()) }
+    var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
 
     val totalCarbs = remember(mealItems.toList()) {
         mealItems.sumOf { it.carbsText.toDoubleOrNull() ?: 0.0 }
+    }
+    val selectedMealType = remember(selectedMealTypeId, mealTypes) {
+        mealTypes.firstOrNull { it.id == selectedMealTypeId }
+    }
+
+    LaunchedEffect(resumeSignal, mealTypes) {
+        selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
     }
 
     Column(
@@ -128,11 +132,46 @@ fun CalculatorScreen(
             }
         }
 
-        Text(
-            text = Strings.foodsOnPlate(),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
-        )
+        if (mealTypes.isNotEmpty()) {
+            MealTypeSelector(
+                mealTypes = mealTypes,
+                selectedMealTypeId = selectedMealTypeId,
+                onMealTypeSelected = { selectedMealTypeId = it }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = Strings.foodsOnPlate(),
+                style = MaterialTheme.typography.titleMedium
+            )
+            selectedMealType?.let { mealType ->
+                val remainingCarbs = totalCarbs - mealType.targetCarbs
+                val remainingText = when {
+                    kotlin.math.abs(remainingCarbs) < 0.05 -> "0g"
+                    remainingCarbs > 0 -> "+${formatDecimal(remainingCarbs)}g"
+                    else -> "-${formatDecimal(kotlin.math.abs(remainingCarbs))}g"
+                }
+                val remainingColor = when {
+                    kotlin.math.abs(remainingCarbs) < 0.05 -> MaterialTheme.colorScheme.primary
+                    remainingCarbs > 0 -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.tertiary
+                }
+                Text(
+                    text = remainingText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = remainingColor
+                )
+            }
+        }
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -175,6 +214,69 @@ fun CalculatorScreen(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MealTypeSelector(
+    mealTypes: List<MealType>,
+    selectedMealTypeId: Long?,
+    onMealTypeSelected: (Long) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedMealType = mealTypes.firstOrNull { it.id == selectedMealTypeId } ?: mealTypes.first()
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.weight(1f)
+        ) {
+            OutlinedTextField(
+                value = "${selectedMealType.name} • ${formatHour(selectedMealType.hourOfDay.toInt())}",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(Strings.mealTypeSelector()) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth()
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                mealTypes.forEach { mealType ->
+                    DropdownMenuItem(
+                        text = { Text("${mealType.name} • ${formatHour(mealType.hourOfDay.toInt())}") },
+                        onClick = {
+                            onMealTypeSelected(mealType.id)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        OutlinedTextField(
+            value = "${formatDecimal(selectedMealType.targetCarbs)}g",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(Strings.carbs()) },
+            textStyle = LocalTextStyle.current.copy(
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier.width(112.dp)
+        )
+    }
+}
+
+private fun nextMealTypeForHour(mealTypes: List<MealType>, currentHour: Int): MealType? {
+    if (mealTypes.isEmpty()) return null
+    return mealTypes.firstOrNull { it.hourOfDay.toInt() >= currentHour } ?: mealTypes.first()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

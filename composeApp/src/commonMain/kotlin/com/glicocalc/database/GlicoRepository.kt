@@ -4,7 +4,6 @@ import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import com.glicocalc.database.GlicoDatabase
 import kotlinx.coroutines.flow.Flow
-import com.glicocalc.database.Dish
 import com.glicocalc.models.DishComponent
 import com.glicocalc.models.DishWithComposition
 
@@ -43,6 +42,22 @@ class GlicoRepository(val database: GlicoDatabase) {
             val carbsPer100g = components.sumOf { (it.percentage / 100.0) * it.foodCarbs }
             DishWithCarbs(dish, carbsPer100g)
         }
+    }
+
+    fun getAllMealTypes(): Flow<List<com.glicocalc.database.MealType>> {
+        return queries.selectAllMealTypes().asFlow().mapToList()
+    }
+
+    suspend fun insertMealType(name: String, targetCarbs: Double, hourOfDay: Long) {
+        queries.insertMealType(name, targetCarbs, hourOfDay)
+    }
+
+    suspend fun updateMealType(id: Long, name: String, targetCarbs: Double, hourOfDay: Long) {
+        queries.updateMealType(name, targetCarbs, hourOfDay, id)
+    }
+
+    suspend fun deleteMealType(id: Long) {
+        queries.deleteMealType(id)
     }
 
     suspend fun insertDishWithComponents(name: String, components: List<Pair<Long, Double>>) {
@@ -91,11 +106,21 @@ class GlicoRepository(val database: GlicoDatabase) {
     }
 
     fun seedInitialData() {
-        val existing = queries.selectAllBaseFoods().executeAsList()
-        if (existing.isEmpty()) {
+        val existingFoods = queries.selectAllBaseFoods().executeAsList()
+        val existingMealTypes = queries.selectAllMealTypes().executeAsList()
+
+        if (existingFoods.isEmpty()) {
             database.transaction {
                 InitialData.foods.forEach {
                     queries.insertBaseFood(it.name, it.carbs)
+                }
+            }
+        }
+
+        if (existingMealTypes.isEmpty()) {
+            database.transaction {
+                InitialData.mealTypes.forEach {
+                    queries.insertMealType(it.name, it.targetCarbs, it.hourOfDay)
                 }
             }
         }

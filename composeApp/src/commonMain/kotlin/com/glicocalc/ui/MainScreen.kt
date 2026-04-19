@@ -21,7 +21,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainApp(
     repository: GlicoRepository,
-    telemetry: Telemetry
+    telemetry: Telemetry,
+    resumeSignal: Int = 0
 ) {
     AppEnvironment {
         val scope = rememberCoroutineScope()
@@ -31,6 +32,7 @@ fun MainApp(
 
         val baseFoods by repository.getAllBaseFoods().collectAsState(initial = emptyList())
         val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
+        val mealTypes by repository.getAllMealTypes().collectAsState(initial = emptyList())
 
         LaunchedEffect(currentScreen) {
             telemetry.screenViewed(currentScreen.name)
@@ -59,7 +61,7 @@ fun MainApp(
                             label = { Text(Strings.navFoods()) }
                         )
                         NavigationBarItem(
-                            selected = currentScreen == Screen.Settings,
+                            selected = currentScreen == Screen.Settings || currentScreen == Screen.MealTypes,
                             onClick = { currentScreen = Screen.Settings },
                             icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                             label = { Text(Strings.settings()) }
@@ -73,8 +75,10 @@ fun MainApp(
                     Screen.Calculator -> CalculatorScreen(
                         dishes = dishes.map { com.glicocalc.database.Dish(it.id, it.name) },
                         baseFoods = baseFoods.map { com.glicocalc.database.BaseFood(it.id, it.name, it.carbsPer100g) },
+                        mealTypes = mealTypes,
                         onSelectDish = { repository.getDishWithComposition(it) },
                         onSelectBaseFood = { repository.getBaseFood(it) },
+                        resumeSignal = resumeSignal,
                         modifier = modifier
                     )
                     Screen.FoodList -> FoodListScreen(
@@ -141,6 +145,24 @@ fun MainApp(
                     Screen.Settings -> SettingsScreen(
                         selectedLanguage = customAppLocale,
                         onOpenLanguagePicker = { showLanguageDialog = true },
+                        onOpenMealTypes = { currentScreen = Screen.MealTypes },
+                        modifier = modifier
+                    )
+                    Screen.MealTypes -> MealTypesScreen(
+                        mealTypes = mealTypes,
+                        onBack = { currentScreen = Screen.Settings },
+                        onAddMealType = { name, targetCarbs, hourOfDay ->
+                            telemetry.action("meal_type_added")
+                            scope.launch { repository.insertMealType(name, targetCarbs, hourOfDay.toLong()) }
+                        },
+                        onEditMealType = { id, name, targetCarbs, hourOfDay ->
+                            telemetry.action("meal_type_edited")
+                            scope.launch { repository.updateMealType(id, name, targetCarbs, hourOfDay.toLong()) }
+                        },
+                        onDeleteMealType = { id ->
+                            telemetry.action("meal_type_deleted")
+                            scope.launch { repository.deleteMealType(id) }
+                        },
                         modifier = modifier
                     )
                 }
@@ -161,7 +183,7 @@ fun MainApp(
 }
 
 enum class Screen {
-    Calculator, FoodList, Dishes, DishEditor, Settings
+    Calculator, FoodList, Dishes, DishEditor, Settings, MealTypes
 }
 
 @Composable

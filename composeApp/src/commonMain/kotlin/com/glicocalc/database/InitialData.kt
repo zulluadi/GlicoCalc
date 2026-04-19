@@ -1,8 +1,18 @@
 package com.glicocalc.database
 
 data class InitialFood(val name: String, val carbs: Double)
+data class InitialMealType(val name: String, val hourOfDay: Long, val targetCarbs: Double)
 
 object InitialData {
+    val mealTypes = listOf(
+        InitialMealType("Breakfast", 7, 50.0),
+        InitialMealType("Snack 1", 10, 25.0),
+        InitialMealType("Lunch", 13, 75.0),
+        InitialMealType("Snack 2", 16, 25.0),
+        InitialMealType("Dinner", 19, 50.0),
+        InitialMealType("Snack 3", 22, 25.0)
+    )
+
     val foods = listOf(
         InitialFood("Pâine Albă", 49.0),
         InitialFood("Pâine Integrală", 41.0),
