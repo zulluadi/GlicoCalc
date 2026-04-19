@@ -64,6 +64,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
             if (hasGoogleServices) {
                 apply(from = "firebase-config.gradle")
             }
