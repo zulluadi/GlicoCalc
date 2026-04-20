@@ -108,7 +108,7 @@ object Strings {
     @Composable fun mealTypeSelector() = stringResource(Res.string.meal_type_selector)
     @Composable fun mealItemLabel(index: Int) = stringResource(Res.string.meal_item_label, index)
     @Composable fun carbsPer100g(value: String) = stringResource(Res.string.carbs_per_100g, value)
-    @Composable fun carbsPercent(value: String) = stringResource(Res.string.carbs_percent, value)
+    @Composable fun carbsPercent(value: String) = stringResource(Res.string.carbs_percent, value).replace("%%", "%")
     @Composable fun mealTypeAddToMatch(value: String) = stringResource(Res.string.meal_type_add_to_match, value)
     @Composable fun mealTypeRemoveToMatch(value: String) = stringResource(Res.string.meal_type_remove_to_match, value)
     @Composable fun mealTypeAddRemoveDelta(value: String) = stringResource(Res.string.meal_type_add_remove_delta, value)

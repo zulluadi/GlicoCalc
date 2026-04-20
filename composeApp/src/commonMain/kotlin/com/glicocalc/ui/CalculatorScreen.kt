@@ -11,10 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.glicocalc.database.MealType
@@ -32,6 +32,18 @@ data class MealItem(
 ) {
     val displayName: String get() = selectedDish?.dish?.name ?: selectedBaseFood?.name ?: ""
 }
+
+private data class SearchableDish(
+    val dish: Dish,
+    val normalizedName: String
+)
+
+private data class SearchableFood(
+    val food: BaseFood,
+    val localizedName: String,
+    val normalizedRawName: String,
+    val normalizedLocalizedName: String
+)
 
 private enum class EditedField {
     Weight,
@@ -91,6 +103,25 @@ fun CalculatorScreen(
     val resolveMealTypeName = rememberMealTypeNameResolver()
     val mealItems = remember { mutableStateListOf<MealItem>(MealItem()) }
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
+    val searchableDishes = remember(dishes) {
+        dishes.map { dish ->
+            SearchableDish(
+                dish = dish,
+                normalizedName = dish.name.removeDiacritics()
+            )
+        }
+    }
+    val searchableFoods = remember(baseFoods, resolveFoodName) {
+        baseFoods.map { food ->
+            val localizedName = resolveFoodName(food.name)
+            SearchableFood(
+                food = food,
+                localizedName = localizedName,
+                normalizedRawName = food.name.removeDiacritics(),
+                normalizedLocalizedName = localizedName.removeDiacritics()
+            )
+        }
+    }
 
     val totalCarbs = remember(mealItems.toList()) {
         mealItems.sumOf { it.carbsText.toDoubleOrNull() ?: 0.0 }
@@ -171,43 +202,35 @@ fun CalculatorScreen(
 
         LazyColumn(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             itemsIndexed(mealItems) { index: Int, item: MealItem ->
                 MealItemRow(
                     index = index,
                     item = item,
-                    dishes = dishes,
-                    baseFoods = baseFoods,
-                    resolveFoodName = resolveFoodName,
+                    searchableDishes = searchableDishes,
+                    searchableFoods = searchableFoods,
                     onSelectDish = onSelectDish,
                     onSelectBaseFood = onSelectBaseFood,
                     onUpdate = { updated -> mealItems[index] = updated },
+                    canDelete = mealItems.size > 1,
                     onDelete = { if (mealItems.size > 1) mealItems.removeAt(index) }
                 )
-                if (index < mealItems.size - 1) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(top = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                }
             }
+        }
 
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { mealItems.add(MealItem()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.addAnotherFoodToMeal())
-                }
-            }
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = { mealItems.add(MealItem()) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(Strings.addAnotherFoodToMeal())
         }
 
         if (mealTypes.isNotEmpty()) {
@@ -288,23 +311,33 @@ private fun nextMealTypeForHour(mealTypes: List<MealType>, currentHour: Int): Me
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MealItemRow(
+private fun MealItemRow(
     index: Int,
     item: MealItem,
-    dishes: List<Dish>,
-    baseFoods: List<BaseFood>,
-    resolveFoodName: (String) -> String,
+    searchableDishes: List<SearchableDish>,
+    searchableFoods: List<SearchableFood>,
     onSelectDish: (Long) -> DishWithComposition?,
     onSelectBaseFood: (Long) -> BaseFood?,
     onUpdate: (MealItem) -> Unit,
+    canDelete: Boolean,
     onDelete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf(item.displayName) }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart && canDelete) {
+                onDelete()
+                true
+            } else {
+                false
+            }
+        }
+    )
 
     LaunchedEffect(item.selectedDish, item.selectedBaseFood) {
         val newDisplayName = item.selectedDish?.dish?.name
-            ?: item.selectedBaseFood?.name?.let(resolveFoodName)
+            ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
             ?: ""
         if (newDisplayName != searchQuery) {
             searchQuery = newDisplayName
@@ -312,154 +345,219 @@ fun MealItemRow(
     }
 
     val normalizedQuery = searchQuery.removeDiacritics()
-    val filteredDishes by remember(searchQuery, dishes, baseFoods) {
+    val filteredResults by remember(searchQuery, searchableDishes, searchableFoods) {
         derivedStateOf {
-            val matchingDishes = if (searchQuery.isEmpty()) dishes else {
-                dishes.filter { it.name.removeDiacritics().contains(normalizedQuery, ignoreCase = true) }
+            val matchingDishes = if (searchQuery.isBlank()) {
+                searchableDishes.take(16).map { it.dish }
+            } else {
+                searchableDishes
+                    .asSequence()
+                    .filter { it.normalizedName.contains(normalizedQuery, ignoreCase = true) }
+                    .map { it.dish }
+                    .take(20)
+                    .toList()
             }
-            val matchingFoods = if (searchQuery.isEmpty()) baseFoods else {
-                baseFoods.filter { food ->
-                    matchesBaseFoodQuery(
-                        rawName = food.name,
-                        localizedName = resolveFoodName(food.name),
-                        query = searchQuery
-                    )
-                }
+            val matchingFoods = if (searchQuery.isBlank()) {
+                searchableFoods.take(24)
+            } else {
+                searchableFoods
+                    .asSequence()
+                    .filter {
+                        it.normalizedRawName.contains(normalizedQuery, ignoreCase = true) ||
+                            it.normalizedLocalizedName.contains(normalizedQuery, ignoreCase = true)
+                    }
+                    .take(24)
+                    .toList()
             }
             matchingDishes to matchingFoods
         }
     }
-    val (filteredDishList, filteredFoodList) = filteredDishes
+    val (filteredDishList, filteredFoodList) = filteredResults
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Box(modifier = Modifier.weight(1.5f)) {
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.large)
+                    .padding(vertical = 2.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = if (canDelete) {
+                        MaterialTheme.colorScheme.errorContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    shape = MaterialTheme.shapes.large
                 ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { 
-                            searchQuery = it
-                            expanded = true
-                        },
-                        label = {
-                            Text(
-                                text = Strings.mealItemLabel(index + 1),
-                                style = MaterialTheme.typography.bodySmall
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (canDelete) Strings.delete() else "",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (canDelete) {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                        if (canDelete) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = Strings.delete(),
+                                tint = MaterialTheme.colorScheme.onErrorContainer
                             )
-                        },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-
-                    if (filteredDishList.isNotEmpty() || filteredFoodList.isNotEmpty()) {
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            properties = androidx.compose.ui.window.PopupProperties(focusable = false),
-                            modifier = Modifier.exposedDropdownSize().heightIn(max = 280.dp)
-                        ) {
-                            filteredDishList.forEach { dish ->
-                                DropdownMenuItem(
-                                    text = { Text(dish.name) },
-                                    onClick = {
-                                        searchQuery = dish.name
-                                        onUpdate(
-                                            syncMealItem(
-                                                item = item,
-                                                selectedDish = onSelectDish(dish.id),
-                                                selectedBaseFood = null
-                                            )
-                                        )
-                                        expanded = false
-                                    }
-                                )
-                            }
-                            filteredFoodList.forEach { food ->
-                                DropdownMenuItem(
-                                    text = { Text(resolveFoodName(food.name)) },
-                                    onClick = {
-                                        searchQuery = resolveFoodName(food.name)
-                                        onUpdate(
-                                            syncMealItem(
-                                                item = item,
-                                                selectedDish = null,
-                                                selectedBaseFood = onSelectBaseFood(food.id)
-                                            )
-                                        )
-                                        expanded = false
-                                    }
-                                )
-                            }
                         }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            OutlinedTextField(
-                value = item.weightText,
-                onValueChange = {
-                    if (it.all { char -> char.isDigit() || char == '.' }) {
-                        onUpdate(syncMealItem(item.copy(weightText = it), EditedField.Weight))
-                    }
-                },
-                label = {
-                    Text(
-                        text = Strings.weight(),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(0.8f),
-                suffix = { Text("g") }
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            OutlinedTextField(
-                value = item.carbsText,
-                onValueChange = {
-                    if (it.all { char -> char.isDigit() || char == '.' }) {
-                        onUpdate(syncMealItem(item.copy(carbsText = it), EditedField.Carbs))
-                    }
-                },
-                label = {
-                    Text(
-                        text = Strings.carbs(),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(0.8f),
-                suffix = { Text("g") }
-            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        val carbsInfo = item.selectedDish?.let { composition ->
+            Strings.carbsPercent(formatDecimal(CarbCalculator.calculateCarbsPercentage(composition.components)))
+        } ?: item.selectedBaseFood?.let { food ->
+            Strings.carbsPercent(formatDecimal(food.carbsPer100g))
         }
-        
-        item.selectedDish?.let { composition ->
-            Text(
-                text = Strings.carbsPercent(((CarbCalculator.calculateCarbsPercentage(composition.components) * 10).toInt() / 10.0).toString()),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-            )
-        }
-        item.selectedBaseFood?.let { food ->
-            Text(
-                text = Strings.carbsPercent(food.carbsPer100g.toString()),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-            )
+
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = {
+                                searchQuery = it
+                                expanded = true
+                            },
+                            label = { Text(Strings.mealItemLabel(index + 1)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            singleLine = true,
+                            maxLines = 1
+                        )
+
+                        if (filteredDishList.isNotEmpty() || filteredFoodList.isNotEmpty()) {
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                properties = androidx.compose.ui.window.PopupProperties(focusable = false),
+                                modifier = Modifier.exposedDropdownSize().heightIn(max = 280.dp)
+                            ) {
+                                filteredDishList.forEach { dish ->
+                                    DropdownMenuItem(
+                                        text = { Text(dish.name) },
+                                        onClick = {
+                                            searchQuery = dish.name
+                                            onUpdate(
+                                                syncMealItem(
+                                                    item = item,
+                                                    selectedDish = onSelectDish(dish.id),
+                                                    selectedBaseFood = null
+                                                )
+                                            )
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                                filteredFoodList.forEach { searchableFood ->
+                                    DropdownMenuItem(
+                                        text = { Text(searchableFood.localizedName) },
+                                        onClick = {
+                                            searchQuery = searchableFood.localizedName
+                                            onUpdate(
+                                                syncMealItem(
+                                                    item = item,
+                                                    selectedDish = null,
+                                                    selectedBaseFood = onSelectBaseFood(searchableFood.food.id)
+                                                )
+                                            )
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                carbsInfo?.let { info ->
+                    Text(
+                        text = info,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = item.weightText,
+                        onValueChange = {
+                            if (it.all { char -> char.isDigit() || char == '.' }) {
+                                onUpdate(syncMealItem(item.copy(weightText = it), EditedField.Weight))
+                            }
+                        },
+                        label = { Text(Strings.weight()) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        suffix = { Text("g") },
+                        singleLine = true
+                    )
+
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = item.carbsText,
+                            onValueChange = {
+                                if (it.all { char -> char.isDigit() || char == '.' }) {
+                                    onUpdate(syncMealItem(item.copy(carbsText = it), EditedField.Carbs))
+                                }
+                            },
+                            label = { Text(Strings.carbs()) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f),
+                            suffix = { Text("g") },
+                            singleLine = true
+                        )
+                    }
+                }
+            }
         }
     }
 }
