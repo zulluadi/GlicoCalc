@@ -9,6 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 var customAppLocale by mutableStateOf<String?>(null)
+var customFoodLocale by mutableStateOf<String?>(null)
+var hasLoadedPersistedAppLocale by mutableStateOf(false)
+var hasLoadedPersistedFoodLocale by mutableStateOf(false)
 
 expect object LocalAppLocale {
     val current: String
@@ -66,4 +69,10 @@ val appLanguageOptions = listOf(
     AppLanguageOption("ar", "العربية"),
     AppLanguageOption("he", "עברית"),
     AppLanguageOption("zh", "中文")
+)
+
+val foodLanguageOptions = listOf(
+    AppLanguageOption(null, "Same as app language"),
+    AppLanguageOption("en", "English"),
+    AppLanguageOption("ro", "Română")
 )

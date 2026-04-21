@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 @Composable
 fun SettingsScreen(
     selectedLanguage: String?,
+    selectedFoodLanguage: String?,
     onOpenLanguagePicker: () -> Unit,
+    onOpenFoodLanguagePicker: () -> Unit,
     onOpenMealTypes: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -40,9 +42,19 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text(Strings.language()) },
                     supportingContent = {
-                        Text(currentLanguageLabel(selectedLanguage))
+                        Text(currentLanguageLabel(selectedLanguage, appLanguageOptions, Strings.systemDefault()))
                     },
                     modifier = Modifier.clickable(onClick = onOpenLanguagePicker)
+                )
+                HorizontalDivider()
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text(Strings.foodLanguage()) },
+                    supportingContent = {
+                        Text(currentLanguageLabel(selectedFoodLanguage, foodLanguageOptions, Strings.sameAsAppLanguage()))
+                    },
+                    modifier = Modifier.clickable(onClick = onOpenFoodLanguagePicker)
                 )
                 HorizontalDivider()
             }
@@ -65,10 +77,14 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun currentLanguageLabel(selectedLanguage: String?): String {
-    val option = appLanguageOptions.firstOrNull { it.code == selectedLanguage }
+private fun currentLanguageLabel(
+    selectedLanguage: String?,
+    options: List<AppLanguageOption>,
+    fallbackLabel: String
+): String {
+    val option = options.firstOrNull { it.code == selectedLanguage }
     return if (option?.code == null) {
-        Strings.systemDefault()
+        fallbackLabel
     } else {
         option.label
     }

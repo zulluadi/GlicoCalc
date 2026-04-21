@@ -90,3 +90,9 @@ SELECT content FROM Setting WHERE key = 'language';
 
 setLanguage:
 INSERT OR REPLACE INTO Setting(key, content) VALUES ('language', ?);
+
+getFoodLanguage:
+SELECT content FROM Setting WHERE key = 'food_language';
+
+setFoodLanguage:
+INSERT OR REPLACE INTO Setting(key, content) VALUES ('food_language', ?);

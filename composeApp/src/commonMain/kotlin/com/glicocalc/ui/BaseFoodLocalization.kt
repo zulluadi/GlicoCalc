@@ -6,15 +6,22 @@ import com.glicocalc.logic.removeDiacritics
 
 @Composable
 fun rememberBaseFoodNameResolver(): (String) -> String {
-    val currentLocale = LocalAppLocale.current
-    val languageCode = remember(currentLocale) { currentLocale.lowercase() }
+    val appLocale = LocalAppLocale.current
+    val selectedFoodLocale = customFoodLocale
+    val languageCode = remember(appLocale, selectedFoodLocale) {
+        effectiveFoodLanguageCode(selectedFoodLocale ?: appLocale)
+    }
     return remember(languageCode) {
-        if (languageCode.startsWith("ro")) {
+        if (languageCode == "ro") {
             { name -> name }
         } else {
             { name -> englishBaseFoodNames[name] ?: name }
         }
     }
+}
+
+private fun effectiveFoodLanguageCode(locale: String): String {
+    return if (locale.lowercase().startsWith("ro")) "ro" else "en"
 }
 
 fun matchesBaseFoodQuery(

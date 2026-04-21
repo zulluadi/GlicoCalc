@@ -133,4 +133,12 @@ class GlicoRepository(val database: GlicoDatabase) {
     fun saveLanguage(languageCode: String?) {
         queries.setLanguage(languageCode)
     }
+
+    fun getFoodLanguage(): String? {
+        return queries.getFoodLanguage().executeAsOneOrNull()?.content
+    }
+
+    fun saveFoodLanguage(languageCode: String?) {
+        queries.setFoodLanguage(languageCode)
+    }
 }

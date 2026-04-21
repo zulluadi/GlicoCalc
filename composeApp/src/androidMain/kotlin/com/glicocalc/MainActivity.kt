@@ -12,6 +12,9 @@ import com.glicocalc.database.GlicoDatabase
 import com.glicocalc.telemetry.NoopTelemetry
 import com.glicocalc.ui.MainApp
 import com.glicocalc.ui.customAppLocale
+import com.glicocalc.ui.customFoodLocale
+import com.glicocalc.ui.hasLoadedPersistedAppLocale
+import com.glicocalc.ui.hasLoadedPersistedFoodLocale
 
 class MainActivity : ComponentActivity() {
     private var resumeSignal by mutableStateOf(0)
@@ -30,6 +33,9 @@ class MainActivity : ComponentActivity() {
 
         // Load persisted language
         customAppLocale = repository.getLanguage()
+        customFoodLocale = repository.getFoodLanguage()
+        hasLoadedPersistedAppLocale = true
+        hasLoadedPersistedFoodLocale = true
         
         setContent {
             MainApp(

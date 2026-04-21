@@ -17,6 +17,7 @@
     <string name="add_food_title">Add Food</string>
     <string name="edit_food_title">Edit Food</string>
     <string name="food_name">Food Name</string>
+    <string name="food_language">Food language</string>
     <string name="carbs_per_100g_label">Carbs per 100g</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
@@ -31,6 +32,7 @@
     <string name="delete_row">Delete row</string>
     <string name="add_ingredient">Add Ingredient</string>
     <string name="language">Language</string>
+    <string name="same_as_app_language">Same as app language</string>
     <string name="system_default">System default</string>
     <string name="settings">Settings</string>
     <string name="meal_types">Meal types</string>

@@ -24,11 +24,23 @@ fun MainApp(
     telemetry: Telemetry,
     resumeSignal: Int = 0
 ) {
+    LaunchedEffect(repository) {
+        if (!hasLoadedPersistedAppLocale) {
+            customAppLocale = repository.getLanguage()
+            hasLoadedPersistedAppLocale = true
+        }
+        if (!hasLoadedPersistedFoodLocale) {
+            customFoodLocale = repository.getFoodLanguage()
+            hasLoadedPersistedFoodLocale = true
+        }
+    }
+
     AppEnvironment {
         val scope = rememberCoroutineScope()
         var currentScreen by remember { mutableStateOf(Screen.Calculator) }
         var editingDishId by remember { mutableStateOf<Long?>(null) }
         var showLanguageDialog by remember { mutableStateOf(false) }
+        var showFoodLanguageDialog by remember { mutableStateOf(false) }
 
         val baseFoods by repository.getAllBaseFoods().collectAsState(initial = emptyList())
         val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
@@ -144,7 +156,9 @@ fun MainApp(
                     }
                     Screen.Settings -> SettingsScreen(
                         selectedLanguage = customAppLocale,
+                        selectedFoodLanguage = customFoodLocale,
                         onOpenLanguagePicker = { showLanguageDialog = true },
+                        onOpenFoodLanguagePicker = { showFoodLanguageDialog = true },
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },
                         modifier = modifier
                     )
@@ -170,12 +184,30 @@ fun MainApp(
 
             if (showLanguageDialog) {
                 LanguageDialog(
+                    title = Strings.language(),
                     selectedLanguage = customAppLocale,
+                    options = appLanguageOptions,
+                    defaultLabel = Strings.systemDefault(),
                     onDismiss = { showLanguageDialog = false },
                     onSelectLanguage = {
                         customAppLocale = it
                         repository.saveLanguage(it)
                         showLanguageDialog = false
+                    }
+                )
+            }
+
+            if (showFoodLanguageDialog) {
+                LanguageDialog(
+                    title = Strings.foodLanguage(),
+                    selectedLanguage = customFoodLocale,
+                    options = foodLanguageOptions,
+                    defaultLabel = Strings.sameAsAppLanguage(),
+                    onDismiss = { showFoodLanguageDialog = false },
+                    onSelectLanguage = {
+                        customFoodLocale = it
+                        repository.saveFoodLanguage(it)
+                        showFoodLanguageDialog = false
                     }
                 )
             }
@@ -189,17 +221,20 @@ enum class Screen {
 
 @Composable
 private fun LanguageDialog(
+    title: String,
     selectedLanguage: String?,
+    options: List<AppLanguageOption>,
+    defaultLabel: String,
     onDismiss: () -> Unit,
     onSelectLanguage: (String?) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.language()) },
+        title = { Text(title) },
         text = {
             LazyColumn {
-                items(appLanguageOptions) { option ->
-                    val label = if (option.code == null) Strings.systemDefault() else option.label
+                items(options) { option ->
+                    val label = if (option.code == null) defaultLabel else option.label
                     TextButton(onClick = { onSelectLanguage(option.code) }) {
                         Text(if (selectedLanguage == option.code) "• $label" else label)
                     }

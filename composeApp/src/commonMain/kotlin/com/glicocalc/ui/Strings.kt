@@ -24,6 +24,7 @@ import glicocalc.composeapp.generated.resources.edit_dish_title
 import glicocalc.composeapp.generated.resources.edit_food_title
 import glicocalc.composeapp.generated.resources.edit_meal_type_title
 import glicocalc.composeapp.generated.resources.food_deleted
+import glicocalc.composeapp.generated.resources.food_language
 import glicocalc.composeapp.generated.resources.food_name
 import glicocalc.composeapp.generated.resources.foods_on_plate
 import glicocalc.composeapp.generated.resources.ingredient
@@ -50,6 +51,7 @@ import glicocalc.composeapp.generated.resources.new_dish_title
 import glicocalc.composeapp.generated.resources.save
 import glicocalc.composeapp.generated.resources.search_food_placeholder
 import glicocalc.composeapp.generated.resources.settings
+import glicocalc.composeapp.generated.resources.same_as_app_language
 import glicocalc.composeapp.generated.resources.add_meal_type
 import glicocalc.composeapp.generated.resources.add_meal_type_title
 import org.jetbrains.compose.resources.stringResource
@@ -80,6 +82,7 @@ object Strings {
     @Composable fun addMealTypeTitle() = stringResource(Res.string.add_meal_type_title)
     @Composable fun editMealTypeTitle() = stringResource(Res.string.edit_meal_type_title)
     @Composable fun foodName() = stringResource(Res.string.food_name)
+    @Composable fun foodLanguage() = stringResource(Res.string.food_language)
     @Composable fun mealTypeName() = stringResource(Res.string.meal_type_name)
     @Composable fun mealTargetCarbs() = stringResource(Res.string.meal_target_carbs)
     @Composable fun mealHour() = stringResource(Res.string.meal_hour)
@@ -98,6 +101,7 @@ object Strings {
     @Composable fun deleteRow() = stringResource(Res.string.delete_row)
     @Composable fun addIngredient() = stringResource(Res.string.add_ingredient)
     @Composable fun language() = stringResource(Res.string.language)
+    @Composable fun sameAsAppLanguage() = stringResource(Res.string.same_as_app_language)
     @Composable fun systemDefault() = stringResource(Res.string.system_default)
     @Composable fun settings() = stringResource(Res.string.settings)
     @Composable fun mealTypes() = stringResource(Res.string.meal_types)
