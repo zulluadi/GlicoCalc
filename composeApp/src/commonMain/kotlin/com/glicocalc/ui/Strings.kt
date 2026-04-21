@@ -50,10 +50,26 @@ import glicocalc.composeapp.generated.resources.nav_foods
 import glicocalc.composeapp.generated.resources.new_dish_title
 import glicocalc.composeapp.generated.resources.save
 import glicocalc.composeapp.generated.resources.search_food_placeholder
+import glicocalc.composeapp.generated.resources.sign_in_with_google
+import glicocalc.composeapp.generated.resources.sign_out
 import glicocalc.composeapp.generated.resources.settings
 import glicocalc.composeapp.generated.resources.same_as_app_language
 import glicocalc.composeapp.generated.resources.add_meal_type
 import glicocalc.composeapp.generated.resources.add_meal_type_title
+import glicocalc.composeapp.generated.resources.sync_account
+import glicocalc.composeapp.generated.resources.sync_account_description
+import glicocalc.composeapp.generated.resources.sync_account_missing_google_config
+import glicocalc.composeapp.generated.resources.sync_account_unavailable
+import glicocalc.composeapp.generated.resources.sync_last_synced
+import glicocalc.composeapp.generated.resources.sync_now
+import glicocalc.composeapp.generated.resources.sync_signed_in_as
+import glicocalc.composeapp.generated.resources.sync_signed_in_google
+import glicocalc.composeapp.generated.resources.sync_status
+import glicocalc.composeapp.generated.resources.sync_status_failed
+import glicocalc.composeapp.generated.resources.sync_status_not_signed_in
+import glicocalc.composeapp.generated.resources.sync_status_pending
+import glicocalc.composeapp.generated.resources.sync_status_syncing
+import glicocalc.composeapp.generated.resources.sync_status_up_to_date
 import org.jetbrains.compose.resources.stringResource
 import glicocalc.composeapp.generated.resources.total_carbs
 import glicocalc.composeapp.generated.resources.undo
@@ -104,6 +120,22 @@ object Strings {
     @Composable fun sameAsAppLanguage() = stringResource(Res.string.same_as_app_language)
     @Composable fun systemDefault() = stringResource(Res.string.system_default)
     @Composable fun settings() = stringResource(Res.string.settings)
+    @Composable fun syncAccount() = stringResource(Res.string.sync_account)
+    @Composable fun syncAccountDescription() = stringResource(Res.string.sync_account_description)
+    @Composable fun syncAccountUnavailable() = stringResource(Res.string.sync_account_unavailable)
+    @Composable fun syncAccountMissingGoogleConfig() = stringResource(Res.string.sync_account_missing_google_config)
+    @Composable fun syncSignedInAs(value: String) = stringResource(Res.string.sync_signed_in_as, value)
+    @Composable fun syncStatus() = stringResource(Res.string.sync_status)
+    @Composable fun syncStatusNotSignedIn() = stringResource(Res.string.sync_status_not_signed_in)
+    @Composable fun syncStatusSyncing() = stringResource(Res.string.sync_status_syncing)
+    @Composable fun syncStatusUpToDate() = stringResource(Res.string.sync_status_up_to_date)
+    @Composable fun syncStatusPending(value: Int) = stringResource(Res.string.sync_status_pending, value)
+    @Composable fun syncStatusFailed() = stringResource(Res.string.sync_status_failed)
+    @Composable fun syncLastSynced(value: String) = stringResource(Res.string.sync_last_synced, value)
+    @Composable fun syncNow() = stringResource(Res.string.sync_now)
+    @Composable fun syncSignedInGoogle() = stringResource(Res.string.sync_signed_in_google)
+    @Composable fun signInWithGoogle() = stringResource(Res.string.sign_in_with_google)
+    @Composable fun signOut() = stringResource(Res.string.sign_out)
     @Composable fun mealTypes() = stringResource(Res.string.meal_types)
     @Composable fun mealTypesDescription() = stringResource(Res.string.meal_types_description)
     @Composable fun mealTypesCarePlanNote() = stringResource(Res.string.meal_types_care_plan_note)

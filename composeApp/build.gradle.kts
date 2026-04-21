@@ -45,7 +45,14 @@ kotlin {
             dependencies {
                 implementation("androidx.activity:activity-compose:1.8.2")
                 implementation("androidx.appcompat:appcompat:1.6.1")
+                implementation("androidx.credentials:credentials:1.3.0")
+                implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+                implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
                 implementation("com.squareup.sqldelight:android-driver:1.5.5")
+                implementation("com.google.firebase:firebase-auth:22.2.0")
+                implementation("com.google.firebase:firebase-firestore:24.7.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
             }
         }
     }

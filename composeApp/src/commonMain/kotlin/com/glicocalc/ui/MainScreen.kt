@@ -22,6 +22,13 @@ import kotlinx.coroutines.launch
 fun MainApp(
     repository: GlicoRepository,
     telemetry: Telemetry,
+    syncAccountLabel: String? = null,
+    syncAccountStatusMessage: String? = null,
+    syncStatusMessage: String? = null,
+    lastSyncedMessage: String? = null,
+    onSignInToSync: (() -> Unit)? = null,
+    onSignOutFromSync: (() -> Unit)? = null,
+    onManualSync: (() -> Unit)? = null,
     resumeSignal: Int = 0
 ) {
     LaunchedEffect(repository) {
@@ -85,8 +92,8 @@ fun MainApp(
 
                 when (currentScreen) {
                     Screen.Calculator -> CalculatorScreen(
-                        dishes = dishes.map { com.glicocalc.database.Dish(it.id, it.name) },
-                        baseFoods = baseFoods.map { com.glicocalc.database.BaseFood(it.id, it.name, it.carbsPer100g) },
+                        dishes = dishes,
+                        baseFoods = baseFoods,
                         mealTypes = mealTypes,
                         onSelectDish = { repository.getDishWithComposition(it) },
                         onSelectBaseFood = { repository.getBaseFood(it) },
@@ -107,9 +114,9 @@ fun MainApp(
                             telemetry.action("food_deleted")
                             scope.launch { repository.deleteBaseFood(it) }
                         },
-                        onUndeleteFood = { name, carbs ->
+                        onUndeleteFood = { id ->
                             telemetry.action("food_restored")
-                            scope.launch { repository.insertBaseFood(name, carbs) }
+                            scope.launch { repository.restoreBaseFood(id) }
                         },
                         modifier = modifier
                     )
@@ -139,7 +146,7 @@ fun MainApp(
                         DishEditorScreen(
                             initialName = initialDish?.dish?.name ?: "",
                             initialComponents = initialDish?.components?.map { it.baseFoodId to it.percentage } ?: emptyList(),
-                            allBaseFoods = baseFoods.map { com.glicocalc.database.BaseFood(it.id, it.name, it.carbsPer100g) },
+                            allBaseFoods = baseFoods,
                             onCancel = { currentScreen = Screen.Dishes },
                             onSave = { name, components ->
                                 telemetry.action("dish_saved")
@@ -157,8 +164,15 @@ fun MainApp(
                     Screen.Settings -> SettingsScreen(
                         selectedLanguage = customAppLocale,
                         selectedFoodLanguage = customFoodLocale,
+                        syncAccountLabel = syncAccountLabel,
+                        syncAccountStatusMessage = syncAccountStatusMessage,
+                        syncStatusMessage = syncStatusMessage,
+                        lastSyncedMessage = lastSyncedMessage,
                         onOpenLanguagePicker = { showLanguageDialog = true },
                         onOpenFoodLanguagePicker = { showFoodLanguageDialog = true },
+                        onSignInToSync = onSignInToSync,
+                        onSignOutFromSync = onSignOutFromSync,
+                        onManualSync = onManualSync,
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },
                         modifier = modifier
                     )

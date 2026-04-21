@@ -26,7 +26,7 @@ fun FoodListScreen(
     onAddFood: (String, Double) -> Unit,
     onEditFood: (Long, String, Double) -> Unit,
     onDeleteFood: (Long) -> Unit,
-    onUndeleteFood: (String, Double) -> Unit,
+    onUndeleteFood: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
@@ -94,7 +94,7 @@ fun FoodListScreen(
                                         )
                                         if (result == SnackbarResult.ActionPerformed) {
                                             deletedFood.value?.let { f ->
-                                                onUndeleteFood(f.name, f.carbsPer100g)
+                                                onUndeleteFood(f.id)
                                             }
                                         }
                                         deletedFood.value = null

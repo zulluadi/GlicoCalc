@@ -1,12 +1,21 @@
 CREATE TABLE BaseFood (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    carbsPer100g REAL NOT NULL
+    carbsPer100g REAL NOT NULL,
+    remoteKey TEXT UNIQUE,
+    source TEXT NOT NULL DEFAULT 'default',
+    isDeleted INTEGER NOT NULL DEFAULT 0,
+    needsSync INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE Dish (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    remoteKey TEXT UNIQUE,
+    isDeleted INTEGER NOT NULL DEFAULT 0,
+    needsSync INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE DishComponent (
@@ -27,33 +36,85 @@ CREATE TABLE MealType (
 
 CREATE TABLE Setting (
     key TEXT PRIMARY KEY,
-    content TEXT
+    content TEXT,
+    needsSync INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0
 );
 
 -- Queries
 insertBaseFood:
-INSERT INTO BaseFood(name, carbsPer100g) VALUES (?, ?);
+INSERT INTO BaseFood(name, carbsPer100g, remoteKey, source, isDeleted, needsSync, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 updateBaseFood:
-UPDATE BaseFood SET name = ?, carbsPer100g = ? WHERE id = ?;
+UPDATE BaseFood SET name = ?, carbsPer100g = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
 
 deleteBaseFood:
-DELETE FROM BaseFood WHERE id = ?;
+UPDATE BaseFood SET isDeleted = 1, needsSync = ?, updatedAt = ? WHERE id = ?;
+
+restoreBaseFood:
+UPDATE BaseFood SET isDeleted = 0, needsSync = ?, updatedAt = ? WHERE id = ?;
 
 selectAllBaseFoods:
-SELECT * FROM BaseFood ORDER BY name;
+SELECT * FROM BaseFood WHERE isDeleted = 0 ORDER BY name;
+
+selectAllBaseFoodsIncludingDeleted:
+SELECT * FROM BaseFood ORDER BY id;
+
+selectBaseFoodById:
+SELECT * FROM BaseFood WHERE id = ?;
+
+selectBaseFoodByRemoteKey:
+SELECT * FROM BaseFood WHERE remoteKey = ?;
+
+selectBaseFoodsNeedingSync:
+SELECT * FROM BaseFood WHERE needsSync = 1 ORDER BY updatedAt, id;
+
+markBaseFoodSynced:
+UPDATE BaseFood SET needsSync = 0 WHERE id = ?;
+
+updateBaseFoodSyncMetadata:
+UPDATE BaseFood
+SET remoteKey = ?, source = ?, needsSync = ?, updatedAt = ?
+WHERE id = ?;
+
+applyRemoteBaseFood:
+UPDATE BaseFood
+SET name = ?, carbsPer100g = ?, isDeleted = ?, needsSync = 0, updatedAt = ?
+WHERE id = ?;
 
 insertDish:
-INSERT INTO Dish(name) VALUES (?);
+INSERT INTO Dish(name, remoteKey, isDeleted, needsSync, updatedAt) VALUES (?, ?, ?, ?, ?);
 
 updateDish:
-UPDATE Dish SET name = ? WHERE id = ?;
+UPDATE Dish SET name = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
 
 deleteDish:
-DELETE FROM Dish WHERE id = ?;
+UPDATE Dish SET isDeleted = 1, needsSync = ?, updatedAt = ? WHERE id = ?;
 
 selectAllDishes:
-SELECT * FROM Dish ORDER BY name;
+SELECT * FROM Dish WHERE isDeleted = 0 ORDER BY name;
+
+selectAllDishesIncludingDeleted:
+SELECT * FROM Dish ORDER BY id;
+
+selectDishById:
+SELECT * FROM Dish WHERE id = ?;
+
+selectDishByRemoteKey:
+SELECT * FROM Dish WHERE remoteKey = ?;
+
+selectDishesNeedingSync:
+SELECT * FROM Dish WHERE needsSync = 1 ORDER BY updatedAt, id;
+
+markDishSynced:
+UPDATE Dish SET needsSync = 0 WHERE id = ?;
+
+updateDishSyncMetadata:
+UPDATE Dish SET remoteKey = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
+
+applyRemoteDish:
+UPDATE Dish SET name = ?, isDeleted = ?, needsSync = 0, updatedAt = ? WHERE id = ?;
 
 insertDishComponent:
 INSERT INTO DishComponent(dishId, baseFoodId, percentage) VALUES (?, ?, ?);
@@ -89,10 +150,22 @@ getLanguage:
 SELECT content FROM Setting WHERE key = 'language';
 
 setLanguage:
-INSERT OR REPLACE INTO Setting(key, content) VALUES ('language', ?);
+INSERT OR REPLACE INTO Setting(key, content, needsSync, updatedAt) VALUES ('language', ?, ?, ?);
 
 getFoodLanguage:
 SELECT content FROM Setting WHERE key = 'food_language';
 
 setFoodLanguage:
-INSERT OR REPLACE INTO Setting(key, content) VALUES ('food_language', ?);
+INSERT OR REPLACE INTO Setting(key, content, needsSync, updatedAt) VALUES ('food_language', ?, ?, ?);
+
+selectSettingsNeedingSync:
+SELECT * FROM Setting WHERE key IN ('language', 'food_language') AND needsSync = 1 ORDER BY updatedAt, key;
+
+selectSettingByKey:
+SELECT * FROM Setting WHERE key = ?;
+
+markSettingSynced:
+UPDATE Setting SET needsSync = 0 WHERE key = ?;
+
+applyRemoteSetting:
+INSERT OR REPLACE INTO Setting(key, content, needsSync, updatedAt) VALUES (?, ?, 0, ?);

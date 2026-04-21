@@ -1,7 +1,11 @@
 package com.glicocalc.database
 
+import kotlin.math.absoluteValue
+import kotlin.random.Random
+
 data class InitialFood(val name: String, val carbs: Double)
 data class InitialMealType(val name: String, val hourOfDay: Long, val targetCarbs: Double)
+data class SeedFood(val remoteKey: String, val name: String, val carbs: Double)
 
 object InitialData {
     val mealTypes = listOf(
@@ -419,4 +423,33 @@ object InitialData {
         InitialFood("Apa", 0.0),
         InitialFood("Apa minerala", 0.0)
     )
+
+    val seededFoods: List<SeedFood> = foods.mapIndexed { index, food ->
+        SeedFood(
+            remoteKey = defaultFoodRemoteKey(index),
+            name = food.name,
+            carbs = food.carbs
+        )
+    }
+
+    fun defaultFoodByIndex(index: Int): SeedFood? = seededFoods.getOrNull(index)
+
+    fun defaultFoodByRemoteKey(remoteKey: String): SeedFood? = seededFoods.firstOrNull { it.remoteKey == remoteKey }
+}
+
+private fun defaultFoodRemoteKey(index: Int): String {
+    return "default-${(index + 1).toString().padStart(4, '0')}"
+}
+
+internal fun generateCustomFoodRemoteKey(): String {
+    return generateCustomRemoteKey("custom")
+}
+
+internal fun generateCustomDishRemoteKey(): String {
+    return generateCustomRemoteKey("dish")
+}
+
+private fun generateCustomRemoteKey(prefix: String): String {
+    val randomSuffix = Random.nextLong().absoluteValue.toString(16)
+    return "$prefix-${PlatformTime.currentTimeMillis()}-$randomSuffix"
 }
