@@ -53,4 +53,23 @@
     <string name="meal_item_label">Aliment %1$d</string>
     <string name="carbs_per_100g">%1$s g glucides / 100 g</string>
     <string name="carbs_percent">%1$s%% glucides</string>
+    <string name="dish_deleted">Plat supprimé</string>
+    <string name="food_language">Langue des aliments</string>
+    <string name="same_as_app_language">Identique à la langue de l'application</string>
+    <string name="sync_account">Compte de synchronisation</string>
+    <string name="sync_account_description">Connectez-vous pour conserver vos modifications d'aliments après la réinstallation de l'application ou un changement d'appareil.</string>
+    <string name="sync_account_unavailable">La connexion pour la synchronisation n'est pas disponible tant que Firebase n'est pas correctement configuré.</string>
+    <string name="sync_account_missing_google_config">La connexion avec Google n'est pas disponible, car l'identifiant client web manque dans la configuration Firebase.</string>
+    <string name="sync_signed_in_as">Connecté en tant que %1$s</string>
+    <string name="sync_signed_in_google">Compte Google lié</string>
+    <string name="sign_in_with_google">Se connecter avec Google</string>
+    <string name="sign_out">Se déconnecter</string>
+    <string name="sync_status">État de synchronisation</string>
+    <string name="sync_status_not_signed_in">Connectez-vous pour synchroniser les aliments et les plats.</string>
+    <string name="sync_status_syncing">Synchronisation en cours…</string>
+    <string name="sync_status_up_to_date">À jour</string>
+    <string name="sync_status_pending">Modifications en attente : %1$d</string>
+    <string name="sync_status_failed">La dernière synchronisation a échoué. Vous pouvez réessayer manuellement.</string>
+    <string name="sync_last_synced">Dernière synchronisation : %1$s</string>
+    <string name="sync_now">Synchroniser maintenant</string>
 </resources>

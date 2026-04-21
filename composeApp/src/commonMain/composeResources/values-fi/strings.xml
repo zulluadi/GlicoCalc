@@ -53,4 +53,23 @@
     <string name="meal_item_label">Ruoka %1$d</string>
     <string name="carbs_per_100g">%1$s g hiilihydraatteja / 100 g</string>
     <string name="carbs_percent">%1$s%% hiilihydraatteja</string>
+    <string name="dish_deleted">Ruoka poistettu</string>
+    <string name="food_language">Ruokien kieli</string>
+    <string name="same_as_app_language">Sama kuin sovelluksen kieli</string>
+    <string name="sync_account">Synkronointitili</string>
+    <string name="sync_account_description">Kirjaudu sisään, jotta ruokamuutokset säilyvät sovelluksen uudelleenasennuksen tai laitteen vaihdon jälkeen.</string>
+    <string name="sync_account_unavailable">Synkronoinnin kirjautuminen ei ole käytettävissä ennen kuin Firebase on määritetty oikein.</string>
+    <string name="sync_account_missing_google_config">Google-kirjautuminen ei ole käytettävissä, koska Firebase-määrityksestä puuttuu verkkopalvelinasiakkaan tunnus.</string>
+    <string name="sync_signed_in_as">Kirjautunut nimellä %1$s</string>
+    <string name="sync_signed_in_google">Google-tili yhdistetty</string>
+    <string name="sign_in_with_google">Kirjaudu Googlella</string>
+    <string name="sign_out">Kirjaudu ulos</string>
+    <string name="sync_status">Synkronoinnin tila</string>
+    <string name="sync_status_not_signed_in">Kirjaudu sisään synkronoidaksesi ruoat ja annokset.</string>
+    <string name="sync_status_syncing">Synkronoidaan…</string>
+    <string name="sync_status_up_to_date">Ajan tasalla</string>
+    <string name="sync_status_pending">Odottavat muutokset: %1$d</string>
+    <string name="sync_status_failed">Viimeisin synkronointi epäonnistui. Voit yrittää uudelleen käsin.</string>
+    <string name="sync_last_synced">Viimeksi synkronoitu: %1$s</string>
+    <string name="sync_now">Synkronoi nyt</string>
 </resources>

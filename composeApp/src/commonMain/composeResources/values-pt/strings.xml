@@ -53,4 +53,23 @@
     <string name="meal_item_label">Alimento %1$d</string>
     <string name="carbs_per_100g">%1$s g carboidratos / 100 g</string>
     <string name="carbs_percent">%1$s%% carboidratos</string>
+    <string name="dish_deleted">Prato apagado</string>
+    <string name="food_language">Idioma dos alimentos</string>
+    <string name="same_as_app_language">Igual ao idioma da aplicação</string>
+    <string name="sync_account">Conta de sincronização</string>
+    <string name="sync_account_description">Inicie sessão para manter as alterações dos alimentos após reinstalar a aplicação ou trocar de dispositivo.</string>
+    <string name="sync_account_unavailable">O início de sessão para sincronização não está disponível até o Firebase estar configurado corretamente.</string>
+    <string name="sync_account_missing_google_config">O início de sessão com Google não está disponível porque falta o ID do cliente web na configuração do Firebase.</string>
+    <string name="sync_signed_in_as">Sessão iniciada como %1$s</string>
+    <string name="sync_signed_in_google">Conta Google associada</string>
+    <string name="sign_in_with_google">Iniciar sessão com Google</string>
+    <string name="sign_out">Terminar sessão</string>
+    <string name="sync_status">Estado da sincronização</string>
+    <string name="sync_status_not_signed_in">Inicie sessão para sincronizar alimentos e pratos.</string>
+    <string name="sync_status_syncing">A sincronizar…</string>
+    <string name="sync_status_up_to_date">Atualizado</string>
+    <string name="sync_status_pending">Alterações pendentes: %1$d</string>
+    <string name="sync_status_failed">A última sincronização falhou. Pode tentar novamente manualmente.</string>
+    <string name="sync_last_synced">Última sincronização: %1$s</string>
+    <string name="sync_now">Sincronizar agora</string>
 </resources>

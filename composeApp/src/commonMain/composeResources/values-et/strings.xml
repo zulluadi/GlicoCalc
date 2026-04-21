@@ -53,4 +53,23 @@
     <string name="meal_item_label">Toit %1$d</string>
     <string name="carbs_per_100g">%1$s g süsivesikuid / 100 g</string>
     <string name="carbs_percent">%1$s%% süsivesikuid</string>
+    <string name="dish_deleted">Roog kustutatud</string>
+    <string name="food_language">Toitude keel</string>
+    <string name="same_as_app_language">Sama mis rakenduse keel</string>
+    <string name="sync_account">Sünkroonimiskonto</string>
+    <string name="sync_account_description">Logi sisse, et säilitada toidumuudatused pärast rakenduse uuesti installimist või seadme vahetamist.</string>
+    <string name="sync_account_unavailable">Sünkroonimiseks sisselogimine pole saadaval enne, kui Firebase on õigesti seadistatud.</string>
+    <string name="sync_account_missing_google_config">Google'iga sisselogimine pole saadaval, sest Firebase'i seadistuses puudub veebikliendi ID.</string>
+    <string name="sync_signed_in_as">Sisse logitud kui %1$s</string>
+    <string name="sync_signed_in_google">Google'i konto seotud</string>
+    <string name="sign_in_with_google">Logi sisse Google'iga</string>
+    <string name="sign_out">Logi välja</string>
+    <string name="sync_status">Sünkroonimise olek</string>
+    <string name="sync_status_not_signed_in">Logi sisse, et sünkroonida toite ja roogasid.</string>
+    <string name="sync_status_syncing">Sünkroonimine…</string>
+    <string name="sync_status_up_to_date">Ajakohane</string>
+    <string name="sync_status_pending">Ootel muudatused: %1$d</string>
+    <string name="sync_status_failed">Viimane sünkroonimine ebaõnnestus. Saate käsitsi uuesti proovida.</string>
+    <string name="sync_last_synced">Viimati sünkroonitud: %1$s</string>
+    <string name="sync_now">Sünkrooni kohe</string>
 </resources>

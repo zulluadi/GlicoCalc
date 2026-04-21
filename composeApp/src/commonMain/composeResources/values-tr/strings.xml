@@ -53,4 +53,23 @@
     <string name="meal_item_label">Yiyecek %1$d</string>
     <string name="carbs_per_100g">100 g başına %1$s g karbonhidrat</string>
     <string name="carbs_percent">%1$s%% karbonhidrat</string>
+    <string name="dish_deleted">Yemek silindi</string>
+    <string name="food_language">Yemek dili</string>
+    <string name="same_as_app_language">Uygulama diliyle aynı</string>
+    <string name="sync_account">Senkronizasyon hesabı</string>
+    <string name="sync_account_description">Uygulamayı yeniden yükledikten veya cihaz değiştirdikten sonra yemek değişikliklerinizi korumak için oturum açın.</string>
+    <string name="sync_account_unavailable">Firebase düzgün yapılandırılana kadar senkronizasyon için oturum açma kullanılamaz.</string>
+    <string name="sync_account_missing_google_config">Firebase yapılandırmasında web istemci kimliği eksik olduğu için Google ile oturum açma kullanılamıyor.</string>
+    <string name="sync_signed_in_as">%1$s olarak oturum açıldı</string>
+    <string name="sync_signed_in_google">Google hesabı bağlandı</string>
+    <string name="sign_in_with_google">Google ile oturum aç</string>
+    <string name="sign_out">Oturumu kapat</string>
+    <string name="sync_status">Senkronizasyon durumu</string>
+    <string name="sync_status_not_signed_in">Yemekleri ve tarifleri senkronize etmek için oturum açın.</string>
+    <string name="sync_status_syncing">Şimdi senkronize ediliyor…</string>
+    <string name="sync_status_up_to_date">Güncel</string>
+    <string name="sync_status_pending">Bekleyen değişiklikler: %1$d</string>
+    <string name="sync_status_failed">Son senkronizasyon başarısız oldu. Elle yeniden deneyebilirsiniz.</string>
+    <string name="sync_last_synced">Son senkronizasyon: %1$s</string>
+    <string name="sync_now">Şimdi senkronize et</string>
 </resources>

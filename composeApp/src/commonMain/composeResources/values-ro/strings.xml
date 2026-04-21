@@ -53,4 +53,23 @@
     <string name="meal_item_label">Aliment %1$d</string>
     <string name="carbs_per_100g">%1$s g glucide / 100g</string>
     <string name="carbs_percent">%1$s%% glucide</string>
+    <string name="dish_deleted">Preparatul a fost șters</string>
+    <string name="food_language">Limba alimentelor</string>
+    <string name="same_as_app_language">La fel ca limba aplicației</string>
+    <string name="sync_account">Cont de sincronizare</string>
+    <string name="sync_account_description">Conectează-te pentru a păstra modificările alimentelor după reinstalarea aplicației sau schimbarea dispozitivului.</string>
+    <string name="sync_account_unavailable">Conectarea pentru sincronizare nu este disponibilă până când Firebase nu este configurat corect.</string>
+    <string name="sync_account_missing_google_config">Conectarea cu Google nu este disponibilă deoarece configurația Firebase nu are ID-ul clientului web.</string>
+    <string name="sync_signed_in_as">Conectat ca %1$s</string>
+    <string name="sync_signed_in_google">Cont Google conectat</string>
+    <string name="sign_in_with_google">Conectează-te cu Google</string>
+    <string name="sign_out">Deconectare</string>
+    <string name="sync_status">Stare sincronizare</string>
+    <string name="sync_status_not_signed_in">Conectează-te pentru a sincroniza alimentele și preparatele.</string>
+    <string name="sync_status_syncing">Se sincronizează acum…</string>
+    <string name="sync_status_up_to_date">Actualizat</string>
+    <string name="sync_status_pending">Modificări în așteptare: %1$d</string>
+    <string name="sync_status_failed">Ultima sincronizare a eșuat. Poți reîncerca manual.</string>
+    <string name="sync_last_synced">Ultima sincronizare: %1$s</string>
+    <string name="sync_now">Sincronizează acum</string>
 </resources>

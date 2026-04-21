@@ -18,6 +18,7 @@ import glicocalc.composeapp.generated.resources.composition_ingredients
 import glicocalc.composeapp.generated.resources.delete
 import glicocalc.composeapp.generated.resources.delete_row
 import glicocalc.composeapp.generated.resources.dish_name_label
+import glicocalc.composeapp.generated.resources.dish_deleted
 import glicocalc.composeapp.generated.resources.dishes_title
 import glicocalc.composeapp.generated.resources.edit
 import glicocalc.composeapp.generated.resources.edit_dish_title
@@ -90,6 +91,7 @@ object Strings {
     @Composable fun addFood() = stringResource(Res.string.add_food)
     @Composable fun searchFoodPlaceholder() = stringResource(Res.string.search_food_placeholder)
     @Composable fun foodDeleted() = stringResource(Res.string.food_deleted)
+    @Composable fun dishDeleted() = stringResource(Res.string.dish_deleted)
     @Composable fun undo() = stringResource(Res.string.undo)
     @Composable fun edit() = stringResource(Res.string.edit)
     @Composable fun addFoodTitle() = stringResource(Res.string.add_food_title)

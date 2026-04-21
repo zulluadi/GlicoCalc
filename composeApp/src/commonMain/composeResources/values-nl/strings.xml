@@ -53,4 +53,23 @@
     <string name="meal_item_label">Voedsel %1$d</string>
     <string name="carbs_per_100g">%1$s g koolhydraten / 100 g</string>
     <string name="carbs_percent">%1$s%% koolhydraten</string>
+    <string name="dish_deleted">Gerecht verwijderd</string>
+    <string name="food_language">Taal van voedingsmiddelen</string>
+    <string name="same_as_app_language">Zelfde als app-taal</string>
+    <string name="sync_account">Synchronisatieaccount</string>
+    <string name="sync_account_description">Log in om je wijzigingen aan voedingsmiddelen te behouden na herinstallatie van de app of wisselen van apparaat.</string>
+    <string name="sync_account_unavailable">Inloggen voor synchronisatie is niet beschikbaar totdat Firebase correct is ingesteld.</string>
+    <string name="sync_account_missing_google_config">Inloggen met Google is niet beschikbaar omdat de Firebase-configuratie het webclient-ID mist.</string>
+    <string name="sync_signed_in_as">Ingelogd als %1$s</string>
+    <string name="sync_signed_in_google">Google-account gekoppeld</string>
+    <string name="sign_in_with_google">Inloggen met Google</string>
+    <string name="sign_out">Uitloggen</string>
+    <string name="sync_status">Synchronisatiestatus</string>
+    <string name="sync_status_not_signed_in">Log in om voedingsmiddelen en gerechten te synchroniseren.</string>
+    <string name="sync_status_syncing">Bezig met synchroniseren…</string>
+    <string name="sync_status_up_to_date">Bijgewerkt</string>
+    <string name="sync_status_pending">Wijzigingen in behandeling: %1$d</string>
+    <string name="sync_status_failed">De laatste synchronisatie is mislukt. Je kunt handmatig opnieuw proberen.</string>
+    <string name="sync_last_synced">Laatst gesynchroniseerd: %1$s</string>
+    <string name="sync_now">Nu synchroniseren</string>
 </resources>

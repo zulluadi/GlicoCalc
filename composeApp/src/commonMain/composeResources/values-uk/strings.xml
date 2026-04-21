@@ -53,4 +53,23 @@
     <string name="meal_item_label">Продукт %1$d</string>
     <string name="carbs_per_100g">%1$s г вуглеводів / 100 г</string>
     <string name="carbs_percent">%1$s%% вуглеводів</string>
+    <string name="dish_deleted">Страву видалено</string>
+    <string name="food_language">Мова продуктів</string>
+    <string name="same_as_app_language">Як мова застосунку</string>
+    <string name="sync_account">Обліковий запис синхронізації</string>
+    <string name="sync_account_description">Увійдіть, щоб зберегти зміни продуктів після перевстановлення застосунку або зміни пристрою.</string>
+    <string name="sync_account_unavailable">Вхід для синхронізації недоступний, доки Firebase не налаштовано належним чином.</string>
+    <string name="sync_account_missing_google_config">Вхід через Google недоступний, оскільки в конфігурації Firebase відсутній ідентифікатор вебклієнта.</string>
+    <string name="sync_signed_in_as">Вхід виконано як %1$s</string>
+    <string name="sync_signed_in_google">Обліковий запис Google прив'язано</string>
+    <string name="sign_in_with_google">Увійти через Google</string>
+    <string name="sign_out">Вийти</string>
+    <string name="sync_status">Стан синхронізації</string>
+    <string name="sync_status_not_signed_in">Увійдіть, щоб синхронізувати продукти та страви.</string>
+    <string name="sync_status_syncing">Триває синхронізація…</string>
+    <string name="sync_status_up_to_date">Актуально</string>
+    <string name="sync_status_pending">Очікувані зміни: %1$d</string>
+    <string name="sync_status_failed">Остання синхронізація не вдалася. Ви можете спробувати ще раз вручну.</string>
+    <string name="sync_last_synced">Остання синхронізація: %1$s</string>
+    <string name="sync_now">Синхронізувати зараз</string>
 </resources>

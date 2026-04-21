@@ -53,4 +53,23 @@
     <string name="meal_item_label">Храна %1$d</string>
     <string name="carbs_per_100g">%1$s г въглехидрати / 100 г</string>
     <string name="carbs_percent">%1$s%% въглехидрати</string>
+    <string name="dish_deleted">Ястието е изтрито</string>
+    <string name="food_language">Език на храните</string>
+    <string name="same_as_app_language">Същият като езика на приложението</string>
+    <string name="sync_account">Акаунт за синхронизация</string>
+    <string name="sync_account_description">Влезте, за да запазите промените в храните след преинсталиране на приложението или смяна на устройството.</string>
+    <string name="sync_account_unavailable">Входът за синхронизация не е наличен, докато Firebase не бъде конфигуриран правилно.</string>
+    <string name="sync_account_missing_google_config">Входът с Google не е наличен, защото в конфигурацията на Firebase липсва уеб клиентски идентификатор.</string>
+    <string name="sync_signed_in_as">Влезли сте като %1$s</string>
+    <string name="sync_signed_in_google">Свързан е Google акаунт</string>
+    <string name="sign_in_with_google">Вход с Google</string>
+    <string name="sign_out">Изход</string>
+    <string name="sync_status">Състояние на синхронизацията</string>
+    <string name="sync_status_not_signed_in">Влезте, за да синхронизирате храни и ястия.</string>
+    <string name="sync_status_syncing">Синхронизира се…</string>
+    <string name="sync_status_up_to_date">Актуално</string>
+    <string name="sync_status_pending">Чакащи промени: %1$d</string>
+    <string name="sync_status_failed">Последната синхронизация беше неуспешна. Можете да опитате отново ръчно.</string>
+    <string name="sync_last_synced">Последна синхронизация: %1$s</string>
+    <string name="sync_now">Синхронизирай сега</string>
 </resources>

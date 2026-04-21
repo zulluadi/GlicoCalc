@@ -53,4 +53,23 @@
     <string name="meal_item_label">Livsmedel %1$d</string>
     <string name="carbs_per_100g">%1$s g kolhydrater / 100 g</string>
     <string name="carbs_percent">%1$s%% kolhydrater</string>
+    <string name="dish_deleted">Rätt raderad</string>
+    <string name="food_language">Matens språk</string>
+    <string name="same_as_app_language">Samma som appens språk</string>
+    <string name="sync_account">Synkkonto</string>
+    <string name="sync_account_description">Logga in för att behålla dina matändringar efter ominstallation av appen eller byte av enhet.</string>
+    <string name="sync_account_unavailable">Inloggning för synkronisering är inte tillgänglig förrän Firebase är korrekt konfigurerat.</string>
+    <string name="sync_account_missing_google_config">Google-inloggning är inte tillgänglig eftersom Firebase-konfigurationen saknar webklient-ID.</string>
+    <string name="sync_signed_in_as">Inloggad som %1$s</string>
+    <string name="sync_signed_in_google">Google-konto länkat</string>
+    <string name="sign_in_with_google">Logga in med Google</string>
+    <string name="sign_out">Logga ut</string>
+    <string name="sync_status">Synkstatus</string>
+    <string name="sync_status_not_signed_in">Logga in för att synkronisera livsmedel och rätter.</string>
+    <string name="sync_status_syncing">Synkroniserar nu…</string>
+    <string name="sync_status_up_to_date">Uppdaterad</string>
+    <string name="sync_status_pending">Väntande ändringar: %1$d</string>
+    <string name="sync_status_failed">Senaste synkroniseringen misslyckades. Du kan försöka igen manuellt.</string>
+    <string name="sync_last_synced">Senast synkroniserad: %1$s</string>
+    <string name="sync_now">Synkronisera nu</string>
 </resources>

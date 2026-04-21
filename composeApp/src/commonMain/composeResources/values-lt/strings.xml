@@ -53,4 +53,23 @@
     <string name="meal_item_label">Produktas %1$d</string>
     <string name="carbs_per_100g">%1$s g angliavandenių / 100 g</string>
     <string name="carbs_percent">%1$s%% angliavandenių</string>
+    <string name="dish_deleted">Patiekalas ištrintas</string>
+    <string name="food_language">Maisto kalba</string>
+    <string name="same_as_app_language">Tokia pati kaip programėlės kalba</string>
+    <string name="sync_account">Sinchronizavimo paskyra</string>
+    <string name="sync_account_description">Prisijunkite, kad išsaugotumėte maisto pakeitimus po programėlės įdiegimo iš naujo arba pakeitus įrenginį.</string>
+    <string name="sync_account_unavailable">Prisijungimas sinchronizacijai negalimas, kol Firebase nėra tinkamai sukonfigūruotas.</string>
+    <string name="sync_account_missing_google_config">Prisijungimas per Google negalimas, nes Firebase konfigūracijoje trūksta žiniatinklio kliento ID.</string>
+    <string name="sync_signed_in_as">Prisijungta kaip %1$s</string>
+    <string name="sync_signed_in_google">Google paskyra susieta</string>
+    <string name="sign_in_with_google">Prisijungti su Google</string>
+    <string name="sign_out">Atsijungti</string>
+    <string name="sync_status">Sinchronizavimo būsena</string>
+    <string name="sync_status_not_signed_in">Prisijunkite, kad sinchronizuotumėte maistą ir patiekalus.</string>
+    <string name="sync_status_syncing">Sinchronizuojama…</string>
+    <string name="sync_status_up_to_date">Atnaujinta</string>
+    <string name="sync_status_pending">Laukiantys pakeitimai: %1$d</string>
+    <string name="sync_status_failed">Paskutinė sinchronizacija nepavyko. Galite bandyti dar kartą rankiniu būdu.</string>
+    <string name="sync_last_synced">Paskutinį kartą sinchronizuota: %1$s</string>
+    <string name="sync_now">Sinchronizuoti dabar</string>
 </resources>

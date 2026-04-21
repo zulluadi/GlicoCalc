@@ -53,4 +53,23 @@
     <string name="meal_item_label">Potravina %1$d</string>
     <string name="carbs_per_100g">%1$s g sacharidov / 100 g</string>
     <string name="carbs_percent">%1$s%% sacharidov</string>
+    <string name="dish_deleted">Jedlo odstránené</string>
+    <string name="food_language">Jazyk potravín</string>
+    <string name="same_as_app_language">Rovnaký ako jazyk aplikácie</string>
+    <string name="sync_account">Synchronizačný účet</string>
+    <string name="sync_account_description">Prihláste sa, aby ste si zachovali zmeny potravín po preinštalovaní aplikácie alebo zmene zariadenia.</string>
+    <string name="sync_account_unavailable">Prihlásenie na synchronizáciu nie je dostupné, kým Firebase nie je správne nakonfigurovaný.</string>
+    <string name="sync_account_missing_google_config">Prihlásenie cez Google nie je dostupné, pretože v konfigurácii Firebase chýba ID webového klienta.</string>
+    <string name="sync_signed_in_as">Prihlásený ako %1$s</string>
+    <string name="sync_signed_in_google">Účet Google pripojený</string>
+    <string name="sign_in_with_google">Prihlásiť sa cez Google</string>
+    <string name="sign_out">Odhlásiť sa</string>
+    <string name="sync_status">Stav synchronizácie</string>
+    <string name="sync_status_not_signed_in">Prihláste sa na synchronizáciu potravín a jedál.</string>
+    <string name="sync_status_syncing">Synchronizuje sa…</string>
+    <string name="sync_status_up_to_date">Aktuálne</string>
+    <string name="sync_status_pending">Čakajúce zmeny: %1$d</string>
+    <string name="sync_status_failed">Posledná synchronizácia zlyhala. Môžete to skúsiť znova ručne.</string>
+    <string name="sync_last_synced">Naposledy synchronizované: %1$s</string>
+    <string name="sync_now">Synchronizovať teraz</string>
 </resources>

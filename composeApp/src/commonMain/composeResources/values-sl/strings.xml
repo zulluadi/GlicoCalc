@@ -53,4 +53,23 @@
     <string name="meal_item_label">Živilo %1$d</string>
     <string name="carbs_per_100g">%1$s g ogljikovih hidratov / 100 g</string>
     <string name="carbs_percent">%1$s%% ogljikovih hidratov</string>
+    <string name="dish_deleted">Jed izbrisana</string>
+    <string name="food_language">Jezik živil</string>
+    <string name="same_as_app_language">Enako kot jezik aplikacije</string>
+    <string name="sync_account">Račun za sinhronizacijo</string>
+    <string name="sync_account_description">Prijavite se, da obdržite spremembe živil po ponovni namestitvi aplikacije ali menjavi naprave.</string>
+    <string name="sync_account_unavailable">Prijava za sinhronizacijo ni na voljo, dokler Firebase ni pravilno nastavljen.</string>
+    <string name="sync_account_missing_google_config">Prijava z Googlom ni na voljo, ker v konfiguraciji Firebase manjka ID spletnega odjemalca.</string>
+    <string name="sync_signed_in_as">Prijavljen kot %1$s</string>
+    <string name="sync_signed_in_google">Povezan Google račun</string>
+    <string name="sign_in_with_google">Prijava z Googlom</string>
+    <string name="sign_out">Odjava</string>
+    <string name="sync_status">Stanje sinhronizacije</string>
+    <string name="sync_status_not_signed_in">Prijavite se za sinhronizacijo živil in jedi.</string>
+    <string name="sync_status_syncing">Sinhronizacija poteka…</string>
+    <string name="sync_status_up_to_date">Posodobljeno</string>
+    <string name="sync_status_pending">Čakajoče spremembe: %1$d</string>
+    <string name="sync_status_failed">Zadnja sinhronizacija ni uspela. Poskusite lahko znova ročno.</string>
+    <string name="sync_last_synced">Nazadnje sinhronizirano: %1$s</string>
+    <string name="sync_now">Sinhroniziraj zdaj</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.glicocalc.database.GlicoRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,14 +22,22 @@ fun DishListScreen(
     onAddDish: () -> Unit,
     onEditDish: (Long) -> Unit,
     onDeleteDish: (Long) -> Unit,
+    onUndeleteDish: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val deletedMessage = Strings.dishDeleted()
+    val undoLabel = Strings.undo()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deletedDishId = remember { mutableStateOf<Long?>(null) }
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(Strings.dishesTitle()) }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddDish) {
                 Icon(Icons.Default.Add, contentDescription = Strings.addDish())
@@ -44,7 +53,21 @@ fun DishListScreen(
                         headlineContent = { Text(dishWithCarbs.dish.name) },
                         supportingContent = { Text(Strings.carbsPer100g(((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0).toString())) },
                         leadingContent = {
-                            IconButton(onClick = { onDeleteDish(dishWithCarbs.dish.id) }) {
+                            IconButton(onClick = {
+                                deletedDishId.value = dishWithCarbs.dish.id
+                                onDeleteDish(dishWithCarbs.dish.id)
+                                scope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = deletedMessage,
+                                        actionLabel = undoLabel,
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        deletedDishId.value?.let(onUndeleteDish)
+                                    }
+                                    deletedDishId.value = null
+                                }
+                            }) {
                                 Icon(Icons.Default.Delete, contentDescription = Strings.delete(), tint = MaterialTheme.colorScheme.error)
                             }
                         },

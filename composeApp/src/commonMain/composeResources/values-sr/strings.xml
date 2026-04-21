@@ -53,4 +53,23 @@
     <string name="meal_item_label">Namirnica %1$d</string>
     <string name="carbs_per_100g">%1$s g ugljenih hidrata / 100 g</string>
     <string name="carbs_percent">%1$s%% ugljenih hidrata</string>
+    <string name="dish_deleted">Јело је обрисано</string>
+    <string name="food_language">Језик намирница</string>
+    <string name="same_as_app_language">Исто као језик апликације</string>
+    <string name="sync_account">Налог за синхронизацију</string>
+    <string name="sync_account_description">Пријавите се да сачувате измене намирница након поновне инсталације апликације или промене уређаја.</string>
+    <string name="sync_account_unavailable">Пријава за синхронизацију није доступна док Firebase није правилно подешен.</string>
+    <string name="sync_account_missing_google_config">Пријава преко Google-а није доступна јер у Firebase подешавању недостаје ID веб клијента.</string>
+    <string name="sync_signed_in_as">Пријављени сте као %1$s</string>
+    <string name="sync_signed_in_google">Google налог је повезан</string>
+    <string name="sign_in_with_google">Пријави се преко Google-а</string>
+    <string name="sign_out">Одјави се</string>
+    <string name="sync_status">Статус синхронизације</string>
+    <string name="sync_status_not_signed_in">Пријавите се да синхронизујете намирнице и јела.</string>
+    <string name="sync_status_syncing">Синхронизација је у току…</string>
+    <string name="sync_status_up_to_date">Ажурно</string>
+    <string name="sync_status_pending">Промене на чекању: %1$d</string>
+    <string name="sync_status_failed">Последња синхронизација није успела. Можете покушати поново ручно.</string>
+    <string name="sync_last_synced">Последња синхронизација: %1$s</string>
+    <string name="sync_now">Синхронизуј сада</string>
 </resources>

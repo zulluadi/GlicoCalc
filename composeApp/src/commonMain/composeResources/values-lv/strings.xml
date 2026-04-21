@@ -53,4 +53,23 @@
     <string name="meal_item_label">Produkts %1$d</string>
     <string name="carbs_per_100g">%1$s g ogļhidrātu / 100 g</string>
     <string name="carbs_percent">%1$s%% ogļhidrātu</string>
+    <string name="dish_deleted">Ēdiens dzēsts</string>
+    <string name="food_language">Pārtikas valoda</string>
+    <string name="same_as_app_language">Tāda pati kā lietotnes valoda</string>
+    <string name="sync_account">Sinhronizācijas konts</string>
+    <string name="sync_account_description">Pierakstieties, lai saglabātu pārtikas izmaiņas pēc lietotnes pārinstalēšanas vai ierīces maiņas.</string>
+    <string name="sync_account_unavailable">Pierakstīšanās sinhronizācijai nav pieejama, kamēr Firebase nav pareizi konfigurēts.</string>
+    <string name="sync_account_missing_google_config">Pierakstīšanās ar Google nav pieejama, jo Firebase konfigurācijā trūkst tīmekļa klienta ID.</string>
+    <string name="sync_signed_in_as">Pierakstījies kā %1$s</string>
+    <string name="sync_signed_in_google">Google konts piesaistīts</string>
+    <string name="sign_in_with_google">Pierakstīties ar Google</string>
+    <string name="sign_out">Izrakstīties</string>
+    <string name="sync_status">Sinhronizācijas statuss</string>
+    <string name="sync_status_not_signed_in">Pierakstieties, lai sinhronizētu pārtiku un ēdienus.</string>
+    <string name="sync_status_syncing">Notiek sinhronizācija…</string>
+    <string name="sync_status_up_to_date">Atjaunināts</string>
+    <string name="sync_status_pending">Neapstrādātas izmaiņas: %1$d</string>
+    <string name="sync_status_failed">Pēdējā sinhronizācija neizdevās. Varat mēģināt vēlreiz manuāli.</string>
+    <string name="sync_last_synced">Pēdējā sinhronizācija: %1$s</string>
+    <string name="sync_now">Sinhronizēt tagad</string>
 </resources>

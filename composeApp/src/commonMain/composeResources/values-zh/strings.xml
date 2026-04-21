@@ -53,4 +53,23 @@
     <string name="meal_item_label">食物%1$d</string>
     <string name="carbs_per_100g">每100克%1$s克碳水</string>
     <string name="carbs_percent">%1$s%%碳水</string>
+    <string name="dish_deleted">菜肴已删除</string>
+    <string name="food_language">食物语言</string>
+    <string name="same_as_app_language">与应用语言相同</string>
+    <string name="sync_account">同步账号</string>
+    <string name="sync_account_description">登录后可在重新安装应用或更换设备后保留你的食物修改。</string>
+    <string name="sync_account_unavailable">在 Firebase 正确配置之前，同步登录不可用。</string>
+    <string name="sync_account_missing_google_config">Google 登录不可用，因为 Firebase 配置缺少 web 客户端 ID。</string>
+    <string name="sync_signed_in_as">已登录为 %1$s</string>
+    <string name="sync_signed_in_google">Google 账号已关联</string>
+    <string name="sign_in_with_google">使用 Google 登录</string>
+    <string name="sign_out">退出登录</string>
+    <string name="sync_status">同步状态</string>
+    <string name="sync_status_not_signed_in">登录以同步食物和菜肴。</string>
+    <string name="sync_status_syncing">正在同步…</string>
+    <string name="sync_status_up_to_date">已是最新</string>
+    <string name="sync_status_pending">待同步更改：%1$d</string>
+    <string name="sync_status_failed">上次同步失败。你可以手动重试。</string>
+    <string name="sync_last_synced">上次同步：%1$s</string>
+    <string name="sync_now">立即同步</string>
 </resources>

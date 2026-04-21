@@ -272,6 +272,12 @@ class GlicoRepository(val database: GlicoDatabase) {
         notifyLocalDataChanged()
     }
 
+    suspend fun restoreDish(dishId: Long) {
+        val now = PlatformTime.currentTimeMillis()
+        queries.restoreDish(1, now, dishId)
+        notifyLocalDataChanged()
+    }
+
     fun getDishWithComposition(dishId: Long): DishWithComposition? {
         val dish = queries.selectDishById(dishId).executeAsOneOrNull() ?: return null
         val components = queries.selectComponentsByDishId(dishId).executeAsList().map {

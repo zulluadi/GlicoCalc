@@ -53,4 +53,23 @@
     <string name="meal_item_label">%1$d. étel</string>
     <string name="carbs_per_100g">%1$s g szénhidrát / 100 g</string>
     <string name="carbs_percent">%1$s%% szénhidrát</string>
+    <string name="dish_deleted">Az étel törölve</string>
+    <string name="food_language">Ételek nyelve</string>
+    <string name="same_as_app_language">Ugyanaz, mint az alkalmazás nyelve</string>
+    <string name="sync_account">Szinkronizációs fiók</string>
+    <string name="sync_account_description">Jelentkezzen be, hogy megőrizze az ételmódosításokat az alkalmazás újratelepítése vagy eszközváltás után.</string>
+    <string name="sync_account_unavailable">A szinkronizációs bejelentkezés nem érhető el, amíg a Firebase nincs megfelelően beállítva.</string>
+    <string name="sync_account_missing_google_config">A Google-bejelentkezés nem érhető el, mert hiányzik a webes kliensazonosító a Firebase konfigurációból.</string>
+    <string name="sync_signed_in_as">Bejelentkezve mint: %1$s</string>
+    <string name="sync_signed_in_google">Google-fiók összekapcsolva</string>
+    <string name="sign_in_with_google">Bejelentkezés Google-lel</string>
+    <string name="sign_out">Kijelentkezés</string>
+    <string name="sync_status">Szinkronizálás állapota</string>
+    <string name="sync_status_not_signed_in">Jelentkezzen be az ételek és fogások szinkronizálásához.</string>
+    <string name="sync_status_syncing">Szinkronizálás…</string>
+    <string name="sync_status_up_to_date">Naprakész</string>
+    <string name="sync_status_pending">Függőben lévő módosítások: %1$d</string>
+    <string name="sync_status_failed">Az utolsó szinkronizálás sikertelen volt. Kézzel újrapróbálhatja.</string>
+    <string name="sync_last_synced">Utolsó szinkronizálás: %1$s</string>
+    <string name="sync_now">Szinkronizálás most</string>
 </resources>

@@ -53,4 +53,23 @@
     <string name="meal_item_label">Produkt %1$d</string>
     <string name="carbs_per_100g">%1$s g węglowodanów / 100 g</string>
     <string name="carbs_percent">%1$s%% węglowodanów</string>
+    <string name="dish_deleted">Danie usunięte</string>
+    <string name="food_language">Język produktów</string>
+    <string name="same_as_app_language">Taki sam jak język aplikacji</string>
+    <string name="sync_account">Konto synchronizacji</string>
+    <string name="sync_account_description">Zaloguj się, aby zachować zmiany produktów po ponownej instalacji aplikacji lub zmianie urządzenia.</string>
+    <string name="sync_account_unavailable">Logowanie do synchronizacji nie jest dostępne, dopóki Firebase nie zostanie poprawnie skonfigurowany.</string>
+    <string name="sync_account_missing_google_config">Logowanie przez Google jest niedostępne, ponieważ w konfiguracji Firebase brakuje identyfikatora klienta WWW.</string>
+    <string name="sync_signed_in_as">Zalogowano jako %1$s</string>
+    <string name="sync_signed_in_google">Połączono konto Google</string>
+    <string name="sign_in_with_google">Zaloguj się przez Google</string>
+    <string name="sign_out">Wyloguj się</string>
+    <string name="sync_status">Stan synchronizacji</string>
+    <string name="sync_status_not_signed_in">Zaloguj się, aby synchronizować produkty i dania.</string>
+    <string name="sync_status_syncing">Trwa synchronizacja…</string>
+    <string name="sync_status_up_to_date">Aktualne</string>
+    <string name="sync_status_pending">Oczekujące zmiany: %1$d</string>
+    <string name="sync_status_failed">Ostatnia synchronizacja nie powiodła się. Możesz spróbować ponownie ręcznie.</string>
+    <string name="sync_last_synced">Ostatnia synchronizacja: %1$s</string>
+    <string name="sync_now">Synchronizuj teraz</string>
 </resources>

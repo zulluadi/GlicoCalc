@@ -53,4 +53,23 @@
     <string name="meal_item_label">מזון %1$d</string>
     <string name="carbs_per_100g">%1$s גרם פחמימות ל-100 גרם</string>
     <string name="carbs_percent">%1$s%% פחמימות</string>
+    <string name="dish_deleted">המנה נמחקה</string>
+    <string name="food_language">שפת המאכלים</string>
+    <string name="same_as_app_language">כמו שפת האפליקציה</string>
+    <string name="sync_account">חשבון סנכרון</string>
+    <string name="sync_account_description">התחבר כדי לשמור את שינויי המאכלים לאחר התקנה מחדש של האפליקציה או החלפת מכשיר.</string>
+    <string name="sync_account_unavailable">התחברות לסנכרון אינה זמינה עד ש-Firebase יוגדר כראוי.</string>
+    <string name="sync_account_missing_google_config">התחברות עם Google אינה זמינה משום שחסר מזהה לקוח web בהגדרת Firebase.</string>
+    <string name="sync_signed_in_as">מחובר בתור %1$s</string>
+    <string name="sync_signed_in_google">חשבון Google קושר</string>
+    <string name="sign_in_with_google">התחבר עם Google</string>
+    <string name="sign_out">התנתק</string>
+    <string name="sync_status">מצב סנכרון</string>
+    <string name="sync_status_not_signed_in">התחבר כדי לסנכרן מאכלים ומנות.</string>
+    <string name="sync_status_syncing">מתבצע סנכרון…</string>
+    <string name="sync_status_up_to_date">מעודכן</string>
+    <string name="sync_status_pending">שינויים ממתינים: %1$d</string>
+    <string name="sync_status_failed">הסנכרון האחרון נכשל. אפשר לנסות שוב ידנית.</string>
+    <string name="sync_last_synced">סונכרן לאחרונה: %1$s</string>
+    <string name="sync_now">סנכרן עכשיו</string>
 </resources>

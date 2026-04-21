@@ -12,6 +12,7 @@
     <string name="add_food">Add Food</string>
     <string name="search_food_placeholder">Search food...</string>
     <string name="food_deleted">Food deleted</string>
+    <string name="dish_deleted">Dish deleted</string>
     <string name="undo">Undo</string>
     <string name="edit">Edit</string>
     <string name="add_food_title">Add Food</string>

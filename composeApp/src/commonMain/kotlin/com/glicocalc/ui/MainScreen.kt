@@ -121,7 +121,7 @@ fun MainApp(
                         modifier = modifier
                     )
                     Screen.Dishes -> {
-                        val dishesWithCarbs = remember { repository.getAllDishesWithCarbs() }
+                        val dishesWithCarbs = remember(dishes, baseFoods) { repository.getAllDishesWithCarbs() }
                         DishListScreen(
                             dishesWithCarbs = dishesWithCarbs.map { com.glicocalc.database.GlicoRepository.DishWithCarbs(it.dish, it.carbsPer100g) },
                             onAddDish = {
@@ -137,6 +137,10 @@ fun MainApp(
                             onDeleteDish = {
                                 telemetry.action("dish_deleted")
                                 scope.launch { repository.deleteDish(it) }
+                            },
+                            onUndeleteDish = {
+                                telemetry.action("dish_restored")
+                                scope.launch { repository.restoreDish(it) }
                             },
                             modifier = modifier
                         )

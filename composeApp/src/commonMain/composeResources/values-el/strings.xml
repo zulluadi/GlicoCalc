@@ -53,4 +53,23 @@
     <string name="meal_item_label">Τρόφιμο %1$d</string>
     <string name="carbs_per_100g">%1$s g υδατάνθρακες / 100 g</string>
     <string name="carbs_percent">%1$s%% υδατάνθρακες</string>
+    <string name="dish_deleted">Το πιάτο διαγράφηκε</string>
+    <string name="food_language">Γλώσσα τροφίμων</string>
+    <string name="same_as_app_language">Ίδια με τη γλώσσα της εφαρμογής</string>
+    <string name="sync_account">Λογαριασμός συγχρονισμού</string>
+    <string name="sync_account_description">Συνδεθείτε για να διατηρήσετε τις αλλαγές στα τρόφιμα μετά από επανεγκατάσταση της εφαρμογής ή αλλαγή συσκευής.</string>
+    <string name="sync_account_unavailable">Η σύνδεση για συγχρονισμό δεν είναι διαθέσιμη μέχρι να ρυθμιστεί σωστά το Firebase.</string>
+    <string name="sync_account_missing_google_config">Η σύνδεση με Google δεν είναι διαθέσιμη επειδή λείπει το αναγνωριστικό web client από τη ρύθμιση Firebase.</string>
+    <string name="sync_signed_in_as">Συνδεδεμένος ως %1$s</string>
+    <string name="sync_signed_in_google">Συνδέθηκε λογαριασμός Google</string>
+    <string name="sign_in_with_google">Σύνδεση με Google</string>
+    <string name="sign_out">Αποσύνδεση</string>
+    <string name="sync_status">Κατάσταση συγχρονισμού</string>
+    <string name="sync_status_not_signed_in">Συνδεθείτε για να συγχρονίσετε τρόφιμα και πιάτα.</string>
+    <string name="sync_status_syncing">Γίνεται συγχρονισμός…</string>
+    <string name="sync_status_up_to_date">Ενημερωμένο</string>
+    <string name="sync_status_pending">Εκκρεμείς αλλαγές: %1$d</string>
+    <string name="sync_status_failed">Ο τελευταίος συγχρονισμός απέτυχε. Μπορείτε να δοκιμάσετε ξανά χειροκίνητα.</string>
+    <string name="sync_last_synced">Τελευταίος συγχρονισμός: %1$s</string>
+    <string name="sync_now">Συγχρονισμός τώρα</string>
 </resources>

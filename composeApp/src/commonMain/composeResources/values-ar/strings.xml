@@ -53,4 +53,23 @@
     <string name="meal_item_label">طعام %1$d</string>
     <string name="carbs_per_100g">%1$s غ كربوهيدرات / 100 غ</string>
     <string name="carbs_percent">%1$s%% كربوهيدرات</string>
+    <string name="dish_deleted">تم حذف الطبق</string>
+    <string name="food_language">لغة الأطعمة</string>
+    <string name="same_as_app_language">مثل لغة التطبيق</string>
+    <string name="sync_account">حساب المزامنة</string>
+    <string name="sync_account_description">سجّل الدخول للاحتفاظ بتعديلات الأطعمة بعد إعادة تثبيت التطبيق أو تغيير الجهاز.</string>
+    <string name="sync_account_unavailable">تسجيل الدخول للمزامنة غير متاح حتى يتم إعداد Firebase بشكل صحيح.</string>
+    <string name="sync_account_missing_google_config">تسجيل الدخول عبر Google غير متاح لأن إعداد Firebase يفتقد معرّف عميل الويب.</string>
+    <string name="sync_signed_in_as">تم تسجيل الدخول باسم %1$s</string>
+    <string name="sync_signed_in_google">تم ربط حساب Google</string>
+    <string name="sign_in_with_google">تسجيل الدخول عبر Google</string>
+    <string name="sign_out">تسجيل الخروج</string>
+    <string name="sync_status">حالة المزامنة</string>
+    <string name="sync_status_not_signed_in">سجّل الدخول لمزامنة الأطعمة والأطباق.</string>
+    <string name="sync_status_syncing">تتم المزامنة الآن…</string>
+    <string name="sync_status_up_to_date">محدّث</string>
+    <string name="sync_status_pending">تغييرات معلقة: %1$d</string>
+    <string name="sync_status_failed">فشلت آخر عملية مزامنة. يمكنك إعادة المحاولة يدويًا.</string>
+    <string name="sync_last_synced">آخر مزامنة: %1$s</string>
+    <string name="sync_now">زامن الآن</string>
 </resources>
