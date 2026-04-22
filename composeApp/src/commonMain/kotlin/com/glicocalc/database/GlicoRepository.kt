@@ -23,7 +23,7 @@ class GlicoRepository(val database: GlicoDatabase) {
         return queries.selectBaseFoodById(id).executeAsOneOrNull()
     }
 
-    suspend fun insertBaseFood(name: String, carbs: Double) {
+    fun insertBaseFood(name: String, carbs: Double) {
         val now = PlatformTime.currentTimeMillis()
         queries.insertBaseFood(
             name = name,
@@ -37,19 +37,19 @@ class GlicoRepository(val database: GlicoDatabase) {
         notifyLocalDataChanged()
     }
 
-    suspend fun updateBaseFood(id: Long, name: String, carbs: Double) {
+    fun updateBaseFood(id: Long, name: String, carbs: Double) {
         val now = PlatformTime.currentTimeMillis()
         queries.updateBaseFood(name, carbs, 1, now, id)
         notifyLocalDataChanged()
     }
 
-    suspend fun deleteBaseFood(id: Long) {
+    fun deleteBaseFood(id: Long) {
         val now = PlatformTime.currentTimeMillis()
         queries.deleteBaseFood(1, now, id)
         notifyLocalDataChanged()
     }
 
-    suspend fun restoreBaseFood(id: Long) {
+    fun restoreBaseFood(id: Long) {
         val now = PlatformTime.currentTimeMillis()
         queries.restoreBaseFood(1, now, id)
         notifyLocalDataChanged()
@@ -202,16 +202,6 @@ class GlicoRepository(val database: GlicoDatabase) {
         }
     }
 
-    fun prepareDishCatalog() {
-        val now = PlatformTime.currentTimeMillis()
-        database.transaction {
-            getAllDishesIncludingDeleted().forEach { dish ->
-                if (dish.remoteKey != null) return@forEach
-                queries.updateDishSyncMetadata(generateCustomDishRemoteKey(), 1, now, dish.id)
-            }
-        }
-    }
-
     data class DishWithCarbs(val dish: Dish, val carbsPer100g: Double)
 
     fun getAllDishesWithCarbs(): List<DishWithCarbs> {
@@ -226,19 +216,19 @@ class GlicoRepository(val database: GlicoDatabase) {
         return queries.selectAllMealTypes().asFlow().mapToList()
     }
 
-    suspend fun insertMealType(name: String, targetCarbs: Double, hourOfDay: Long) {
+    fun insertMealType(name: String, targetCarbs: Double, hourOfDay: Long) {
         queries.insertMealType(name, targetCarbs, hourOfDay)
     }
 
-    suspend fun updateMealType(id: Long, name: String, targetCarbs: Double, hourOfDay: Long) {
+    fun updateMealType(id: Long, name: String, targetCarbs: Double, hourOfDay: Long) {
         queries.updateMealType(name, targetCarbs, hourOfDay, id)
     }
 
-    suspend fun deleteMealType(id: Long) {
+    fun deleteMealType(id: Long) {
         queries.deleteMealType(id)
     }
 
-    suspend fun insertDishWithComponents(name: String, components: List<Pair<Long, Double>>) {
+    fun insertDishWithComponents(name: String, components: List<Pair<Long, Double>>) {
         val now = PlatformTime.currentTimeMillis()
         database.transaction {
             queries.insertDish(
@@ -256,7 +246,7 @@ class GlicoRepository(val database: GlicoDatabase) {
         notifyLocalDataChanged()
     }
 
-    suspend fun updateDishWithComponents(dishId: Long, name: String, components: List<Pair<Long, Double>>) {
+    fun updateDishWithComponents(dishId: Long, name: String, components: List<Pair<Long, Double>>) {
         val now = PlatformTime.currentTimeMillis()
         database.transaction {
             queries.updateDish(name, 1, now, dishId)
@@ -268,7 +258,7 @@ class GlicoRepository(val database: GlicoDatabase) {
         notifyLocalDataChanged()
     }
 
-    suspend fun deleteDish(dishId: Long) {
+    fun deleteDish(dishId: Long) {
         val now = PlatformTime.currentTimeMillis()
         database.transaction {
             queries.deleteComponentsByDishId(dishId)
@@ -277,7 +267,7 @@ class GlicoRepository(val database: GlicoDatabase) {
         notifyLocalDataChanged()
     }
 
-    suspend fun restoreDish(dishId: Long) {
+    fun restoreDish(dishId: Long) {
         val now = PlatformTime.currentTimeMillis()
         queries.restoreDish(1, now, dishId)
         notifyLocalDataChanged()

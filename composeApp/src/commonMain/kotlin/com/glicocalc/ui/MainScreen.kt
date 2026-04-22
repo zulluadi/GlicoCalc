@@ -1,19 +1,15 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.glicocalc.database.GlicoRepository
-import com.glicocalc.models.DishWithComposition
 import com.glicocalc.telemetry.Telemetry
 import com.glicocalc.ui.theme.GlicoCalcTheme
 import kotlinx.coroutines.launch
@@ -124,7 +120,7 @@ fun MainApp(
                     Screen.Dishes -> {
                         val dishesWithCarbs = remember(dishes, baseFoods) { repository.getAllDishesWithCarbs() }
                         DishListScreen(
-                            dishesWithCarbs = dishesWithCarbs.map { com.glicocalc.database.GlicoRepository.DishWithCarbs(it.dish, it.carbsPer100g) },
+                            dishesWithCarbs = dishesWithCarbs,
                             onAddDish = {
                                 telemetry.action("dish_editor_opened_new")
                                 currentScreen = Screen.DishEditor
