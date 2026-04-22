@@ -4,7 +4,7 @@
     <string name="nav_foods">Yiyecekler</string>
     <string name="total_carbs">Toplam karbonhidrat</string>
     <string name="foods_on_plate">Tabaktaki yiyecekler</string>
-    <string name="add_another_food_to_meal">Öğüne başka bir yiyecek ekle</string>
+    <string name="add_another_food_to_meal">Yiyecek ekle</string>
     <string name="weight">Ağırlık</string>
     <string name="carbs">Karbonhidrat</string>
     <string name="delete">Sil</string>

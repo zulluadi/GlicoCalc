@@ -13,6 +13,8 @@ import glicocalc.composeapp.generated.resources.carbs
 import glicocalc.composeapp.generated.resources.carbs_percent
 import glicocalc.composeapp.generated.resources.carbs_per_100g
 import glicocalc.composeapp.generated.resources.carbs_per_100g_label
+import glicocalc.composeapp.generated.resources.clear_text
+import glicocalc.composeapp.generated.resources.clear_meal
 import glicocalc.composeapp.generated.resources.close
 import glicocalc.composeapp.generated.resources.composition_ingredients
 import glicocalc.composeapp.generated.resources.delete
@@ -84,6 +86,8 @@ object Strings {
     @Composable fun totalCarbs() = stringResource(Res.string.total_carbs)
     @Composable fun foodsOnPlate() = stringResource(Res.string.foods_on_plate)
     @Composable fun addAnotherFoodToMeal() = stringResource(Res.string.add_another_food_to_meal)
+    @Composable fun clearMeal() = stringResource(Res.string.clear_meal)
+    @Composable fun clearText() = stringResource(Res.string.clear_text)
     @Composable fun weight() = stringResource(Res.string.weight)
     @Composable fun carbs() = stringResource(Res.string.carbs)
     @Composable fun delete() = stringResource(Res.string.delete)

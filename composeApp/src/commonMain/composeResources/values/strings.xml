@@ -4,7 +4,9 @@
     <string name="nav_foods">Foods</string>
     <string name="total_carbs">Total Carbs</string>
     <string name="foods_on_plate">Foods on the plate</string>
-    <string name="add_another_food_to_meal">Add another food to the meal</string>
+    <string name="add_another_food_to_meal">Add food</string>
+    <string name="clear_meal">Clear meal</string>
+    <string name="clear_text">Clear text</string>
     <string name="weight">Weight</string>
     <string name="carbs">Carbs</string>
     <string name="delete">Delete</string>

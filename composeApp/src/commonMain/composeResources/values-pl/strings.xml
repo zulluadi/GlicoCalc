@@ -4,7 +4,7 @@
     <string name="nav_foods">Produkty</string>
     <string name="total_carbs">Łączne węglowodany</string>
     <string name="foods_on_plate">Produkty na talerzu</string>
-    <string name="add_another_food_to_meal">Dodaj kolejny produkt do posiłku</string>
+    <string name="add_another_food_to_meal">Dodaj produkt</string>
     <string name="weight">Masa</string>
     <string name="carbs">Węglowodany</string>
     <string name="delete">Usuń</string>

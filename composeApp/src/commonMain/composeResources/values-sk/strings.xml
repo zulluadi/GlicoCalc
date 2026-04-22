@@ -4,7 +4,7 @@
     <string name="nav_foods">Potraviny</string>
     <string name="total_carbs">Celkové sacharidy</string>
     <string name="foods_on_plate">Potraviny na tanieri</string>
-    <string name="add_another_food_to_meal">Pridať ďalšiu potravinu do jedla</string>
+    <string name="add_another_food_to_meal">Pridať potravinu</string>
     <string name="weight">Hmotnosť</string>
     <string name="carbs">Sacharidy</string>
     <string name="delete">Vymazať</string>

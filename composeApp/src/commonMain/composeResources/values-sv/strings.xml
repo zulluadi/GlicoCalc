@@ -4,7 +4,7 @@
     <string name="nav_foods">Livsmedel</string>
     <string name="total_carbs">Totala kolhydrater</string>
     <string name="foods_on_plate">Livsmedel på tallriken</string>
-    <string name="add_another_food_to_meal">Lägg till ett annat livsmedel i måltiden</string>
+    <string name="add_another_food_to_meal">Lägg till livsmedel</string>
     <string name="weight">Vikt</string>
     <string name="carbs">Kolhydrater</string>
     <string name="delete">Ta bort</string>

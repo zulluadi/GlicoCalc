@@ -4,7 +4,7 @@
     <string name="nav_foods">食物</string>
     <string name="total_carbs">总碳水</string>
     <string name="foods_on_plate">盘中食物</string>
-    <string name="add_another_food_to_meal">为这餐再添加一种食物</string>
+    <string name="add_another_food_to_meal">添加食物</string>
     <string name="weight">重量</string>
     <string name="carbs">碳水</string>
     <string name="delete">删除</string>

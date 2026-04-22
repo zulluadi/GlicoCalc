@@ -4,7 +4,7 @@
     <string name="nav_foods">Продукты</string>
     <string name="total_carbs">Общие углеводы</string>
     <string name="foods_on_plate">Продукты на тарелке</string>
-    <string name="add_another_food_to_meal">Добавить ещё один продукт к приёму пищи</string>
+    <string name="add_another_food_to_meal">Добавить продукт</string>
     <string name="weight">Вес</string>
     <string name="carbs">Углеводы</string>
     <string name="delete">Удалить</string>

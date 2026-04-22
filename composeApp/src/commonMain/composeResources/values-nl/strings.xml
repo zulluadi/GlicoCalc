@@ -4,7 +4,7 @@
     <string name="nav_foods">Voedsel</string>
     <string name="total_carbs">Totale koolhydraten</string>
     <string name="foods_on_plate">Voedsel op het bord</string>
-    <string name="add_another_food_to_meal">Nog een voedingsmiddel aan de maaltijd toevoegen</string>
+    <string name="add_another_food_to_meal">Voedsel toevoegen</string>
     <string name="weight">Gewicht</string>
     <string name="carbs">Koolhydraten</string>
     <string name="delete">Verwijderen</string>

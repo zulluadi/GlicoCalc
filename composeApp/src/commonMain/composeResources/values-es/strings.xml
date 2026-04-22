@@ -4,7 +4,7 @@
     <string name="nav_foods">Alimentos</string>
     <string name="total_carbs">Carbohidratos totales</string>
     <string name="foods_on_plate">Alimentos en el plato</string>
-    <string name="add_another_food_to_meal">Agregar otro alimento a la comida</string>
+    <string name="add_another_food_to_meal">Agregar alimento</string>
     <string name="weight">Peso</string>
     <string name="carbs">Carbohidratos</string>
     <string name="delete">Eliminar</string>

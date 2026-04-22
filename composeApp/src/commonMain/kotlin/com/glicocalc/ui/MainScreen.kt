@@ -92,6 +92,7 @@ fun MainApp(
 
                 when (currentScreen) {
                     Screen.Calculator -> CalculatorScreen(
+                        repository = repository,
                         dishes = dishes,
                         baseFoods = baseFoods,
                         mealTypes = mealTypes,

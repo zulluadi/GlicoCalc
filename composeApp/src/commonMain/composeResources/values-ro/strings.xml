@@ -4,7 +4,9 @@
     <string name="nav_foods">Alimente</string>
     <string name="total_carbs">Total Glucide</string>
     <string name="foods_on_plate">Alimente în farfurie</string>
-    <string name="add_another_food_to_meal">Adaugă alt aliment la masă</string>
+    <string name="add_another_food_to_meal">Adaugă aliment</string>
+    <string name="clear_meal">Golește masa</string>
+    <string name="clear_text">Șterge textul</string>
     <string name="weight">Gramaj</string>
     <string name="carbs">Glucide</string>
     <string name="delete">Șterge</string>

@@ -4,7 +4,7 @@
     <string name="nav_foods">Fødevarer</string>
     <string name="total_carbs">Samlede kulhydrater</string>
     <string name="foods_on_plate">Madvarer på tallerkenen</string>
-    <string name="add_another_food_to_meal">Tilføj en anden madvare til måltidet</string>
+    <string name="add_another_food_to_meal">Tilføj madvare</string>
     <string name="weight">Vægt</string>
     <string name="carbs">Kulhydrater</string>
     <string name="delete">Slet</string>

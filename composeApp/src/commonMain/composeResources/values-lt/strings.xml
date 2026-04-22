@@ -4,7 +4,7 @@
     <string name="nav_foods">Produktai</string>
     <string name="total_carbs">Bendras angliavandenių kiekis</string>
     <string name="foods_on_plate">Produktai lėkštėje</string>
-    <string name="add_another_food_to_meal">Pridėti dar vieną produktą į valgį</string>
+    <string name="add_another_food_to_meal">Pridėti produktą</string>
     <string name="weight">Svoris</string>
     <string name="carbs">Angliavandeniai</string>
     <string name="delete">Šalinti</string>

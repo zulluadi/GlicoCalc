@@ -4,7 +4,7 @@
     <string name="nav_foods">Lebensmittel</string>
     <string name="total_carbs">Gesamte Kohlenhydrate</string>
     <string name="foods_on_plate">Lebensmittel auf dem Teller</string>
-    <string name="add_another_food_to_meal">Weiteres Lebensmittel zur Mahlzeit hinzufügen</string>
+    <string name="add_another_food_to_meal">Lebensmittel hinzufügen</string>
     <string name="weight">Gewicht</string>
     <string name="carbs">Kohlenhydrate</string>
     <string name="delete">Löschen</string>

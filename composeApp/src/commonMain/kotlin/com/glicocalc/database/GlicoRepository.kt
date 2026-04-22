@@ -10,6 +10,11 @@ class GlicoRepository(val database: GlicoDatabase) {
     private val queries = database.glicoDatabaseQueries
     var onFoodsChanged: (() -> Unit)? = null
 
+    private companion object {
+        const val CALCULATOR_MEAL_DRAFT_KEY = "calculator_meal_draft"
+        const val CALCULATOR_MEAL_TYPE_ID_KEY = "calculator_meal_type_id"
+    }
+
     fun getAllBaseFoods(): Flow<List<BaseFood>> {
         return queries.selectAllBaseFoods().asFlow().mapToList()
     }
@@ -403,6 +408,27 @@ class GlicoRepository(val database: GlicoDatabase) {
     fun saveFoodLanguage(languageCode: String?) {
         queries.setFoodLanguage(languageCode, 1, PlatformTime.currentTimeMillis())
         notifyLocalDataChanged()
+    }
+
+    fun getCalculatorMealDraft(): String? {
+        return queries.selectSettingByKey(CALCULATOR_MEAL_DRAFT_KEY).executeAsOneOrNull()?.content
+    }
+
+    fun saveCalculatorMealDraft(content: String?) {
+        queries.applyRemoteSetting(CALCULATOR_MEAL_DRAFT_KEY, content, PlatformTime.currentTimeMillis())
+    }
+
+    fun getCalculatorMealTypeId(): Long? {
+        return queries.selectSettingByKey(CALCULATOR_MEAL_TYPE_ID_KEY).executeAsOneOrNull()?.content?.toLongOrNull()
+    }
+
+    fun saveCalculatorMealTypeId(mealTypeId: Long?) {
+        queries.applyRemoteSetting(CALCULATOR_MEAL_TYPE_ID_KEY, mealTypeId?.toString(), PlatformTime.currentTimeMillis())
+    }
+
+    fun clearCalculatorDraft() {
+        saveCalculatorMealDraft(null)
+        saveCalculatorMealTypeId(null)
     }
 
     private fun notifyLocalDataChanged() {

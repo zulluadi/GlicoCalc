@@ -4,7 +4,7 @@
     <string name="nav_foods">Živila</string>
     <string name="total_carbs">Skupni ogljikovi hidrati</string>
     <string name="foods_on_plate">Živila na krožniku</string>
-    <string name="add_another_food_to_meal">Dodaj še eno živilo obroku</string>
+    <string name="add_another_food_to_meal">Dodaj živilo</string>
     <string name="weight">Teža</string>
     <string name="carbs">Ogljikovi hidrati</string>
     <string name="delete">Izbriši</string>

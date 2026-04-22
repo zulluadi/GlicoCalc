@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,11 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.glicocalc.database.BaseFood
+import com.glicocalc.database.Dish
+import com.glicocalc.database.GlicoRepository
 import com.glicocalc.database.MealType
 import com.glicocalc.logic.CarbCalculator
 import com.glicocalc.logic.removeDiacritics
-import com.glicocalc.database.Dish
-import com.glicocalc.database.BaseFood
 import com.glicocalc.models.DishWithComposition
 
 data class MealItem(
@@ -48,6 +50,91 @@ private data class SearchableFood(
 private enum class EditedField {
     Weight,
     Carbs
+}
+
+private enum class MealItemSelectionType {
+    Dish,
+    Food,
+    None
+}
+
+private data class PersistedMealItem(
+    val selectionType: MealItemSelectionType,
+    val selectedId: Long? = null,
+    val weightText: String = "",
+    val carbsText: String = ""
+)
+
+private fun serializeMealItems(items: List<MealItem>): String {
+    return items.joinToString(separator = "\n") { item ->
+        val (type, id) = when {
+            item.selectedDish != null -> MealItemSelectionType.Dish.name to item.selectedDish.dish.id.toString()
+            item.selectedBaseFood != null -> MealItemSelectionType.Food.name to item.selectedBaseFood.id.toString()
+            else -> MealItemSelectionType.None.name to ""
+        }
+        listOf(type, id, item.weightText, item.carbsText).joinToString(separator = "\t")
+    }
+}
+
+private fun deserializeMealItems(
+    serialized: String,
+    onSelectDish: (Long) -> DishWithComposition?,
+    onSelectBaseFood: (Long) -> BaseFood?
+): List<MealItem> {
+    return serialized
+        .lineSequence()
+        .mapNotNull { line ->
+            val parts = line.split('\t')
+            if (parts.size != 4) return@mapNotNull null
+            val persisted = PersistedMealItem(
+                selectionType = MealItemSelectionType.entries.firstOrNull { it.name == parts[0] } ?: MealItemSelectionType.None,
+                selectedId = parts[1].toLongOrNull(),
+                weightText = parts[2],
+                carbsText = parts[3]
+            )
+            when (persisted.selectionType) {
+                MealItemSelectionType.Dish -> {
+                    val dish = persisted.selectedId?.let(onSelectDish) ?: return@mapNotNull null
+                    MealItem(
+                        selectedDish = dish,
+                        weightText = persisted.weightText,
+                        carbsText = persisted.carbsText
+                    )
+                }
+                MealItemSelectionType.Food -> {
+                    val food = persisted.selectedId?.let(onSelectBaseFood) ?: return@mapNotNull null
+                    MealItem(
+                        selectedBaseFood = food,
+                        weightText = persisted.weightText,
+                        carbsText = persisted.carbsText
+                    )
+                }
+                MealItemSelectionType.None -> MealItem(
+                    weightText = persisted.weightText,
+                    carbsText = persisted.carbsText
+                )
+            }
+        }
+        .toList()
+}
+
+private fun isMeaningfulMealItem(item: MealItem): Boolean {
+    return item.selectedDish != null ||
+        item.selectedBaseFood != null ||
+        item.weightText.isNotBlank() ||
+        item.carbsText.isNotBlank()
+}
+
+@Composable
+private fun ClearTextButton(
+    onClear: () -> Unit
+) {
+    IconButton(onClick = onClear) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = Strings.clearText()
+        )
+    }
 }
 
 private fun MealItem.carbsPer100g(): Double? {
@@ -91,6 +178,7 @@ private fun syncMealItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalculatorScreen(
+    repository: GlicoRepository,
     dishes: List<Dish>,
     baseFoods: List<BaseFood>,
     mealTypes: List<MealType>,
@@ -101,7 +189,15 @@ fun CalculatorScreen(
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
     val resolveMealTypeName = rememberMealTypeNameResolver()
-    val mealItems = remember { mutableStateListOf<MealItem>(MealItem()) }
+    val initialMealItems = remember {
+        deserializeMealItems(
+            serialized = repository.getCalculatorMealDraft().orEmpty(),
+            onSelectDish = onSelectDish,
+            onSelectBaseFood = onSelectBaseFood
+        ).ifEmpty { listOf(MealItem()) }
+    }
+    val mealItems = remember { mutableStateListOf<MealItem>().apply { addAll(initialMealItems) } }
+    val persistedMealTypeId = remember { repository.getCalculatorMealTypeId() }
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
     val searchableDishes = remember(dishes) {
         dishes.map { dish ->
@@ -129,9 +225,24 @@ fun CalculatorScreen(
     val selectedMealType = remember(selectedMealTypeId, mealTypes) {
         mealTypes.firstOrNull { it.id == selectedMealTypeId }
     }
+    val hasEditableMeal = remember(mealItems.toList()) { mealItems.any(::isMeaningfulMealItem) }
 
     LaunchedEffect(resumeSignal, mealTypes) {
-        selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
+        val restoredMealTypeId = persistedMealTypeId?.takeIf { savedId ->
+            mealTypes.any { it.id == savedId }
+        }
+        val activeMealTypeId = selectedMealTypeId?.takeIf { activeId ->
+            mealTypes.any { it.id == activeId }
+        }
+        selectedMealTypeId = activeMealTypeId ?: restoredMealTypeId ?: nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
+    }
+
+    LaunchedEffect(mealItems.toList()) {
+        repository.saveCalculatorMealDraft(serializeMealItems(mealItems))
+    }
+
+    LaunchedEffect(selectedMealTypeId) {
+        repository.saveCalculatorMealTypeId(selectedMealTypeId)
     }
 
     Column(
@@ -220,17 +331,40 @@ fun CalculatorScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        Button(
-            onClick = { mealItems.add(MealItem()) },
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(Strings.addAnotherFoodToMeal())
+            Button(
+                onClick = { mealItems.add(MealItem()) },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(Strings.addAnotherFoodToMeal())
+            }
+
+            OutlinedButton(
+                onClick = {
+                    mealItems.clear()
+                    mealItems.add(MealItem())
+                    selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
+                    repository.clearCalculatorDraft()
+                },
+                modifier = Modifier.weight(1f),
+                enabled = hasEditableMeal,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(Strings.clearMeal())
+            }
         }
 
         if (mealTypes.isNotEmpty()) {
@@ -463,7 +597,15 @@ private fun MealItemRow(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),
                             singleLine = true,
-                            maxLines = 1
+                            maxLines = 1,
+                            suffix = {
+                                if (searchQuery.isNotBlank()) {
+                                    ClearTextButton {
+                                        searchQuery = ""
+                                        onUpdate(item.copy(selectedDish = null, selectedBaseFood = null))
+                                    }
+                                }
+                            }
                         )
 
                         if (filteredDishList.isNotEmpty() || filteredFoodList.isNotEmpty()) {
@@ -534,7 +676,14 @@ private fun MealItemRow(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                         suffix = { Text("g") },
-                        singleLine = true
+                        singleLine = true,
+                        trailingIcon = {
+                            if (item.weightText.isNotBlank()) {
+                                ClearTextButton {
+                                    onUpdate(syncMealItem(item.copy(weightText = ""), EditedField.Weight))
+                                }
+                            }
+                        }
                     )
 
                     Row(
@@ -553,7 +702,14 @@ private fun MealItemRow(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
                             suffix = { Text("g") },
-                            singleLine = true
+                            singleLine = true,
+                            trailingIcon = {
+                                if (item.carbsText.isNotBlank()) {
+                                    ClearTextButton {
+                                        onUpdate(syncMealItem(item.copy(carbsText = ""), EditedField.Carbs))
+                                    }
+                                }
+                            }
                         )
                     }
                 }

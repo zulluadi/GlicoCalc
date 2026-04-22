@@ -4,7 +4,7 @@
     <string name="nav_foods">Τρόφιμα</string>
     <string name="total_carbs">Συνολικοί υδατάνθρακες</string>
     <string name="foods_on_plate">Τρόφιμα στο πιάτο</string>
-    <string name="add_another_food_to_meal">Προσθήκη άλλης τροφής στο γεύμα</string>
+    <string name="add_another_food_to_meal">Προσθήκη τροφής</string>
     <string name="weight">Βάρος</string>
     <string name="carbs">Υδατάνθρακες</string>
     <string name="delete">Διαγραφή</string>
