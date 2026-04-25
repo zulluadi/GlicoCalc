@@ -1,6 +1,7 @@
 package com.glicocalc
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import java.text.DateFormat
 import java.util.Date
@@ -32,6 +33,7 @@ import com.glicocalc.ui.hasLoadedPersistedAppLocale
 import com.glicocalc.ui.hasLoadedPersistedFoodLocale
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +42,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private companion object {
+        const val TAG = "MainActivity"
+    }
+
     private var resumeSignal by mutableStateOf(0)
     private var syncAccountLabel by mutableStateOf<String?>(null)
     private var syncUiState by mutableStateOf(SyncUiState(status = SyncStatus.IDLE, pendingCount = 0, isSignedIn = false))
@@ -164,7 +170,10 @@ class MainActivity : ComponentActivity() {
             try {
                 val credential = requestGoogleCredential(serverClientId, true)
                     ?: requestGoogleCredential(serverClientId, false)
-                    ?: return@launch
+                    ?: run {
+                        showToast("Google Sign-In could not start. Check the release signing SHA in Firebase.")
+                        return@launch
+                    }
 
                 if (credential is CustomCredential &&
                     credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -177,9 +186,14 @@ class MainActivity : ComponentActivity() {
                     showToast("Google Sign-In did not return a valid credential.")
                 }
             } catch (exception: GetCredentialException) {
-                showToast(exception.localizedMessage ?: "Google Sign-In failed.")
+                Log.w(TAG, "Google credential request failed.", exception)
+                showToast(googleSignInErrorMessage(exception))
+            } catch (exception: FirebaseException) {
+                Log.w(TAG, "Firebase Google sign-in failed.", exception)
+                showToast(googleSignInErrorMessage(exception))
             } catch (exception: Exception) {
-                showToast(exception.localizedMessage ?: "Google Sign-In failed.")
+                Log.w(TAG, "Unexpected Google sign-in failure.", exception)
+                showToast(googleSignInErrorMessage(exception))
             }
         }
     }
@@ -216,6 +230,44 @@ class MainActivity : ComponentActivity() {
                 foodSyncManager.requestSync()
                 showToast("Sync account disconnected.")
             }
+        }
+    }
+
+    private fun googleSignInErrorMessage(exception: Throwable): String {
+        val details = buildString {
+            append(exception.message.orEmpty())
+            if (exception.localizedMessage != exception.message) {
+                append(' ')
+                append(exception.localizedMessage.orEmpty())
+            }
+            exception.cause?.message?.takeIf { it.isNotBlank() }?.let {
+                append(' ')
+                append(it)
+            }
+        }
+
+        val normalizedDetails = details.lowercase()
+        return when {
+            "not registered to use oauth2.0" in normalizedDetails ||
+                "sha-1" in normalizedDetails ||
+                "developer console" in normalizedDetails ||
+                "caller not whitelisted" in normalizedDetails ||
+                "developer_error" in normalizedDetails -> {
+                "Google Sign-In is misconfigured for this installed build. Add this release/App Distribution SHA-1 and package name in Firebase, then download a fresh google-services.json."
+            }
+
+            "network" in normalizedDetails || "timeout" in normalizedDetails -> {
+                "Google Sign-In failed because the network request did not complete."
+            }
+
+            "canceled" in normalizedDetails || "cancelled" in normalizedDetails -> {
+                "Google Sign-In was cancelled."
+            }
+
+            else -> exception.localizedMessage
+                ?.takeIf { it.isNotBlank() }
+                ?: exception.message?.takeIf { it.isNotBlank() }
+                ?: "Google Sign-In failed."
         }
     }
 
