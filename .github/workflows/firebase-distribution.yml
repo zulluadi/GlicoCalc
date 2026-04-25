@@ -26,12 +26,23 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create local.properties and google-services.json
+      - name: Create Firebase config and release keystore
         run: |
           echo "firebaseAppDistribution.appId=${{ secrets.FIREBASE_APP_ID }}" >> gradle.properties
+          echo "ANDROID_RELEASE_STORE_FILE=${RUNNER_TEMP}/glicocalc-release.keystore" >> gradle.properties
+          echo "ANDROID_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}" >> gradle.properties
+          echo "ANDROID_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}" >> gradle.properties
+          echo "ANDROID_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}" >> gradle.properties
+
+          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode --ignore-garbage > "${RUNNER_TEMP}/glicocalc-release.keystore"
+          if [ ! -s "${RUNNER_TEMP}/glicocalc-release.keystore" ]; then
+            echo "ERROR: release keystore is EMPTY! Ensure ANDROID_RELEASE_KEYSTORE_BASE64 is correctly set."
+            exit 1
+          fi
+
           # Decode safely handling any newlines or formatting variations
           echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode --ignore-garbage > composeApp/google-services.json
-          
+
           # Validation Step
           if [ ! -s composeApp/google-services.json ]; then
             echo "ERROR: google-services.json is EMPTY! Ensure your GOOGLE_SERVICES_JSON_BASE64 secret is correctly set."
@@ -42,7 +53,15 @@ jobs:
             exit 1
           fi
 
-      - name: Build and Upload to Firebase App Distribution
+      - name: Print release signing SHA-1
+        run: |
+          keytool -list -v \
+            -keystore "${RUNNER_TEMP}/glicocalc-release.keystore" \
+            -storepass "${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}" \
+            -alias "${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}" \
+            -keypass "${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}" | grep "SHA1:"
+
+      - name: Build signed APK and upload to Firebase App Distribution
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: ./gradlew :composeApp:assembleRelease :composeApp:appDistributionUploadRelease -PfirebaseAppDistribution.testers="${{ secrets.FIREBASE_TESTERS }}"

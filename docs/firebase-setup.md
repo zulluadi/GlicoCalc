@@ -23,7 +23,9 @@ When you are ready to enable Firebase:
     *   **Cloud Firestore** -> create a database
 3.  Add the app's SHA fingerprints in the Firebase project settings for Android before testing Google Sign-In.
 4.  After enabling Google sign-in, download the updated `google-services.json` again and replace the old file. Firebase's Google sign-in flow relies on the OAuth client data from that updated config.
-5.  Use Firestore rules that isolate each user's food diffs under their own UID, for example:
+5.  Use a dedicated release keystore for GitHub-distributed builds. Add that keystore's `SHA-1` and `SHA-256` to the Android app in Firebase, then download `google-services.json` again after the fingerprints are saved.
+6.  Until the app is published to a Google Play internal testing, closed testing, open testing, or production track, distribute signed APKs through Firebase App Distribution. Android App Bundle uploads require the Firebase project to be linked to a published Google Play app with the same package name.
+7.  Use Firestore rules that isolate each user's food diffs under their own UID, for example:
 
     ```text
     rules_version = '2';
@@ -36,16 +38,21 @@ When you are ready to enable Firebase:
     }
     ```
 
-6.  The app sync stores only user-specific food diffs:
+8.  The app sync stores only user-specific food diffs:
     *   custom foods
     *   edits to default foods
     *   deletions of default foods
-7.  Keep Firebase config files out of Git (already added to `.gitignore`).
-8.  For GitHub Actions, add the following **Repository Secrets**:
+9.  Keep Firebase config files and keystores out of Git (already added to `.gitignore`).
+10.  For GitHub Actions, add the following **Repository Secrets**:
     *   `FIREBASE_TOKEN`: Obtain via `firebase login:ci`.
     *   `FIREBASE_APP_ID`: Your Firebase App ID.
     *   `FIREBASE_TESTERS`: Comma-separated list of tester emails.
-    *   `GOOGLE_SERVICES_JSON`: The full content of your `google-services.json` file.
+    *   `GOOGLE_SERVICES_JSON_BASE64`: Base64 of the latest `google-services.json` downloaded after the Firebase SHA fingerprints were updated.
+    *   `ANDROID_RELEASE_KEYSTORE_BASE64`: Base64 of the release keystore file used by GitHub Actions.
+    *   `ANDROID_RELEASE_STORE_PASSWORD`: The release keystore password.
+    *   `ANDROID_RELEASE_KEY_ALIAS`: The alias of the release signing key inside the keystore.
+    *   `ANDROID_RELEASE_KEY_PASSWORD`: The password for that release key.
+11.  The GitHub Actions workflow prints the release keystore `SHA-1` during the build. Verify that the printed fingerprint matches the one registered in Firebase whenever Google sign-in is changed or release signing is rotated.
 
 ## Why This Setup?
 

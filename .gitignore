@@ -17,6 +17,7 @@ captures/
 *.aab
 
 # Signing and service config
+.secrets/
 *.jks
 *.keystore
 **/google-services.json

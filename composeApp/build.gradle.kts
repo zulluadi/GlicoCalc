@@ -15,6 +15,22 @@ if (hasGoogleServices) {
     apply(plugin = "com.google.firebase.appdistribution")
 }
 
+fun Project.secretOrProperty(name: String): String? {
+    return providers.gradleProperty(name).orNull
+        ?: providers.environmentVariable(name).orNull
+}
+
+val releaseStoreFilePath = project.secretOrProperty("ANDROID_RELEASE_STORE_FILE")
+val releaseStorePassword = project.secretOrProperty("ANDROID_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = project.secretOrProperty("ANDROID_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = project.secretOrProperty("ANDROID_RELEASE_KEY_PASSWORD")
+val hasReleaseSigning = listOf(
+    releaseStoreFilePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { !it.isNullOrBlank() }
+
 kotlin {
     androidTarget {
         compilations.all {
@@ -61,6 +77,18 @@ kotlin {
 android {
     namespace = "com.glicocalc"
     compileSdk = 34
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFilePath!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.glicocalc"
         minSdk = 24
@@ -71,7 +99,12 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.warn("Release keystore is not configured. Falling back to the debug signing key.")
+                signingConfigs.getByName("debug")
+            }
             if (hasGoogleServices) {
                 apply(from = "firebase-config.gradle")
             }

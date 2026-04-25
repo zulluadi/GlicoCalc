@@ -3,6 +3,7 @@ apply plugin: 'com.google.firebase.appdistribution'
 
 firebaseAppDistribution {
     appId = project.findProperty("firebaseAppDistribution.appId") ?: ""
+    artifactType = "APK"
     testers = project.findProperty("firebaseAppDistribution.testers") ?: ""
     releaseNotes = {
         try {
