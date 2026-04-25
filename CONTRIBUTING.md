@@ -25,6 +25,20 @@ Please keep pull requests focused and include:
 - screenshots for UI changes when relevant
 - testing notes
 
+## Commit Messages
+
+Use the project commit convention in [.agent/rules/commit-style.md](.agent/rules/commit-style.md). In short, commit messages should use the area prefix style:
+
+```text
+<Area>: <Summary>
+```
+
+Examples:
+
+- `Calculator: Persist meal draft between app sessions`
+- `UI: Keep dish actions visible on small screens`
+- `Docs: Document Firebase setup requirements`
+
 ## Data And Safety
 
 - Do not commit private user data or health-related records.
