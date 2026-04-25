@@ -13,6 +13,7 @@ local.properties
 
 # Android artifacts
 captures/
+composeApp/release/
 *.apk
 *.aab
 
