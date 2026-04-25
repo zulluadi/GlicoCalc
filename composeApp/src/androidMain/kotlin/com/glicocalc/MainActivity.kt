@@ -32,6 +32,7 @@ import com.glicocalc.ui.customFoodLocale
 import com.glicocalc.ui.hasLoadedPersistedAppLocale
 import com.glicocalc.ui.hasLoadedPersistedFoodLocale
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.GoogleAuthProvider
@@ -102,6 +103,7 @@ class MainActivity : ComponentActivity() {
                 syncStatusMessage = syncStatusMessage(),
                 lastSyncedMessage = lastSyncedMessage(),
                 onSignInToSync = if (canOfferGoogleSignIn()) ::launchGoogleSignIn else null,
+                onSwitchSyncAccount = if (canOfferGoogleSignIn() && syncAccountLabel != null) ::switchSyncAccount else null,
                 onSignOutFromSync = if (canOfferGoogleSignIn()) ::signOutFromSync else null,
                 onManualSync = if (foodSyncManager.isEnabled) foodSyncManager::requestSync else null,
                 resumeSignal = resumeSignal
@@ -168,7 +170,7 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             try {
-                val credential = requestGoogleCredential(serverClientId, true)
+                val credential = requestExplicitGoogleSignIn(serverClientId)
                     ?: requestGoogleCredential(serverClientId, false)
                     ?: run {
                         showToast("Google Sign-In could not start. Check the release signing SHA in Firebase.")
@@ -198,6 +200,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun switchSyncAccount() {
+        lifecycleScope.launch {
+            try {
+                foodSyncManager.signOut()
+                credentialManager.clearCredentialState(ClearCredentialStateRequest())
+            } catch (_: ClearCredentialException) {
+                // Continue to account selection even if Android has no cached credential state.
+            } finally {
+                syncAccountLabel = null
+                launchGoogleSignIn()
+            }
+        }
+    }
+
+    private suspend fun requestExplicitGoogleSignIn(serverClientId: String): Credential? {
+        val googleSignInOption = GetSignInWithGoogleOption.Builder(serverClientId)
+            .build()
+
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleSignInOption)
+            .build()
+
+        return try {
+            credentialManager.getCredential(this, request).credential
+        } catch (_: NoCredentialException) {
+            null
+        }
+    }
+
     private suspend fun requestGoogleCredential(
         serverClientId: String,
         authorizedOnly: Boolean
@@ -205,6 +236,7 @@ class MainActivity : ComponentActivity() {
         val googleIdOption = GetGoogleIdOption.Builder()
             .setServerClientId(serverClientId)
             .setFilterByAuthorizedAccounts(authorizedOnly)
+            .setAutoSelectEnabled(false)
             .build()
 
         val request = GetCredentialRequest.Builder()

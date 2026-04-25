@@ -1,6 +1,8 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -31,6 +33,7 @@ fun SettingsScreen(
     onOpenLanguagePicker: () -> Unit,
     onOpenFoodLanguagePicker: () -> Unit,
     onSignInToSync: (() -> Unit)?,
+    onSwitchSyncAccount: (() -> Unit)?,
     onSignOutFromSync: (() -> Unit)?,
     onManualSync: (() -> Unit)?,
     onOpenMealTypes: () -> Unit,
@@ -83,10 +86,21 @@ fun SettingsScreen(
                     },
                     trailingContent = {
                         when {
-                            syncAccountLabel != null -> SettingsActionButton(
-                                label = Strings.signOut(),
-                                onClick = { onSignOutFromSync?.invoke() }
-                            )
+                            syncAccountLabel != null -> Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (onSwitchSyncAccount != null) {
+                                    SettingsActionButton(
+                                        label = Strings.switchAccount(),
+                                        onClick = onSwitchSyncAccount
+                                    )
+                                }
+                                SettingsActionButton(
+                                    label = Strings.signOut(),
+                                    onClick = { onSignOutFromSync?.invoke() }
+                                )
+                            }
                             onSignInToSync != null -> SettingsActionButton(
                                 label = Strings.signInWithGoogle(),
                                 onClick = onSignInToSync
@@ -94,7 +108,7 @@ fun SettingsScreen(
                         }
                     },
                     modifier = Modifier.clickable(enabled = syncAccountLabel != null || onSignInToSync != null) {
-                        if (syncAccountLabel == null) onSignInToSync?.invoke() else onSignOutFromSync?.invoke()
+                        if (syncAccountLabel == null) onSignInToSync?.invoke() else onSwitchSyncAccount?.invoke()
                     }
                 )
                 HorizontalDivider()

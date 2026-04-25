@@ -25,6 +25,7 @@ fun MainApp(
     syncStatusMessage: String? = null,
     lastSyncedMessage: String? = null,
     onSignInToSync: (() -> Unit)? = null,
+    onSwitchSyncAccount: (() -> Unit)? = null,
     onSignOutFromSync: (() -> Unit)? = null,
     onManualSync: (() -> Unit)? = null,
     resumeSignal: Int = 0
@@ -174,6 +175,7 @@ fun MainApp(
                         onOpenLanguagePicker = { showLanguageDialog = true },
                         onOpenFoodLanguagePicker = { showFoodLanguageDialog = true },
                         onSignInToSync = onSignInToSync,
+                        onSwitchSyncAccount = onSwitchSyncAccount,
                         onSignOutFromSync = onSignOutFromSync,
                         onManualSync = onManualSync,
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },

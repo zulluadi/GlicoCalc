@@ -55,6 +55,7 @@ import glicocalc.composeapp.generated.resources.save
 import glicocalc.composeapp.generated.resources.search_food_placeholder
 import glicocalc.composeapp.generated.resources.sign_in_with_google
 import glicocalc.composeapp.generated.resources.sign_out
+import glicocalc.composeapp.generated.resources.switch_account
 import glicocalc.composeapp.generated.resources.settings
 import glicocalc.composeapp.generated.resources.same_as_app_language
 import glicocalc.composeapp.generated.resources.add_meal_type
@@ -135,6 +136,7 @@ object Strings {
     @Composable fun syncNow() = stringResource(Res.string.sync_now)
     @Composable fun syncSignedInGoogle() = stringResource(Res.string.sync_signed_in_google)
     @Composable fun signInWithGoogle() = stringResource(Res.string.sign_in_with_google)
+    @Composable fun switchAccount() = stringResource(Res.string.switch_account)
     @Composable fun signOut() = stringResource(Res.string.sign_out)
     @Composable fun mealTypes() = stringResource(Res.string.meal_types)
     @Composable fun mealTypesDescription() = stringResource(Res.string.meal_types_description)
