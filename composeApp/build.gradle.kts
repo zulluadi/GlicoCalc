@@ -40,10 +40,18 @@ kotlin {
         }
     }
     
-    // Suport iOS
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    val iosX64Target = iosX64()
+    val iosArm64Target = iosArm64()
+    val iosSimulatorArm64Target = iosSimulatorArm64()
+    val iosTargets = listOf(iosX64Target, iosArm64Target, iosSimulatorArm64Target)
+
+    iosTargets.forEach { target ->
+        target.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+            binaryOption("bundleId", "com.glicocalc.composeapp")
+        }
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -70,6 +78,21 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
             }
+        }
+        val iosMain by creating {
+            dependsOn(commonMain)
+            dependencies {
+                implementation("com.squareup.sqldelight:native-driver:1.5.5")
+            }
+        }
+        val iosX64Main by getting {
+            dependsOn(iosMain)
+        }
+        val iosArm64Main by getting {
+            dependsOn(iosMain)
+        }
+        val iosSimulatorArm64Main by getting {
+            dependsOn(iosMain)
         }
     }
 }
