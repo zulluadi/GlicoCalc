@@ -75,4 +75,12 @@
     <string name="meal_item_label">Food %1$d</string>
     <string name="carbs_per_100g">%1$s g carbs / 100 g</string>
     <string name="carbs_percent">%1$s%% carbs</string>
+
+    <!-- Packed food -->
+    <string name="packed_food">Packed food</string>
+    <string name="pack_total_weight">Pack total weight</string>
+    <string name="pack_count">Number of pieces</string>
+    <string name="use_pieces">Use pieces</string>
+    <string name="pieces">Pieces</string>
+    <string name="pcs">pcs</string>
 </resources>

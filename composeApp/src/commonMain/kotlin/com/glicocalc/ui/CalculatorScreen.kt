@@ -30,9 +30,18 @@ data class MealItem(
     val selectedDish: DishWithComposition? = null,
     val selectedBaseFood: BaseFood? = null,
     val weightText: String = "",
-    val carbsText: String = ""
+    val carbsText: String = "",
+    val usePieces: Boolean = false
 ) {
     val displayName: String get() = selectedDish?.dish?.name ?: selectedBaseFood?.name ?: ""
+}
+
+private fun BaseFood.weightPerPiece(): Double? {
+    if (isPacked == 0L) return null
+    val pw = packWeight ?: return null
+    val pc = packCount ?: return null
+    if (pc <= 0L) return null
+    return pw / pc
 }
 
 private data class SearchableDish(
@@ -62,7 +71,8 @@ private data class PersistedMealItem(
     val selectionType: MealItemSelectionType,
     val selectedId: Long? = null,
     val weightText: String = "",
-    val carbsText: String = ""
+    val carbsText: String = "",
+    val usePieces: Boolean = false
 )
 
 private fun serializeMealItems(items: List<MealItem>): String {
@@ -72,7 +82,7 @@ private fun serializeMealItems(items: List<MealItem>): String {
             item.selectedBaseFood != null -> MealItemSelectionType.Food.name to item.selectedBaseFood.id.toString()
             else -> MealItemSelectionType.None.name to ""
         }
-        listOf(type, id, item.weightText, item.carbsText).joinToString(separator = "\t")
+        listOf(type, id, item.weightText, item.carbsText, if (item.usePieces) "1" else "0").joinToString(separator = "\t")
     }
 }
 
@@ -85,12 +95,14 @@ private fun deserializeMealItems(
         .lineSequence()
         .mapNotNull { line ->
             val parts = line.split('\t')
-            if (parts.size != 4) return@mapNotNull null
+            if (parts.size < 4) return@mapNotNull null
+            val usePieces = parts.size >= 5 && parts[4] == "1"
             val persisted = PersistedMealItem(
                 selectionType = MealItemSelectionType.entries.firstOrNull { it.name == parts[0] } ?: MealItemSelectionType.None,
                 selectedId = parts[1].toLongOrNull(),
                 weightText = parts[2],
-                carbsText = parts[3]
+                carbsText = parts[3],
+                usePieces = usePieces
             )
             when (persisted.selectionType) {
                 MealItemSelectionType.Dish -> {
@@ -98,7 +110,8 @@ private fun deserializeMealItems(
                     MealItem(
                         selectedDish = dish,
                         weightText = persisted.weightText,
-                        carbsText = persisted.carbsText
+                        carbsText = persisted.carbsText,
+                        usePieces = false
                     )
                 }
                 MealItemSelectionType.Food -> {
@@ -106,7 +119,8 @@ private fun deserializeMealItems(
                     MealItem(
                         selectedBaseFood = food,
                         weightText = persisted.weightText,
-                        carbsText = persisted.carbsText
+                        carbsText = persisted.carbsText,
+                        usePieces = persisted.usePieces && food.isPacked != 0L
                     )
                 }
                 MealItemSelectionType.None -> MealItem(
@@ -155,23 +169,77 @@ private fun syncMealItem(
         selectedBaseFood = selectedBaseFood
     )
     val carbsPer100g = updatedItem.carbsPer100g() ?: return updatedItem
-    val weight = updatedItem.weightText.toDoubleOrNull()
-    val carbs = updatedItem.carbsText.toDoubleOrNull()
 
-    return when (editedField) {
-        EditedField.Weight -> {
-            val syncedCarbs = weight?.let { formatDecimal(it * carbsPer100g / 100.0) }.orEmpty()
-            updatedItem.copy(carbsText = syncedCarbs)
+    if (updatedItem.usePieces) {
+        val baseFood = updatedItem.selectedBaseFood
+        if (baseFood == null || baseFood.isPacked == 0L) {
+            return updatedItem.copy(usePieces = false)
         }
-        EditedField.Carbs -> {
-            val syncedWeight = carbs?.let { formatDecimal(it * 100.0 / carbsPer100g) }.orEmpty()
-            updatedItem.copy(weightText = syncedWeight)
+        val weightPerPiece = baseFood.weightPerPiece() ?: return updatedItem.copy(usePieces = false)
+
+        val weight = updatedItem.weightText.toDoubleOrNull()
+        val carbs = updatedItem.carbsText.toDoubleOrNull()
+
+        return when (editedField) {
+            EditedField.Weight -> {
+                val pieces = weight ?: return updatedItem
+                val grams = pieces * weightPerPiece
+                val syncedCarbs = formatDecimal(grams * carbsPer100g / 100.0)
+                updatedItem.copy(carbsText = syncedCarbs)
+            }
+            EditedField.Carbs -> {
+                val carbsVal = carbs ?: return updatedItem
+                val grams = carbsVal * 100.0 / carbsPer100g
+                val pieces = formatDecimal(grams / weightPerPiece)
+                updatedItem.copy(weightText = pieces)
+            }
+            null -> when {
+                weight != null -> {
+                    val grams = weight * weightPerPiece
+                    updatedItem.copy(carbsText = formatDecimal(grams * carbsPer100g / 100.0))
+                }
+                carbs != null -> {
+                    val grams = carbs * 100.0 / carbsPer100g
+                    val pieces = formatDecimal(grams / weightPerPiece)
+                    updatedItem.copy(weightText = pieces)
+                }
+                else -> updatedItem
+            }
         }
-        null -> when {
-            weight != null -> updatedItem.copy(carbsText = formatDecimal(weight * carbsPer100g / 100.0))
-            carbs != null -> updatedItem.copy(weightText = formatDecimal(carbs * 100.0 / carbsPer100g))
-            else -> updatedItem
+    } else {
+        val weight = updatedItem.weightText.toDoubleOrNull()
+        val carbs = updatedItem.carbsText.toDoubleOrNull()
+
+        return when (editedField) {
+            EditedField.Weight -> {
+                val syncedCarbs = weight?.let { formatDecimal(it * carbsPer100g / 100.0) }.orEmpty()
+                updatedItem.copy(carbsText = syncedCarbs)
+            }
+            EditedField.Carbs -> {
+                val syncedWeight = carbs?.let { formatDecimal(it * 100.0 / carbsPer100g) }.orEmpty()
+                updatedItem.copy(weightText = syncedWeight)
+            }
+            null -> when {
+                weight != null -> updatedItem.copy(carbsText = formatDecimal(weight * carbsPer100g / 100.0))
+                carbs != null -> updatedItem.copy(weightText = formatDecimal(carbs * 100.0 / carbsPer100g))
+                else -> updatedItem
+            }
         }
+    }
+}
+
+private fun convertWeightForPieceToggle(
+    weightText: String,
+    toPieces: Boolean,
+    baseFood: BaseFood?
+): String {
+    val food = baseFood ?: return weightText
+    val weightPerPiece = food.weightPerPiece() ?: return weightText
+    val value = weightText.toDoubleOrNull() ?: return ""
+    return if (toPieces) {
+        formatDecimal(value / weightPerPiece)
+    } else {
+        formatDecimal(value * weightPerPiece)
     }
 }
 
@@ -508,6 +576,9 @@ private fun MealItemRow(
     }
     val (filteredDishList, filteredFoodList) = filteredResults
 
+    val selectedBaseFood = item.selectedBaseFood
+    val isPackedFood = selectedBaseFood != null && selectedBaseFood.isPacked != 0L
+
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
@@ -602,7 +673,7 @@ private fun MealItemRow(
                                 if (searchQuery.isNotBlank()) {
                                     ClearTextButton {
                                         searchQuery = ""
-                                        onUpdate(item.copy(selectedDish = null, selectedBaseFood = null))
+                                        onUpdate(item.copy(selectedDish = null, selectedBaseFood = null, usePieces = false))
                                     }
                                 }
                             }
@@ -661,6 +732,53 @@ private fun MealItemRow(
                     )
                 }
 
+                if (isPackedFood) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = Strings.usePieces(),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Switch(
+                            checked = item.usePieces,
+                            onCheckedChange = { usePieces ->
+                                if (usePieces) {
+                                    val newWeightText = convertWeightForPieceToggle(
+                                        weightText = item.weightText,
+                                        toPieces = true,
+                                        baseFood = selectedBaseFood
+                                    )
+                                    onUpdate(
+                                        syncMealItem(
+                                            item.copy(
+                                                weightText = newWeightText,
+                                                usePieces = true
+                                            )
+                                        )
+                                    )
+                                } else {
+                                    val newWeightText = convertWeightForPieceToggle(
+                                        weightText = item.weightText,
+                                        toPieces = false,
+                                        baseFood = selectedBaseFood
+                                    )
+                                    onUpdate(
+                                        syncMealItem(
+                                            item.copy(
+                                                weightText = newWeightText,
+                                                usePieces = false
+                                            )
+                                        )
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -672,10 +790,10 @@ private fun MealItemRow(
                                 onUpdate(syncMealItem(item.copy(weightText = it), EditedField.Weight))
                             }
                         },
-                        label = { Text(Strings.weight()) },
+                        label = { Text(if (item.usePieces && isPackedFood) Strings.pieces() else Strings.weight()) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
-                        suffix = { Text("g") },
+                        suffix = { Text(if (item.usePieces && isPackedFood) Strings.pcs() else "g") },
                         singleLine = true,
                         trailingIcon = {
                             if (item.weightText.isNotBlank()) {

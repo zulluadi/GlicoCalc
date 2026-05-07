@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -13,11 +14,20 @@ import com.glicocalc.ui.Strings
 fun FoodEditorDialog(
     initialName: String = "",
     initialCarbs: String = "",
+    initialIsPacked: Boolean = false,
+    initialPackWeight: String = "",
+    initialPackCount: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (name: String, carbs: Double) -> Unit
+    onConfirm: (name: String, carbs: Double, isPacked: Boolean, packWeight: Double?, packCount: Int?) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
     var carbsText by remember { mutableStateOf(initialCarbs) }
+    var isPacked by remember { mutableStateOf(initialIsPacked) }
+    var packWeightText by remember { mutableStateOf(initialPackWeight) }
+    var packCountText by remember { mutableStateOf(initialPackCount) }
+
+    val isValid = name.isNotBlank() && carbsText.toDoubleOrNull() != null &&
+        (!isPacked || (packWeightText.toDoubleOrNull() != null && (packCountText.toIntOrNull() ?: 0) > 0))
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -39,13 +49,46 @@ fun FoodEditorDialog(
                     modifier = Modifier.fillMaxWidth(),
                     suffix = { Text("g") }
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(Strings.packedFood())
+                    Switch(checked = isPacked, onCheckedChange = { isPacked = it })
+                }
+
+                if (isPacked) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = packWeightText,
+                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) packWeightText = it },
+                        label = { Text(Strings.packTotalWeight()) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        suffix = { Text("g") }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = packCountText,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) packCountText = it },
+                        label = { Text(Strings.packCount()) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        suffix = { Text(Strings.pcs()) }
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
-                enabled = name.isNotBlank() && carbsText.toDoubleOrNull() != null,
+                enabled = isValid,
                 onClick = {
-                    onConfirm(name, carbsText.toDouble())
+                    val packWeight = if (isPacked) packWeightText.toDoubleOrNull() else null
+                    val packCount = if (isPacked) packCountText.toIntOrNull() else null
+                    onConfirm(name, carbsText.toDouble(), isPacked, packWeight, packCount)
                     onDismiss()
                 }
             ) {

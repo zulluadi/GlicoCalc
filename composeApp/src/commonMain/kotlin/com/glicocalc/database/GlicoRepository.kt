@@ -2,11 +2,12 @@ package com.glicocalc.database
 
 import com.glicocalc.models.DishComponent
 import com.glicocalc.models.DishWithComposition
+import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import kotlinx.coroutines.flow.Flow
 
-class GlicoRepository(val database: GlicoDatabase) {
+class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver? = null) {
     private val queries = database.glicoDatabaseQueries
     var onFoodsChanged: (() -> Unit)? = null
 
@@ -23,7 +24,7 @@ class GlicoRepository(val database: GlicoDatabase) {
         return queries.selectBaseFoodById(id).executeAsOneOrNull()
     }
 
-    fun insertBaseFood(name: String, carbs: Double) {
+    fun insertBaseFood(name: String, carbs: Double, isPacked: Boolean = false, packWeight: Double? = null, packCount: Int? = null) {
         val now = PlatformTime.currentTimeMillis()
         queries.insertBaseFood(
             name = name,
@@ -32,14 +33,17 @@ class GlicoRepository(val database: GlicoDatabase) {
             source = FoodSource.CUSTOM.value,
             isDeleted = 0,
             needsSync = 1,
-            updatedAt = now
+            updatedAt = now,
+            isPacked = if (isPacked) 1 else 0,
+            packWeight = packWeight,
+            packCount = packCount?.toLong()
         )
         notifyLocalDataChanged()
     }
 
-    fun updateBaseFood(id: Long, name: String, carbs: Double) {
+    fun updateBaseFood(id: Long, name: String, carbs: Double, isPacked: Boolean = false, packWeight: Double? = null, packCount: Int? = null) {
         val now = PlatformTime.currentTimeMillis()
-        queries.updateBaseFood(name, carbs, 1, now, id)
+        queries.updateBaseFood(name, carbs, if (isPacked) 1 else 0, packWeight, packCount?.toLong(), 1, now, id)
         notifyLocalDataChanged()
     }
 
@@ -76,7 +80,8 @@ class GlicoRepository(val database: GlicoDatabase) {
         return baseFood.source == FoodSource.DEFAULT.value &&
             baseFood.isDeleted == 0L &&
             baseFood.name == seed.name &&
-            baseFood.carbsPer100g == seed.carbs
+            baseFood.carbsPer100g == seed.carbs &&
+            baseFood.isPacked == 0L
     }
 
     fun prepareBaseFoodCatalog() {
@@ -121,12 +126,18 @@ class GlicoRepository(val database: GlicoDatabase) {
                         source = remoteFood.source.value,
                         isDeleted = if (remoteFood.isDeleted) 1 else 0,
                         needsSync = 0,
-                        updatedAt = remoteFood.updatedAt
+                        updatedAt = remoteFood.updatedAt,
+                        isPacked = if (remoteFood.isPacked) 1 else 0,
+                        packWeight = remoteFood.packWeight,
+                        packCount = remoteFood.packCount?.toLong()
                     )
                 } else if (local.needsSync == 0L && remoteFood.updatedAt >= local.updatedAt) {
                     queries.applyRemoteBaseFood(
                         remoteFood.name,
                         remoteFood.carbsPer100g,
+                        if (remoteFood.isPacked) 1 else 0,
+                        remoteFood.packWeight,
+                        remoteFood.packCount?.toLong(),
                         if (remoteFood.isDeleted) 1 else 0,
                         remoteFood.updatedAt,
                         local.id
@@ -143,7 +154,7 @@ class GlicoRepository(val database: GlicoDatabase) {
                     FoodSource.DEFAULT.value -> {
                         val seed = InitialData.defaultFoodByRemoteKey(remoteKey) ?: return@forEach
                         if (localFood.name != seed.name || localFood.carbsPer100g != seed.carbs || localFood.isDeleted != 0L) {
-                            queries.applyRemoteBaseFood(seed.name, seed.carbs, 0, 0, localFood.id)
+                            queries.applyRemoteBaseFood(seed.name, seed.carbs, 0, null, null, 0, 0, localFood.id)
                         }
                     }
 
@@ -152,6 +163,9 @@ class GlicoRepository(val database: GlicoDatabase) {
                             queries.applyRemoteBaseFood(
                                 localFood.name,
                                 localFood.carbsPer100g,
+                                localFood.isPacked,
+                                localFood.packWeight,
+                                localFood.packCount,
                                 1,
                                 localFood.updatedAt,
                                 localFood.id
@@ -353,6 +367,25 @@ class GlicoRepository(val database: GlicoDatabase) {
         }
     }
 
+    fun migrateSchemaIfNeeded() {
+        val d = driver ?: return
+        try {
+            d.execute(null, "ALTER TABLE BaseFood ADD COLUMN isPacked INTEGER NOT NULL DEFAULT 0", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE BaseFood ADD COLUMN packWeight REAL", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE BaseFood ADD COLUMN packCount INTEGER", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+    }
+
     fun seedInitialData() {
         val existingFoods = queries.selectAllBaseFoods().executeAsList()
         val existingMealTypes = queries.selectAllMealTypes().executeAsList()
@@ -367,7 +400,10 @@ class GlicoRepository(val database: GlicoDatabase) {
                         source = FoodSource.DEFAULT.value,
                         isDeleted = 0,
                         needsSync = 0,
-                        updatedAt = 0
+                        updatedAt = 0,
+                        isPacked = 0,
+                        packWeight = null,
+                        packCount = null
                     )
                 }
             }
@@ -432,7 +468,10 @@ data class RemoteFoodRecord(
     val name: String,
     val carbsPer100g: Double,
     val isDeleted: Boolean,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val isPacked: Boolean = false,
+    val packWeight: Double? = null,
+    val packCount: Int? = null
 )
 
 data class RemoteSettingRecord(

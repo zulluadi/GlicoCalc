@@ -31,6 +31,7 @@ fun MainApp(
     resumeSignal: Int = 0
 ) {
     LaunchedEffect(repository) {
+        repository.migrateSchemaIfNeeded()
         if (!hasLoadedPersistedAppLocale) {
             customAppLocale = repository.getLanguage()
             hasLoadedPersistedAppLocale = true
@@ -102,13 +103,13 @@ fun MainApp(
                     )
                     Screen.FoodList -> FoodListScreen(
                         foods = baseFoods,
-                        onAddFood = { name, carbs ->
+                        onAddFood = { name, carbs, isPacked, packWeight, packCount ->
                             telemetry.action("food_added")
-                            scope.launch { repository.insertBaseFood(name, carbs) }
+                            scope.launch { repository.insertBaseFood(name, carbs, isPacked, packWeight, packCount) }
                         },
-                        onEditFood = { id, name, carbs ->
+                        onEditFood = { id, name, carbs, isPacked, packWeight, packCount ->
                             telemetry.action("food_edited")
-                            scope.launch { repository.updateBaseFood(id, name, carbs) }
+                            scope.launch { repository.updateBaseFood(id, name, carbs, isPacked, packWeight, packCount) }
                         },
                         onDeleteFood = {
                             telemetry.action("food_deleted")

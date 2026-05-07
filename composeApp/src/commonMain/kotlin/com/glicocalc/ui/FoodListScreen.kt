@@ -23,8 +23,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun FoodListScreen(
     foods: List<BaseFood>,
-    onAddFood: (String, Double) -> Unit,
-    onEditFood: (Long, String, Double) -> Unit,
+    onAddFood: (String, Double, Boolean, Double?, Int?) -> Unit,
+    onEditFood: (Long, String, Double, Boolean, Double?, Int?) -> Unit,
     onDeleteFood: (Long) -> Unit,
     onUndeleteFood: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -119,7 +119,9 @@ fun FoodListScreen(
         if (showAddDialog) {
             FoodEditorDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, carbs -> onAddFood(name, carbs) }
+                onConfirm = { name, carbs, isPacked, packWeight, packCount ->
+                    onAddFood(name, carbs, isPacked, packWeight, packCount)
+                }
             )
         }
 
@@ -127,8 +129,13 @@ fun FoodListScreen(
             FoodEditorDialog(
                 initialName = food.name,
                 initialCarbs = food.carbsPer100g.toString(),
+                initialIsPacked = food.isPacked != 0L,
+                initialPackWeight = food.packWeight?.let { it.toString() }.orEmpty(),
+                initialPackCount = food.packCount?.let { it.toString() }.orEmpty(),
                 onDismiss = { foodToEdit = null },
-                onConfirm = { name, carbs -> onEditFood(food.id, name, carbs) }
+                onConfirm = { name, carbs, isPacked, packWeight, packCount ->
+                    onEditFood(food.id, name, carbs, isPacked, packWeight, packCount)
+                }
             )
         }
     }

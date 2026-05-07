@@ -195,13 +195,19 @@ class FirebaseFoodSyncManager(
             val carbs = (data["carbsPer100g"] as? Number)?.toDouble() ?: return@mapNotNull null
             val updatedAt = (data["updatedAt"] as? Number)?.toLong() ?: 0L
             val isDeleted = data["isDeleted"] as? Boolean ?: false
+            val isPacked = data["isPacked"] as? Boolean ?: false
+            val packWeight = (data["packWeight"] as? Number)?.toDouble()
+            val packCount = (data["packCount"] as? Number)?.toInt()
             RemoteFoodRecord(
                 remoteKey = document.id,
                 source = source,
                 name = name,
                 carbsPer100g = carbs,
                 isDeleted = isDeleted,
-                updatedAt = updatedAt
+                updatedAt = updatedAt,
+                isPacked = isPacked,
+                packWeight = packWeight,
+                packCount = packCount
             )
         }
     }
@@ -311,13 +317,21 @@ class FirebaseFoodSyncManager(
     }
 
     private fun foodPayload(food: BaseFood): Map<String, Any> {
-        return mapOf(
+        val payload = mutableMapOf<String, Any>(
             "source" to food.source,
             "name" to food.name,
             "carbsPer100g" to food.carbsPer100g,
             "isDeleted" to (food.isDeleted != 0L),
-            "updatedAt" to food.updatedAt
+            "updatedAt" to food.updatedAt,
+            "isPacked" to (food.isPacked != 0L)
         )
+        if (food.packWeight != null) {
+            payload["packWeight"] = food.packWeight
+        }
+        if (food.packCount != null) {
+            payload["packCount"] = food.packCount
+        }
+        return payload
     }
 }
 

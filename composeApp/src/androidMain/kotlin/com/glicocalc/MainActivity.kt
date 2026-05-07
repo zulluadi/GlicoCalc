@@ -63,8 +63,9 @@ class MainActivity : ComponentActivity() {
         val driverFactory = DatabaseDriverFactory(this)
         val driver = driverFactory.createDriver()
         val database = GlicoDatabase(driver)
-        repository = GlicoRepository(database)
+        repository = GlicoRepository(database, driver)
 
+        repository.migrateSchemaIfNeeded()
         repository.seedInitialData()
         repository.prepareBaseFoodCatalog()
 

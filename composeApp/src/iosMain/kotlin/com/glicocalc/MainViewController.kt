@@ -16,7 +16,8 @@ import com.glicocalc.ui.hasLoadedPersistedFoodLocale
 fun MainViewController(syncController: IosSyncController) = ComposeUIViewController {
     val repository = remember {
         val driver = DatabaseDriverFactory().createDriver()
-        GlicoRepository(GlicoDatabase(driver)).also {
+        GlicoRepository(GlicoDatabase(driver), driver).also {
+            it.migrateSchemaIfNeeded()
             it.seedInitialData()
             it.prepareBaseFoodCatalog()
         }
