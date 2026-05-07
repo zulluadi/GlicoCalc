@@ -23,9 +23,14 @@ When you are ready to enable Firebase:
     *   **Cloud Firestore** -> create a database
 3.  Add the app's SHA fingerprints in the Firebase project settings for Android before testing Google Sign-In.
 4.  After enabling Google sign-in, download the updated `google-services.json` again and replace the old file. Firebase's Google sign-in flow relies on the OAuth client data from that updated config.
-5.  Use a dedicated release keystore for GitHub-distributed builds. Add that keystore's `SHA-1` and `SHA-256` to the Android app in Firebase, then download `google-services.json` again after the fingerprints are saved.
-6.  Until the app is published to a Google Play internal testing, closed testing, open testing, or production track, distribute signed APKs through Firebase App Distribution. Android App Bundle uploads require the Firebase project to be linked to a published Google Play app with the same package name.
-7.  Use Firestore rules that isolate each user's food diffs under their own UID, for example:
+5.  For iOS Google sign-in:
+    *   Add the iOS bundle ID `com.glicocalc.app` in Firebase.
+    *   Download `GoogleService-Info.plist` and place it in `iosApp/iosApp/`. This file is ignored by Git.
+    *   Copy `REVERSED_CLIENT_ID` from that plist into `GOOGLE_SIGN_IN_REVERSED_CLIENT_ID` in `iosApp/Configuration/Config.xcconfig`.
+    *   The current iOS implementation links the Google account with Firebase Auth. Food diff syncing is still implemented on Android only.
+6.  Use a dedicated release keystore for GitHub-distributed builds. Add that keystore's `SHA-1` and `SHA-256` to the Android app in Firebase, then download `google-services.json` again after the fingerprints are saved.
+7.  Until the app is published to a Google Play internal testing, closed testing, open testing, or production track, distribute signed APKs through Firebase App Distribution. Android App Bundle uploads require the Firebase project to be linked to a published Google Play app with the same package name.
+8.  Use Firestore rules that isolate each user's food diffs under their own UID, for example:
 
     ```text
     rules_version = '2';
@@ -38,12 +43,12 @@ When you are ready to enable Firebase:
     }
     ```
 
-8.  The app sync stores only user-specific food diffs:
+9.  The app sync stores only user-specific food diffs:
     *   custom foods
     *   edits to default foods
     *   deletions of default foods
-9.  Keep Firebase config files and keystores out of Git (already added to `.gitignore`).
-10.  For GitHub Actions, add the following **Repository Secrets**:
+10.  Keep Firebase config files and keystores out of Git (already added to `.gitignore`).
+11.  For GitHub Actions, add the following **Repository Secrets**:
     *   `FIREBASE_TOKEN`: Obtain via `firebase login:ci`.
     *   `FIREBASE_APP_ID`: Your Firebase App ID.
     *   `FIREBASE_TESTERS`: Comma-separated list of tester emails.
@@ -52,7 +57,7 @@ When you are ready to enable Firebase:
     *   `ANDROID_RELEASE_STORE_PASSWORD`: The release keystore password.
     *   `ANDROID_RELEASE_KEY_ALIAS`: The alias of the release signing key inside the keystore.
     *   `ANDROID_RELEASE_KEY_PASSWORD`: The password for that release key.
-11.  The GitHub Actions workflow prints the release keystore `SHA-1` during the build. Verify that the printed fingerprint matches the one registered in Firebase whenever Google sign-in is changed or release signing is rotated.
+12.  The GitHub Actions workflow prints the release keystore `SHA-1` during the build. Verify that the printed fingerprint matches the one registered in Firebase whenever Google sign-in is changed or release signing is rotated.
 
 ## Why This Setup?
 

@@ -28,6 +28,7 @@ composeApp/release/
 *.framework
 *.xcworkspace
 *.xcodeproj/project.xcworkspace/
+**/xcuserdata/
 DerivedData/
 
 # Logs
