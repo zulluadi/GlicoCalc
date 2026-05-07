@@ -13,9 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.glicocalc.database.BaseFood
@@ -106,22 +110,36 @@ private fun deserializeMealItems(
             )
             when (persisted.selectionType) {
                 MealItemSelectionType.Dish -> {
-                    val dish = persisted.selectedId?.let(onSelectDish) ?: return@mapNotNull null
-                    MealItem(
-                        selectedDish = dish,
-                        weightText = persisted.weightText,
-                        carbsText = persisted.carbsText,
-                        usePieces = false
-                    )
+                    val dish = persisted.selectedId?.let(onSelectDish)
+                    if (dish != null) {
+                        MealItem(
+                            selectedDish = dish,
+                            weightText = persisted.weightText,
+                            carbsText = persisted.carbsText,
+                            usePieces = false
+                        )
+                    } else {
+                        MealItem(
+                            weightText = persisted.weightText,
+                            carbsText = persisted.carbsText
+                        )
+                    }
                 }
                 MealItemSelectionType.Food -> {
-                    val food = persisted.selectedId?.let(onSelectBaseFood) ?: return@mapNotNull null
-                    MealItem(
-                        selectedBaseFood = food,
-                        weightText = persisted.weightText,
-                        carbsText = persisted.carbsText,
-                        usePieces = persisted.usePieces && food.isPacked != 0L
-                    )
+                    val food = persisted.selectedId?.let(onSelectBaseFood)
+                    if (food != null) {
+                        MealItem(
+                            selectedBaseFood = food,
+                            weightText = persisted.weightText,
+                            carbsText = persisted.carbsText,
+                            usePieces = persisted.usePieces && food.isPacked != 0L
+                        )
+                    } else {
+                        MealItem(
+                            weightText = persisted.weightText,
+                            carbsText = persisted.carbsText
+                        )
+                    }
                 }
                 MealItemSelectionType.None -> MealItem(
                     weightText = persisted.weightText,
@@ -182,16 +200,18 @@ private fun syncMealItem(
 
         return when (editedField) {
             EditedField.Weight -> {
-                val pieces = weight ?: return updatedItem
-                val grams = pieces * weightPerPiece
-                val syncedCarbs = formatDecimal(grams * carbsPer100g / 100.0)
+                val syncedCarbs = weight?.let { pieces ->
+                    val grams = pieces * weightPerPiece
+                    formatDecimal(grams * carbsPer100g / 100.0)
+                }.orEmpty()
                 updatedItem.copy(carbsText = syncedCarbs)
             }
             EditedField.Carbs -> {
-                val carbsVal = carbs ?: return updatedItem
-                val grams = carbsVal * 100.0 / carbsPer100g
-                val pieces = formatDecimal(grams / weightPerPiece)
-                updatedItem.copy(weightText = pieces)
+                val syncedWeight = carbs?.let { carbsVal ->
+                    val grams = carbsVal * 100.0 / carbsPer100g
+                    formatDecimal(grams / weightPerPiece)
+                }.orEmpty()
+                updatedItem.copy(weightText = syncedWeight)
             }
             null -> when {
                 weight != null -> {
@@ -526,6 +546,7 @@ private fun MealItemRow(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf(item.displayName) }
+    var textFieldState by remember { mutableStateOf(TextFieldValue(item.displayName)) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
             if (dismissValue == SwipeToDismissBoxValue.EndToStart && canDelete) {
@@ -537,12 +558,14 @@ private fun MealItemRow(
         }
     )
 
-    LaunchedEffect(item.selectedDish, item.selectedBaseFood) {
+    LaunchedEffect(item.selectedDish, item.selectedBaseFood, searchableFoods) {
         val newDisplayName = item.selectedDish?.dish?.name
             ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
+            ?: item.selectedBaseFood?.name
             ?: ""
         if (newDisplayName != searchQuery) {
             searchQuery = newDisplayName
+            textFieldState = TextFieldValue(newDisplayName)
         }
     }
 
@@ -645,35 +668,57 @@ private fun MealItemRow(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val nameSize = MaterialTheme.typography.bodyLarge.fontSize
+                    val carbsSize = MaterialTheme.typography.bodySmall.fontSize
+                    val displayValue = if ((item.selectedDish != null || item.selectedBaseFood != null) && carbsInfo != null) {
+                        TextFieldValue(
+                            annotatedString = buildAnnotatedString {
+                                withStyle(SpanStyle(fontSize = nameSize)) {
+                                    append(searchQuery)
+                                }
+                                append("\n")
+                                withStyle(SpanStyle(fontSize = carbsSize)) {
+                                    append("($carbsInfo)")
+                                }
+                            },
+                            selection = textFieldState.selection,
+                            composition = textFieldState.composition
+                        )
+                    } else {
+                        textFieldState
+                    }
+
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = {
-                                searchQuery = it
+                            value = displayValue,
+                            onValueChange = { newValue ->
+                                textFieldState = newValue
+                                searchQuery = newValue.text.substringBefore("\n")
                                 expanded = true
                             },
                             label = { Text(Strings.mealItemLabel(index + 1)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            singleLine = true,
-                            maxLines = 1,
+                            singleLine = item.selectedDish == null && item.selectedBaseFood == null,
+                            maxLines = if (item.selectedDish != null || item.selectedBaseFood != null) 2 else 1,
                             suffix = {
                                 if (searchQuery.isNotBlank()) {
                                     ClearTextButton {
                                         searchQuery = ""
-                                        onUpdate(item.copy(selectedDish = null, selectedBaseFood = null, usePieces = false))
+                                        textFieldState = TextFieldValue("")
+                                        onUpdate(item.copy(selectedDish = null, selectedBaseFood = null, weightText = "", carbsText = "", usePieces = false))
                                     }
                                 }
                             }
@@ -693,7 +738,7 @@ private fun MealItemRow(
                                             searchQuery = dish.name
                                             onUpdate(
                                                 syncMealItem(
-                                                    item = item,
+                                                    item = item.copy(weightText = "", carbsText = "", usePieces = false),
                                                     selectedDish = onSelectDish(dish.id),
                                                     selectedBaseFood = null
                                                 )
@@ -709,7 +754,7 @@ private fun MealItemRow(
                                             searchQuery = searchableFood.localizedName
                                             onUpdate(
                                                 syncMealItem(
-                                                    item = item,
+                                                    item = item.copy(weightText = "", carbsText = "", usePieces = false),
                                                     selectedDish = null,
                                                     selectedBaseFood = onSelectBaseFood(searchableFood.food.id)
                                                 )
@@ -721,15 +766,6 @@ private fun MealItemRow(
                             }
                         }
                     }
-                }
-
-                carbsInfo?.let { info ->
-                    Text(
-                        text = info,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
                 }
 
                 if (isPackedFood) {
