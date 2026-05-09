@@ -31,7 +31,10 @@ import com.glicocalc.logic.CarbCalculator
 import com.glicocalc.logic.removeDiacritics
 import com.glicocalc.models.DishWithComposition
 
+private var nextMealItemId = 0L
+
 data class MealItem(
+    val id: Long = nextMealItemId++,
     val selectedDish: DishWithComposition? = null,
     val selectedBaseFood: BaseFood? = null,
     val weightText: String = "",
@@ -406,7 +409,7 @@ fun CalculatorScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(listGap)
             ) {
-                itemsIndexed(mealItems) { index: Int, item: MealItem ->
+                itemsIndexed(mealItems, key = { _, item -> item.id }) { index: Int, item: MealItem ->
                     MealItemRow(
                         index = index,
                         item = item,
@@ -417,7 +420,13 @@ fun CalculatorScreen(
                         onSelectBaseFood = onSelectBaseFood,
                         onUpdate = { updated -> mealItems[index] = updated },
                         canDelete = mealItems.size > 1,
-                        onDelete = { if (mealItems.size > 1) mealItems.removeAt(index) }
+                        onDelete = {
+                            if (mealItems.size > 1) {
+                                mealItems.removeAt(index)
+                            } else {
+                                mealItems[index] = MealItem()
+                            }
+                        }
                     )
                 }
             }
@@ -601,10 +610,11 @@ private fun MealItemRow(
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf(item.displayName) }
     var textFieldState by remember { mutableStateOf(TextFieldValue(item.displayName)) }
+    val currentOnDelete by rememberUpdatedState(onDelete)
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
-            if (dismissValue == SwipeToDismissBoxValue.EndToStart && canDelete) {
-                onDelete()
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                currentOnDelete()
                 true
             } else {
                 false
