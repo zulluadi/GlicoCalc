@@ -171,7 +171,7 @@ private fun ClearTextButton(
 }
 
 private fun MealItem.carbsPer100g(): Double? {
-    val dishCarbs = selectedDish?.let { CarbCalculator.calculateCarbsPercentage(it.components) }
+    val dishCarbs = selectedDish?.let { CarbCalculator.calculateCarbsPercentage(it.components, it.dish.totalCookedWeight) }
     val baseFoodCarbs = selectedBaseFood?.carbsPer100g
     val carbsPer100g = dishCarbs ?: baseFoodCarbs
     return carbsPer100g?.takeIf { it > 0.0 }
@@ -707,7 +707,7 @@ private fun MealItemRow(
         modifier = Modifier.fillMaxWidth()
     ) {
         val carbsInfo = item.selectedDish?.let { composition ->
-            Strings.carbsPercent(formatDecimal(CarbCalculator.calculateCarbsPercentage(composition.components)))
+            Strings.carbsPercent(formatDecimal(CarbCalculator.calculateCarbsPercentage(composition.components, composition.dish.totalCookedWeight)))
         } ?: item.selectedBaseFood?.let { food ->
             Strings.carbsPercent(formatDecimal(food.carbsPer100g))
         }

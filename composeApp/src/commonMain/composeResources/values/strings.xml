@@ -83,4 +83,5 @@
     <string name="use_pieces">Use pieces</string>
     <string name="pieces">Pieces</string>
     <string name="pcs">pcs</string>
+    <string name="total_cooked_weight">Total cooked weight (g)</string>
 </resources>

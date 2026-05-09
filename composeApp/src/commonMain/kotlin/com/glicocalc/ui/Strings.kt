@@ -81,6 +81,7 @@ import glicocalc.composeapp.generated.resources.pack_count
 import glicocalc.composeapp.generated.resources.use_pieces
 import glicocalc.composeapp.generated.resources.pieces
 import glicocalc.composeapp.generated.resources.pcs
+import glicocalc.composeapp.generated.resources.total_cooked_weight
 import glicocalc.composeapp.generated.resources.system_default
 
 object Strings {
@@ -164,4 +165,5 @@ object Strings {
     @Composable fun usePieces() = stringResource(Res.string.use_pieces)
     @Composable fun pieces() = stringResource(Res.string.pieces)
     @Composable fun pcs() = stringResource(Res.string.pcs)
+    @Composable fun totalCookedWeight() = stringResource(Res.string.total_cooked_weight)
 }

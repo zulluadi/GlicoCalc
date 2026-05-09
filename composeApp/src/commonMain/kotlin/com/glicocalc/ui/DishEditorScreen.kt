@@ -23,25 +23,27 @@ import com.glicocalc.logic.removeDiacritics
 @Composable
 fun DishEditorScreen(
     initialName: String = "",
+    initialTotalCookedWeight: Double? = null,
     initialComponents: List<Pair<Long, Double>> = emptyList(),
     allBaseFoods: List<BaseFood>,
-    onSave: (String, List<Pair<Long, Double>>) -> Unit,
+    onSave: (String, Double?, List<Pair<Long, Double>>) -> Unit,
     onCancel: () -> Unit
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
     var dishName by remember { mutableStateOf(initialName) }
+    var totalCookedWeightText by remember { mutableStateOf(initialTotalCookedWeight?.toString() ?: "") }
     val components = remember { mutableStateListOf<ComponentState>().apply { 
         if (initialComponents.isEmpty()) add(ComponentState()) 
-        else addAll(initialComponents.map { (foodId, percentage) -> 
+        else addAll(initialComponents.map { (foodId, weightGrams) -> 
             ComponentState(
                 foodId = foodId, 
-                percentage = percentage.toString(),
+                weightGrams = weightGrams.toString(),
                 searchQuery = allBaseFoods.find { it.id == foodId }?.name?.let(resolveFoodName) ?: ""
             ) 
         })
     } }
 
-    val canSave = dishName.isNotBlank() && components.any { it.foodId != null && it.percentage.toDoubleOrNull() != null }
+    val canSave = dishName.isNotBlank() && totalCookedWeightText.toDoubleOrNull() != null && totalCookedWeightText.toDoubleOrNull()!! > 0.0 && components.any { it.foodId != null && it.weightGrams.toDoubleOrNull() != null }
 
     Scaffold(
         topBar = {
@@ -57,10 +59,11 @@ fun DishEditorScreen(
                         enabled = canSave,
                         onClick = {
                             val validComponents = components.mapNotNull {
-                                val p = it.percentage.toDoubleOrNull()
-                                if (it.foodId != null && p != null) it.foodId to p else null
+                                val w = it.weightGrams.toDoubleOrNull()
+                                if (it.foodId != null && w != null) it.foodId to w else null
                             }
-                            onSave(dishName, validComponents)
+                            val cookedWeight = totalCookedWeightText.toDoubleOrNull()
+                            onSave(dishName, cookedWeight, validComponents)
                         }
                     ) {
                         Text(
@@ -87,7 +90,17 @@ fun DishEditorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = totalCookedWeightText,
+                onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) totalCookedWeightText = it },
+                label = { Text(Strings.totalCookedWeight()) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
             
             Text(Strings.compositionIngredients(), fontWeight = FontWeight.Bold)
             
@@ -167,9 +180,9 @@ fun DishEditorScreen(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         OutlinedTextField(
-                            value = component.percentage,
-                            onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) components[index] = component.copy(percentage = it) },
-                            label = { Text("%") },
+                            value = component.weightGrams,
+                            onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) components[index] = component.copy(weightGrams = it) },
+                            label = { Text("g") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(0.7f)
                         )
@@ -197,6 +210,6 @@ fun DishEditorScreen(
 
 data class ComponentState(
     val foodId: Long? = null,
-    val percentage: String = "",
+    val weightGrams: String = "",
     val searchQuery: String = ""
 )

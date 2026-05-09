@@ -4,7 +4,7 @@ data class DishComponent(
     val id: Long,
     val dishId: Long,
     val baseFoodId: Long,
-    val percentage: Double,
+    val weightGrams: Double,
     val foodName: String = "",
     val foodCarbs: Double = 0.0
 )

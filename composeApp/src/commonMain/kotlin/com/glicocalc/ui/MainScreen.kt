@@ -162,16 +162,17 @@ fun MainApp(
                         val initialDish = editingDishId?.let { repository.getDishWithComposition(it) }
                         DishEditorScreen(
                             initialName = initialDish?.dish?.name ?: "",
-                            initialComponents = initialDish?.components?.map { it.baseFoodId to it.percentage } ?: emptyList(),
+                            initialTotalCookedWeight = initialDish?.dish?.totalCookedWeight,
+                            initialComponents = initialDish?.components?.map { it.baseFoodId to it.weightGrams } ?: emptyList(),
                             allBaseFoods = baseFoods,
                             onCancel = { currentScreen = Screen.Dishes },
-                            onSave = { name, components ->
+                            onSave = { name, totalCookedWeight, components ->
                                 telemetry.action("dish_saved")
                                 scope.launch {
                                     if (editingDishId == null) {
-                                        repository.insertDishWithComponents(name, components)
+                                        repository.insertDishWithComponents(name, totalCookedWeight, components)
                                     } else {
-                                        repository.updateDishWithComponents(editingDishId!!, name, components)
+                                        repository.updateDishWithComponents(editingDishId!!, name, totalCookedWeight, components)
                                     }
                                     currentScreen = Screen.Dishes
                                 }

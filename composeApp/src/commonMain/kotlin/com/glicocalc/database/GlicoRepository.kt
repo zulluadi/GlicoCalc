@@ -221,7 +221,12 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     fun getAllDishesWithCarbs(): List<DishWithCarbs> {
         return queries.selectAllDishes().executeAsList().map { dish ->
             val components = queries.selectComponentsByDishId(dish.id).executeAsList()
-            val carbsPer100g = components.sumOf { (it.percentage / 100.0) * it.foodCarbs }
+            val totalCookedWeight = dish.totalCookedWeight
+            val carbsPer100g = if (totalCookedWeight != null && totalCookedWeight > 0.0 && components.isNotEmpty()) {
+                components.sumOf { it.weightGrams * it.foodCarbs } / totalCookedWeight
+            } else {
+                0.0
+            }
             DishWithCarbs(dish, carbsPer100g)
         }
     }
@@ -242,7 +247,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         queries.deleteMealType(id)
     }
 
-    fun insertDishWithComponents(name: String, components: List<Pair<Long, Double>>) {
+    fun insertDishWithComponents(name: String, totalCookedWeight: Double?, components: List<Pair<Long, Double>>) {
         val now = PlatformTime.currentTimeMillis()
         database.transaction {
             queries.insertDish(
@@ -250,23 +255,24 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                 remoteKey = generateCustomDishRemoteKey(),
                 isDeleted = 0,
                 needsSync = 1,
-                updatedAt = now
+                updatedAt = now,
+                totalCookedWeight = totalCookedWeight
             )
             val dishId = queries.lastInsertRowId().executeAsOne()
-            components.forEach { (foodId, percentage) ->
-                queries.insertDishComponent(dishId, foodId, percentage)
+            components.forEach { (foodId, weightGrams) ->
+                queries.insertDishComponent(dishId, foodId, weightGrams)
             }
         }
         notifyLocalDataChanged()
     }
 
-    fun updateDishWithComponents(dishId: Long, name: String, components: List<Pair<Long, Double>>) {
+    fun updateDishWithComponents(dishId: Long, name: String, totalCookedWeight: Double?, components: List<Pair<Long, Double>>) {
         val now = PlatformTime.currentTimeMillis()
         database.transaction {
-            queries.updateDish(name, 1, now, dishId)
+            queries.updateDish(name, totalCookedWeight, 1, now, dishId)
             queries.deleteComponentsByDishId(dishId)
-            components.forEach { (foodId, percentage) ->
-                queries.insertDishComponent(dishId, foodId, percentage)
+            components.forEach { (foodId, weightGrams) ->
+                queries.insertDishComponent(dishId, foodId, weightGrams)
             }
         }
         notifyLocalDataChanged()
@@ -294,7 +300,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                 id = it.id,
                 dishId = it.dishId,
                 baseFoodId = it.baseFoodId,
-                percentage = it.percentage,
+                weightGrams = it.weightGrams,
                 foodName = it.foodName,
                 foodCarbs = it.foodCarbs
             )
@@ -307,12 +313,13 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         val components = queries.selectComponentsByDishId(dishId).executeAsList().mapNotNull { component ->
             val food = queries.selectBaseFoodById(component.baseFoodId).executeAsOneOrNull() ?: return@mapNotNull null
             val foodRemoteKey = food.remoteKey ?: return@mapNotNull null
-            RemoteDishComponentRecord(foodRemoteKey = foodRemoteKey, percentage = component.percentage)
+            RemoteDishComponentRecord(foodRemoteKey = foodRemoteKey, weightGrams = component.weightGrams)
         }
         val remoteKey = dish.remoteKey ?: return null
         return RemoteDishRecord(
             remoteKey = remoteKey,
             name = dish.name,
+            totalCookedWeight = dish.totalCookedWeight,
             isDeleted = dish.isDeleted != 0L,
             updatedAt = dish.updatedAt,
             components = components
@@ -329,13 +336,13 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             remoteDishes.forEach { remoteDish ->
                 val localDish = localByKey[remoteDish.remoteKey]
                 if (localDish == null) {
-                    queries.insertDish(remoteDish.name, remoteDish.remoteKey, if (remoteDish.isDeleted) 1 else 0, 0, remoteDish.updatedAt)
+                    queries.insertDish(remoteDish.name, remoteDish.remoteKey, if (remoteDish.isDeleted) 1 else 0, 0, remoteDish.updatedAt, remoteDish.totalCookedWeight)
                     val newDishId = queries.lastInsertRowId().executeAsOne()
                     if (!remoteDish.isDeleted) {
                         insertRemoteDishComponents(newDishId, remoteDish.components, foodsByRemoteKey)
                     }
                 } else if (localDish.needsSync == 0L && remoteDish.updatedAt >= localDish.updatedAt) {
-                    queries.applyRemoteDish(remoteDish.name, if (remoteDish.isDeleted) 1 else 0, remoteDish.updatedAt, localDish.id)
+                    queries.applyRemoteDish(remoteDish.name, remoteDish.totalCookedWeight, if (remoteDish.isDeleted) 1 else 0, remoteDish.updatedAt, localDish.id)
                     queries.deleteComponentsByDishId(localDish.id)
                     if (!remoteDish.isDeleted) {
                         insertRemoteDishComponents(localDish.id, remoteDish.components, foodsByRemoteKey)
@@ -348,7 +355,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                 if (localDish.needsSync != 0L) return@forEach
                 if (remoteByKey.containsKey(remoteKey)) return@forEach
                 if (localDish.isDeleted == 0L) {
-                    queries.applyRemoteDish(localDish.name, 1, localDish.updatedAt, localDish.id)
+                    queries.applyRemoteDish(localDish.name, localDish.totalCookedWeight, 1, localDish.updatedAt, localDish.id)
                     queries.deleteComponentsByDishId(localDish.id)
                 }
             }
@@ -363,7 +370,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         components.forEach { component ->
             val food = foodsByRemoteKey[component.foodRemoteKey] ?: return@forEach
             if (food.isDeleted != 0L) return@forEach
-            queries.insertDishComponent(dishId, food.id, component.percentage)
+            queries.insertDishComponent(dishId, food.id, component.weightGrams)
         }
     }
 
@@ -381,6 +388,16 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         }
         try {
             d.execute(null, "ALTER TABLE BaseFood ADD COLUMN packCount INTEGER", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE Dish ADD COLUMN totalCookedWeight REAL", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE DishComponent ADD COLUMN weightGrams REAL NOT NULL DEFAULT 0", 0)
         } catch (_: Exception) {
             // Column already exists, ignore
         }
@@ -483,6 +500,7 @@ data class RemoteSettingRecord(
 data class RemoteDishRecord(
     val remoteKey: String,
     val name: String,
+    val totalCookedWeight: Double?,
     val isDeleted: Boolean,
     val updatedAt: Long,
     val components: List<RemoteDishComponentRecord>
@@ -490,7 +508,7 @@ data class RemoteDishRecord(
 
 data class RemoteDishComponentRecord(
     val foodRemoteKey: String,
-    val percentage: Double
+    val weightGrams: Double
 )
 
 enum class FoodSource(val value: String) {

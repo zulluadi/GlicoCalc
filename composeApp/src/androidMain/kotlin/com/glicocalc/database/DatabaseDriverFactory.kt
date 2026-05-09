@@ -89,11 +89,13 @@ class DatabaseDriverFactory(private val context: Context) {
         safeExecute(driver, "ALTER TABLE Dish ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE Dish ADD COLUMN needsSync INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE Dish ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
+        safeExecute(driver, "ALTER TABLE Dish ADD COLUMN totalCookedWeight REAL")
         driver.execute(
             identifier = null,
             sql = "CREATE UNIQUE INDEX IF NOT EXISTS idx_dish_remote_key ON Dish(remoteKey)",
             parameters = 0
         )
+        safeExecute(driver, "ALTER TABLE DishComponent ADD COLUMN weightGrams REAL NOT NULL DEFAULT 0")
     }
 
     private fun ensureSettingSyncColumns(driver: SqlDriver) {
