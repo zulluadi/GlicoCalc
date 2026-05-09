@@ -289,7 +289,6 @@ fun CalculatorScreen(
         ).ifEmpty { listOf(MealItem()) }
     }
     val mealItems = remember { mutableStateListOf<MealItem>().apply { addAll(initialMealItems) } }
-    val persistedMealTypeId = remember { repository.getCalculatorMealTypeId() }
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
     val dishesWithCarbs = remember(dishes, baseFoods) { repository.getAllDishesWithCarbs() }
     val dishCarbsMap = remember(dishesWithCarbs) {
@@ -325,13 +324,10 @@ fun CalculatorScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(resumeSignal, mealTypes) {
-        val restoredMealTypeId = persistedMealTypeId?.takeIf { savedId ->
-            mealTypes.any { it.id == savedId }
-        }
         val activeMealTypeId = selectedMealTypeId?.takeIf { activeId ->
             mealTypes.any { it.id == activeId }
         }
-        selectedMealTypeId = activeMealTypeId ?: restoredMealTypeId ?: nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
+        selectedMealTypeId = activeMealTypeId ?: nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
     }
 
     LaunchedEffect(mealItems.toList()) {
