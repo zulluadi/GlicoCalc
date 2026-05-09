@@ -1,6 +1,8 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -11,6 +13,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.telemetry.Telemetry
 import com.glicocalc.ui.theme.GlicoCalcTheme
@@ -58,33 +62,41 @@ fun MainApp(
         }
 
         GlicoCalcTheme {
+            val density = LocalDensity.current
+            val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
+
             Scaffold(
+                contentWindowInsets = WindowInsets(0.dp),
                 bottomBar = {
-                    NavigationBar {
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.Calculator,
-                            onClick = { currentScreen = Screen.Calculator },
-                            icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
-                            label = { Text(Strings.navCalculator()) }
-                        )
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.Dishes || currentScreen == Screen.DishEditor,
-                            onClick = { currentScreen = Screen.Dishes },
-                            icon = { Icon(Icons.Default.Menu, contentDescription = null) },
-                            label = { Text(Strings.navDishes()) }
-                        )
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.FoodList,
-                            onClick = { currentScreen = Screen.FoodList },
-                            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                            label = { Text(Strings.navFoods()) }
-                        )
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.Settings || currentScreen == Screen.MealTypes,
-                            onClick = { currentScreen = Screen.Settings },
-                            icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                            label = { Text(Strings.settings()) }
-                        )
+                    if (!isKeyboardVisible) {
+                        NavigationBar(
+                            windowInsets = WindowInsets(0.dp)
+                        ) {
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.Calculator,
+                                onClick = { currentScreen = Screen.Calculator },
+                                icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
+                                label = { Text(Strings.navCalculator()) }
+                            )
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.Dishes || currentScreen == Screen.DishEditor,
+                                onClick = { currentScreen = Screen.Dishes },
+                                icon = { Icon(Icons.Default.Menu, contentDescription = null) },
+                                label = { Text(Strings.navDishes()) }
+                            )
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.FoodList,
+                                onClick = { currentScreen = Screen.FoodList },
+                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                                label = { Text(Strings.navFoods()) }
+                            )
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.Settings || currentScreen == Screen.MealTypes,
+                                onClick = { currentScreen = Screen.Settings },
+                                icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                label = { Text(Strings.settings()) }
+                            )
+                        }
                     }
                 }
             ) { padding ->

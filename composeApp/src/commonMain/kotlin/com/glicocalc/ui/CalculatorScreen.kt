@@ -1,6 +1,7 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,13 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.glicocalc.database.BaseFood
@@ -287,6 +288,10 @@ fun CalculatorScreen(
     val mealItems = remember { mutableStateListOf<MealItem>().apply { addAll(initialMealItems) } }
     val persistedMealTypeId = remember { repository.getCalculatorMealTypeId() }
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
+    val dishesWithCarbs = remember(dishes, baseFoods) { repository.getAllDishesWithCarbs() }
+    val dishCarbsMap = remember(dishesWithCarbs) {
+        dishesWithCarbs.associate { it.dish.id to it.carbsPer100g }
+    }
     val searchableDishes = remember(dishes) {
         dishes.map { dish ->
             SearchableDish(
@@ -314,6 +319,7 @@ fun CalculatorScreen(
         mealTypes.firstOrNull { it.id == selectedMealTypeId }
     }
     val hasEditableMeal = remember(mealItems.toList()) { mealItems.any(::isMeaningfulMealItem) }
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(resumeSignal, mealTypes) {
         val restoredMealTypeId = persistedMealTypeId?.takeIf { savedId ->
@@ -333,135 +339,175 @@ fun CalculatorScreen(
         repository.saveCalculatorMealTypeId(selectedMealTypeId)
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    focusManager.clearFocus()
+                }
+            }
     ) {
-        Card(
-            modifier = Modifier.padding(bottom = 24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        val density = LocalDensity.current
+        val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
+        val isCompactHeight = maxHeight < 620.dp || isKeyboardVisible
+        val screenPadding = if (isCompactHeight) 12.dp else 16.dp
+        val sectionGap = if (isCompactHeight) 8.dp else 16.dp
+        val listGap = if (isCompactHeight) 8.dp else 12.dp
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .padding(screenPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = Strings.totalCarbs(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = "${((totalCarbs * 10).toInt() / 10.0)}g",
-                    style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontSize = 54.sp
+            if (!isKeyboardVisible) {
+                TotalCarbsCard(
+                    totalCarbs = totalCarbs,
+                    compact = isCompactHeight,
+                    modifier = Modifier.padding(bottom = sectionGap)
                 )
             }
-        }
 
-        if (mealTypes.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = listGap),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = Strings.foodsOnPlate(),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                selectedMealType?.let { mealType ->
+                    val remainingCarbs = totalCarbs - mealType.targetCarbs
+                    val remainingText = when {
+                        kotlin.math.abs(remainingCarbs) < 0.05 -> "0g"
+                        remainingCarbs > 0 -> "+${formatDecimal(remainingCarbs)}g"
+                        else -> "-${formatDecimal(kotlin.math.abs(remainingCarbs))}g"
+                    }
+                    val remainingColor = when {
+                        kotlin.math.abs(remainingCarbs) < 0.05 -> MaterialTheme.colorScheme.primary
+                        remainingCarbs > 0 -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.tertiary
+                    }
+                    Text(
+                        text = remainingText,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = remainingColor
+                    )
+                }
+            }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(listGap)
+            ) {
+                itemsIndexed(mealItems) { index: Int, item: MealItem ->
+                    MealItemRow(
+                        index = index,
+                        item = item,
+                        dishCarbsMap = dishCarbsMap,
+                        searchableDishes = searchableDishes,
+                        searchableFoods = searchableFoods,
+                        onSelectDish = onSelectDish,
+                        onSelectBaseFood = onSelectBaseFood,
+                        onUpdate = { updated -> mealItems[index] = updated },
+                        canDelete = mealItems.size > 1,
+                        onDelete = { if (mealItems.size > 1) mealItems.removeAt(index) }
+                    )
+                }
+            }
+
+            if (!isKeyboardVisible) {
+                Spacer(modifier = Modifier.height(listGap))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { mealItems.add(MealItem()) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = if (isCompactHeight) 44.dp else 48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(Strings.addAnotherFoodToMeal())
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            mealItems.clear()
+                            mealItems.add(MealItem())
+                            selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
+                            repository.clearCalculatorDraft()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = if (isCompactHeight) 44.dp else 48.dp),
+                        enabled = hasEditableMeal,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(Strings.clearMeal())
+                    }
+                }
+
+                if (mealTypes.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(sectionGap))
+                    MealTypeSelector(
+                        mealTypes = mealTypes,
+                        selectedMealTypeId = selectedMealTypeId,
+                        onMealTypeSelected = { selectedMealTypeId = it },
+                        resolveMealTypeName = resolveMealTypeName,
+                        compact = isCompactHeight
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TotalCarbsCard(
+    totalCarbs: Double,
+    compact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = if (compact) 18.dp else 20.dp,
+                vertical = if (compact) 12.dp else 20.dp
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = Strings.foodsOnPlate(),
-                style = MaterialTheme.typography.titleMedium
+                text = Strings.totalCarbs(),
+                style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            selectedMealType?.let { mealType ->
-                val remainingCarbs = totalCarbs - mealType.targetCarbs
-                val remainingText = when {
-                    kotlin.math.abs(remainingCarbs) < 0.05 -> "0g"
-                    remainingCarbs > 0 -> "+${formatDecimal(remainingCarbs)}g"
-                    else -> "-${formatDecimal(kotlin.math.abs(remainingCarbs))}g"
-                }
-                val remainingColor = when {
-                    kotlin.math.abs(remainingCarbs) < 0.05 -> MaterialTheme.colorScheme.primary
-                    remainingCarbs > 0 -> MaterialTheme.colorScheme.error
-                    else -> MaterialTheme.colorScheme.tertiary
-                }
-                Text(
-                    text = remainingText,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = remainingColor
-                )
-            }
-        }
-
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            itemsIndexed(mealItems) { index: Int, item: MealItem ->
-                MealItemRow(
-                    index = index,
-                    item = item,
-                    searchableDishes = searchableDishes,
-                    searchableFoods = searchableFoods,
-                    onSelectDish = onSelectDish,
-                    onSelectBaseFood = onSelectBaseFood,
-                    onUpdate = { updated -> mealItems[index] = updated },
-                    canDelete = mealItems.size > 1,
-                    onDelete = { if (mealItems.size > 1) mealItems.removeAt(index) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { mealItems.add(MealItem()) },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.addAnotherFoodToMeal())
-            }
-
-            OutlinedButton(
-                onClick = {
-                    mealItems.clear()
-                    mealItems.add(MealItem())
-                    selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
-                    repository.clearCalculatorDraft()
-                },
-                modifier = Modifier.weight(1f),
-                enabled = hasEditableMeal,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(Strings.clearMeal())
-            }
-        }
-
-        if (mealTypes.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            MealTypeSelector(
-                mealTypes = mealTypes,
-                selectedMealTypeId = selectedMealTypeId,
-                onMealTypeSelected = { selectedMealTypeId = it },
-                resolveMealTypeName = resolveMealTypeName
+            Text(
+                text = "${((totalCarbs * 10).toInt() / 10.0)}g",
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontSize = if (compact) 42.sp else 54.sp
             )
         }
     }
@@ -473,7 +519,8 @@ private fun MealTypeSelector(
     mealTypes: List<MealType>,
     selectedMealTypeId: Long?,
     onMealTypeSelected: (Long) -> Unit,
-    resolveMealTypeName: (String) -> String
+    resolveMealTypeName: (String) -> String,
+    compact: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedMealType = mealTypes.firstOrNull { it.id == selectedMealTypeId } ?: mealTypes.first()
@@ -494,7 +541,10 @@ private fun MealTypeSelector(
                 readOnly = true,
                 label = { Text(Strings.mealTypeSelector()) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+                    .heightIn(min = if (compact) 56.dp else 64.dp)
             )
             DropdownMenu(
                 expanded = expanded,
@@ -521,7 +571,9 @@ private fun MealTypeSelector(
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             ),
-            modifier = Modifier.width(112.dp)
+            modifier = Modifier
+                .width(if (compact) 104.dp else 112.dp)
+                .heightIn(min = if (compact) 56.dp else 64.dp)
         )
     }
 }
@@ -536,6 +588,7 @@ private fun nextMealTypeForHour(mealTypes: List<MealType>, currentHour: Int): Me
 private fun MealItemRow(
     index: Int,
     item: MealItem,
+    dishCarbsMap: Map<Long, Double>,
     searchableDishes: List<SearchableDish>,
     searchableFoods: List<SearchableFood>,
     onSelectDish: (Long) -> DishWithComposition?,
@@ -544,6 +597,7 @@ private fun MealItemRow(
     canDelete: Boolean,
     onDelete: () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf(item.displayName) }
     var textFieldState by remember { mutableStateOf(TextFieldValue(item.displayName)) }
@@ -676,43 +730,27 @@ private fun MealItemRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val nameSize = MaterialTheme.typography.bodyLarge.fontSize
-                    val carbsSize = MaterialTheme.typography.bodySmall.fontSize
-                    val displayValue = if ((item.selectedDish != null || item.selectedBaseFood != null) && carbsInfo != null) {
-                        TextFieldValue(
-                            annotatedString = buildAnnotatedString {
-                                withStyle(SpanStyle(fontSize = nameSize)) {
-                                    append(searchQuery)
-                                }
-                                append("\n")
-                                withStyle(SpanStyle(fontSize = carbsSize)) {
-                                    append("($carbsInfo)")
-                                }
-                            },
-                            selection = textFieldState.selection,
-                            composition = textFieldState.composition
-                        )
-                    } else {
-                        textFieldState
-                    }
-
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
-                            value = displayValue,
+                            value = textFieldState,
                             onValueChange = { newValue ->
                                 textFieldState = newValue
-                                searchQuery = newValue.text.substringBefore("\n")
+                                searchQuery = newValue.text
                                 expanded = true
                             },
-                            label = { Text(Strings.mealItemLabel(index + 1)) },
+                            label = {
+                                Text(
+                                    if (carbsInfo != null) carbsInfo
+                                    else Strings.mealItemLabel(index + 1)
+                                )
+                            },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            singleLine = item.selectedDish == null && item.selectedBaseFood == null,
-                            maxLines = if (item.selectedDish != null || item.selectedBaseFood != null) 2 else 1,
+                            singleLine = true,
                             suffix = {
                                 if (searchQuery.isNotBlank()) {
                                     ClearTextButton {
@@ -733,9 +771,28 @@ private fun MealItemRow(
                             ) {
                                 filteredDishList.forEach { dish ->
                                     DropdownMenuItem(
-                                        text = { Text(dish.name) },
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = dish.name,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                dishCarbsMap[dish.id]?.let { carbs ->
+                                                    Text(
+                                                        text = "${formatDecimal(carbs)}%",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        },
                                         onClick = {
                                             searchQuery = dish.name
+                                            textFieldState = TextFieldValue(dish.name)
                                             onUpdate(
                                                 syncMealItem(
                                                     item = item.copy(weightText = "", carbsText = "", usePieces = false),
@@ -744,14 +801,32 @@ private fun MealItemRow(
                                                 )
                                             )
                                             expanded = false
+                                            focusManager.clearFocus()
                                         }
                                     )
                                 }
                                 filteredFoodList.forEach { searchableFood ->
                                     DropdownMenuItem(
-                                        text = { Text(searchableFood.localizedName) },
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = searchableFood.localizedName,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Text(
+                                                    text = "${formatDecimal(searchableFood.food.carbsPer100g)}%",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        },
                                         onClick = {
                                             searchQuery = searchableFood.localizedName
+                                            textFieldState = TextFieldValue(searchableFood.localizedName)
                                             onUpdate(
                                                 syncMealItem(
                                                     item = item.copy(weightText = "", carbsText = "", usePieces = false),
@@ -760,6 +835,7 @@ private fun MealItemRow(
                                                 )
                                             )
                                             expanded = false
+                                            focusManager.clearFocus()
                                         }
                                     )
                                 }

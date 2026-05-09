@@ -10,6 +10,8 @@ struct GlicoCalcApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(googleSignInCoordinator)
+                .ignoresSafeArea(.container, edges: [.bottom])
+                .ignoresSafeArea(.keyboard)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }
