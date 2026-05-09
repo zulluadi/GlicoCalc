@@ -4,11 +4,12 @@ Follow this workflow whenever the user asks to commit changes.
 
 1. Review the worktree with `git status --short`.
 2. Identify files that belong to the requested change.
-3. Leave unrelated user changes unstaged.
-4. Stage only the relevant files.
-5. Write the commit message using `.agent/rules/commit-style.md`.
-6. Include a commit body when the change needs context, validation notes, migration notes, or safety notes.
-7. After committing, report the commit hash and mention any remaining unstaged changes.
+3. Separate distinct changes into individual commits — do not mix unrelated changes in a single commit.
+4. Leave unrelated user changes unstaged.
+5. Stage only the relevant files for the current commit.
+6. Write the commit message using `.agent/rules/commit-style.md`.
+7. Include a commit body when the change needs context, validation notes, migration notes, or safety notes.
+8. After committing, report the commit hash and mention any remaining unstaged changes.
 
 ## Message Selection
 
