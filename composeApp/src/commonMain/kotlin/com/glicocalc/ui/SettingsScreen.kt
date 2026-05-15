@@ -1,8 +1,7 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -13,29 +12,27 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import com.glicocalc.database.FamilyMember
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     selectedLanguage: String?,
     selectedFoodLanguage: String?,
-    syncAccountLabel: String?,
-    syncAccountStatusMessage: String?,
+    familyMembers: List<FamilyMember>,
     syncStatusMessage: String?,
     lastSyncedMessage: String?,
+    isSignedIn: Boolean,
     onOpenLanguagePicker: () -> Unit,
     onOpenFoodLanguagePicker: () -> Unit,
     onSignInToSync: (() -> Unit)?,
-    onSwitchSyncAccount: (() -> Unit)?,
-    onSignOutFromSync: (() -> Unit)?,
-    onManualSync: (() -> Unit)?,
+    onOpenFamilyManager: () -> Unit,
     onOpenMealTypes: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -74,74 +71,65 @@ fun SettingsScreen(
             }
             item {
                 ListItem(
-                    headlineContent = { Text(Strings.syncAccount()) },
+                    headlineContent = { Text(Strings.familyAndSync()) },
                     supportingContent = {
-                        Text(
-                            when {
-                                syncAccountLabel != null -> Strings.syncSignedInAs(syncAccountLabel)
-                                syncAccountStatusMessage != null -> syncAccountStatusMessage
-                                else -> Strings.syncAccountDescription()
+                        Column {
+                            if (familyMembers.isEmpty()) {
+                                Text(
+                                    if (isSignedIn) Strings.syncAccountDescription()
+                                    else Strings.syncStatusNotSignedIn()
+                                )
+                            } else {
+                                familyMembers.take(2).forEach { member ->
+                                    val label = member.name.ifBlank { member.email }
+                                    Text(label)
+                                }
+                                if (familyMembers.size > 2) {
+                                    Text("+${familyMembers.size - 2} more")
+                                }
                             }
-                        )
-                    },
-                    trailingContent = {
-                        when {
-                            syncAccountLabel != null -> Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (onSwitchSyncAccount != null) {
-                                    SettingsActionButton(
-                                        label = Strings.switchAccount(),
-                                        onClick = onSwitchSyncAccount
+                            if (isSignedIn) {
+                                val statusText = buildString {
+                                    if (syncStatusMessage != null) {
+                                        append(syncStatusMessage)
+                                    }
+                                    if (!lastSyncedMessage.isNullOrBlank()) {
+                                        if (isNotEmpty()) append(" \u2022 ")
+                                        append(lastSyncedMessage)
+                                    }
+                                }
+                                if (statusText.isNotBlank()) {
+                                    Text(
+                                        text = statusText,
+                                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                SettingsActionButton(
-                                    label = Strings.signOut(),
-                                    onClick = { onSignOutFromSync?.invoke() }
-                                )
-                            }
-                            onSignInToSync != null -> SettingsActionButton(
-                                label = Strings.signInWithGoogle(),
-                                onClick = onSignInToSync
-                            )
-                        }
-                    },
-                    modifier = Modifier.clickable(enabled = syncAccountLabel != null || onSignInToSync != null) {
-                        if (syncAccountLabel == null) onSignInToSync?.invoke() else onSwitchSyncAccount?.invoke()
-                    }
-                )
-                HorizontalDivider()
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text(Strings.syncStatus()) },
-                    supportingContent = {
-                        val statusText = buildString {
-                            append(syncStatusMessage ?: Strings.syncStatusNotSignedIn())
-                            if (!lastSyncedMessage.isNullOrBlank()) {
-                                append('\n')
-                                append(lastSyncedMessage)
                             }
                         }
-                        Text(statusText)
                     },
                     trailingContent = {
-                        when {
-                            syncAccountLabel == null && onSignInToSync != null -> SettingsActionButton(
-                                label = Strings.signInWithGoogle(),
-                                onClick = onSignInToSync
+                        if (isSignedIn) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null
                             )
-                            onManualSync != null -> SettingsActionButton(
-                                label = Strings.syncNow(),
-                                onClick = onManualSync
-                            )
+                        } else if (onSignInToSync != null) {
+                            TextButton(
+                                onClick = onSignInToSync,
+                                modifier = Modifier.heightIn(min = 40.dp)
+                            ) {
+                                Text(
+                                    text = Strings.signInWithGoogle(),
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     },
-                    modifier = Modifier.clickable(enabled = onManualSync != null || onSignInToSync != null) {
-                        when {
-                            syncAccountLabel == null && onSignInToSync != null -> onSignInToSync()
-                            onManualSync != null -> onManualSync()
+                    modifier = Modifier.clickable {
+                        if (isSignedIn) {
+                            onOpenFamilyManager()
+                        } else {
+                            onSignInToSync?.invoke()
                         }
                     }
                 )
@@ -162,22 +150,6 @@ fun SettingsScreen(
                 HorizontalDivider()
             }
         }
-    }
-}
-
-@Composable
-private fun SettingsActionButton(
-    label: String,
-    onClick: () -> Unit
-) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.heightIn(min = 40.dp)
-    ) {
-        Text(
-            text = label,
-            color = androidx.compose.material3.MaterialTheme.colorScheme.primary
-        )
     }
 }
 

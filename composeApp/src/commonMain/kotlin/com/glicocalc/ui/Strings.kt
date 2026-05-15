@@ -68,6 +68,17 @@ import glicocalc.composeapp.generated.resources.sync_signed_in_as
 import glicocalc.composeapp.generated.resources.sync_signed_in_google
 import glicocalc.composeapp.generated.resources.sync_status
 import glicocalc.composeapp.generated.resources.sync_status_failed
+import glicocalc.composeapp.generated.resources.family_and_sync
+import glicocalc.composeapp.generated.resources.family_members
+import glicocalc.composeapp.generated.resources.family_sharing_description
+import glicocalc.composeapp.generated.resources.family_no_members
+import glicocalc.composeapp.generated.resources.add_member
+import glicocalc.composeapp.generated.resources.remove_member
+import glicocalc.composeapp.generated.resources.member_email
+import glicocalc.composeapp.generated.resources.member_name
+import glicocalc.composeapp.generated.resources.signed_in
+import glicocalc.composeapp.generated.resources.not_signed_in
+import glicocalc.composeapp.generated.resources.owner_badge
 import glicocalc.composeapp.generated.resources.sync_status_not_signed_in
 import glicocalc.composeapp.generated.resources.sync_status_pending
 import glicocalc.composeapp.generated.resources.sync_status_up_to_date
@@ -166,4 +177,16 @@ object Strings {
     @Composable fun pieces() = stringResource(Res.string.pieces)
     @Composable fun pcs() = stringResource(Res.string.pcs)
     @Composable fun totalCookedWeight() = stringResource(Res.string.total_cooked_weight)
+
+    @Composable fun familyAndSync() = stringResource(Res.string.family_and_sync)
+    @Composable fun familyMembers() = stringResource(Res.string.family_members)
+    @Composable fun familySharingDescription() = stringResource(Res.string.family_sharing_description)
+    @Composable fun familyNoMembers() = stringResource(Res.string.family_no_members)
+    @Composable fun addMember() = stringResource(Res.string.add_member)
+    @Composable fun removeMember() = stringResource(Res.string.remove_member)
+    @Composable fun memberEmail() = stringResource(Res.string.member_email)
+    @Composable fun memberName() = stringResource(Res.string.member_name)
+    @Composable fun signedIn() = stringResource(Res.string.signed_in)
+    @Composable fun notSignedIn() = stringResource(Res.string.not_signed_in)
+    @Composable fun ownerBadge() = stringResource(Res.string.owner_badge)
 }

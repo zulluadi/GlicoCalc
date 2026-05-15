@@ -28,22 +28,23 @@ fun MainViewController(syncController: IosSyncController) = ComposeUIViewControl
         customFoodLocale = repository.getFoodLanguage()
         hasLoadedPersistedAppLocale = true
         hasLoadedPersistedFoodLocale = true
+        syncController.onRefreshFamilyMembersRequested = { repository.getAllFamilyMembers() }
+        syncController.onRefreshFamilyIdRequested = { repository.getFamilyId() }
+        syncController.refreshFamilyMembers()
     }
 
     MainApp(
         repository = repository,
         telemetry = NoopTelemetry,
-        syncAccountLabel = syncController.syncAccountLabel,
-        syncAccountStatusMessage = syncController.syncAccountStatusMessage,
+        familyMembers = syncController.familyMembers,
+        familyId = syncController.familyId,
+        isSignedIn = syncController.isSignedIn,
         syncStatusMessage = syncController.syncStatusMessage,
         lastSyncedMessage = syncController.lastSyncedMessage,
-        onSignInToSync = if (syncController.canSignIn) syncController.onSignInRequested else null,
-        onSwitchSyncAccount = if (syncController.canSignIn && syncController.syncAccountLabel != null) {
-            syncController.onSwitchAccountRequested
-        } else {
-            null
-        },
-        onSignOutFromSync = if (syncController.canSignIn) syncController.onSignOutRequested else null,
-        onManualSync = if (syncController.canManualSync) syncController.onManualSyncRequested else null
+        onSignInToSync = if (!syncController.isSignedIn) syncController.onSignInRequested else null,
+        onSignOutFromSync = if (syncController.isSignedIn) syncController.onSignOutRequested else null,
+        onManualSync = if (syncController.canManualSync) syncController.onManualSyncRequested else null,
+        onAddFamilyMember = syncController.onAddFamilyMemberRequested,
+        onRemoveFamilyMember = syncController.onRemoveFamilyMemberRequested
     )
 }

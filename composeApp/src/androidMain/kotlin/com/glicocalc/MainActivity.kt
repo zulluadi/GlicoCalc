@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import com.glicocalc.database.DatabaseDriverFactory
+import com.glicocalc.database.FamilyMember
 import com.glicocalc.database.GlicoDatabase
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.sync.FirebaseFoodSyncManager
@@ -48,7 +49,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private var resumeSignal by mutableStateOf(0)
-    private var syncAccountLabel by mutableStateOf<String?>(null)
+    private var familyMembers by mutableStateOf<List<FamilyMember>>(emptyList())
+    private var familyId by mutableStateOf<String?>(null)
     private var syncUiState by mutableStateOf(SyncUiState(status = SyncStatus.IDLE, pendingCount = 0, isSignedIn = false))
     private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -75,9 +77,9 @@ class MainActivity : ComponentActivity() {
             scope = syncScope
         )
         repository.onFoodsChanged = foodSyncManager::requestSync
-        foodSyncManager.onAccountStateChanged = { label ->
+        foodSyncManager.onAccountStateChanged = { _ ->
             runOnUiThread {
-                syncAccountLabel = label
+                refreshFamilyMembers()
                 syncUiState = foodSyncManager.currentSyncUiState(syncUiState.status)
             }
         }
@@ -87,7 +89,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         foodSyncManager.start()
-        syncAccountLabel = foodSyncManager.currentSyncAccountLabel()
+        refreshFamilyMembers()
         syncUiState = foodSyncManager.currentSyncUiState()
 
         customAppLocale = repository.getLanguage()
@@ -99,14 +101,16 @@ class MainActivity : ComponentActivity() {
             MainApp(
                 repository = repository,
                 telemetry = NoopTelemetry,
-                syncAccountLabel = syncAccountLabel,
-                syncAccountStatusMessage = syncAccountStatusMessage(),
+                familyMembers = familyMembers,
+                familyId = foodSyncManager.getCurrentFamilyId(),
+                isSignedIn = syncUiState.isSignedIn,
                 syncStatusMessage = syncStatusMessage(),
                 lastSyncedMessage = lastSyncedMessage(),
                 onSignInToSync = if (canOfferGoogleSignIn()) ::launchGoogleSignIn else null,
-                onSwitchSyncAccount = if (canOfferGoogleSignIn() && syncAccountLabel != null) ::switchSyncAccount else null,
                 onSignOutFromSync = if (canOfferGoogleSignIn()) ::signOutFromSync else null,
                 onManualSync = if (foodSyncManager.isEnabled) foodSyncManager::requestSync else null,
+                onAddFamilyMember = ::addFamilyMember,
+                onRemoveFamilyMember = ::removeFamilyMember,
                 resumeSignal = resumeSignal
             )
         }
@@ -115,7 +119,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         resumeSignal += 1
-        syncAccountLabel = foodSyncManager.currentSyncAccountLabel()
+        refreshFamilyMembers()
         syncUiState = foodSyncManager.currentSyncUiState()
     }
 
@@ -125,17 +129,34 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun canOfferGoogleSignIn(): Boolean {
-        return foodSyncManager.isEnabled && googleWebClientId() != null
+    private fun refreshFamilyMembers() {
+        familyMembers = repository.getAllFamilyMembers()
+        familyId = foodSyncManager.getCurrentFamilyId()
     }
 
-    private fun syncAccountStatusMessage(): String? {
-        if (syncAccountLabel != null) return null
-        return when {
-            googleWebClientId() == null -> "Google sign-in is unavailable because the Firebase config is missing the web client ID."
-            !foodSyncManager.isEnabled -> "Sync sign-in is unavailable until Firebase is configured correctly."
-            else -> null
+    private fun addFamilyMember(email: String, name: String) {
+        if (repository.getFamilyMemberByEmail(email) != null) return
+        repository.addFamilyMember(email = email, name = name)
+        if (repository.getFamilyOwnerUid() == null) {
+            repository.setFamilyOwner(email)
         }
+        refreshFamilyMembers()
+    }
+
+    private fun removeFamilyMember(email: String) {
+        val member = repository.getFamilyMemberByEmail(email)
+        repository.removeFamilyMember(email)
+        member?.firebaseUid?.let { uid ->
+            syncScope.launch {
+                foodSyncManager.removeMemberFromFamily(uid)
+            }
+        }
+        refreshFamilyMembers()
+        foodSyncManager.requestSync()
+    }
+
+    private fun canOfferGoogleSignIn(): Boolean {
+        return foodSyncManager.isEnabled && googleWebClientId() != null
     }
 
     private fun syncStatusMessage(): String {
@@ -184,6 +205,7 @@ class MainActivity : ComponentActivity() {
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                     val firebaseCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
                     foodSyncManager.linkOrSignIn(firebaseCredential)
+                    refreshFamilyMembers()
                     showToast("Sync account connected.")
                 } else {
                     showToast("Google Sign-In did not return a valid credential.")
@@ -201,16 +223,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun switchSyncAccount() {
+    private fun signOutFromSync() {
         lifecycleScope.launch {
             try {
                 foodSyncManager.signOut()
                 credentialManager.clearCredentialState(ClearCredentialStateRequest())
             } catch (_: ClearCredentialException) {
-                // Continue to account selection even if Android has no cached credential state.
+                // Firebase sign-out still succeeded.
             } finally {
-                syncAccountLabel = null
-                launchGoogleSignIn()
+                refreshFamilyMembers()
+                foodSyncManager.requestSync()
+                showToast("Sync account disconnected.")
             }
         }
     }
@@ -248,21 +271,6 @@ class MainActivity : ComponentActivity() {
             credentialManager.getCredential(this, request).credential
         } catch (_: NoCredentialException) {
             null
-        }
-    }
-
-    private fun signOutFromSync() {
-        lifecycleScope.launch {
-            try {
-                foodSyncManager.signOut()
-                credentialManager.clearCredentialState(ClearCredentialStateRequest())
-            } catch (_: ClearCredentialException) {
-                // Firebase sign-out still succeeded.
-            } finally {
-                syncAccountLabel = null
-                foodSyncManager.requestSync()
-                showToast("Sync account disconnected.")
-            }
         }
     }
 

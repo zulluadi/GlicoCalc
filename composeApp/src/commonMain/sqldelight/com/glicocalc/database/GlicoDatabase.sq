@@ -46,6 +46,14 @@ CREATE TABLE Setting (
     updatedAt INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE FamilyMember (
+    email TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL DEFAULT '',
+    firebaseUid TEXT,
+    isOwner INTEGER NOT NULL DEFAULT 0,
+    addedAt INTEGER NOT NULL DEFAULT 0
+);
+
 -- Queries
 insertBaseFood:
 INSERT INTO BaseFood(name, carbsPer100g, remoteKey, source, isDeleted, needsSync, updatedAt, isPacked, packWeight, packCount)
@@ -177,3 +185,39 @@ UPDATE Setting SET needsSync = 0 WHERE key = ?;
 
 applyRemoteSetting:
 INSERT OR REPLACE INTO Setting(key, content, needsSync, updatedAt) VALUES (?, ?, 0, ?);
+
+insertFamilyMember:
+INSERT OR IGNORE INTO FamilyMember(email, name, firebaseUid, isOwner, addedAt) VALUES (?, ?, ?, ?, ?);
+
+deleteFamilyMemberByEmail:
+DELETE FROM FamilyMember WHERE email = ?;
+
+selectAllFamilyMembers:
+SELECT * FROM FamilyMember ORDER BY addedAt;
+
+selectFamilyMemberByEmail:
+SELECT * FROM FamilyMember WHERE email = ?;
+
+selectFamilyMemberByFirebaseUid:
+SELECT * FROM FamilyMember WHERE firebaseUid = ?;
+
+updateFamilyMemberFirebaseUid:
+UPDATE FamilyMember SET firebaseUid = ? WHERE email = ?;
+
+updateFamilyMemberName:
+UPDATE FamilyMember SET name = ? WHERE email = ?;
+
+getFamilyOwnerUid:
+SELECT firebaseUid FROM FamilyMember WHERE isOwner = 1 AND firebaseUid IS NOT NULL LIMIT 1;
+
+clearOwner:
+UPDATE FamilyMember SET isOwner = 0;
+
+setOwner:
+UPDATE FamilyMember SET isOwner = 1 WHERE email = ?;
+
+countFamilyMembers:
+SELECT COUNT(*) FROM FamilyMember;
+
+deleteAllFamilyMembers:
+DELETE FROM FamilyMember;

@@ -40,6 +40,19 @@ class DatabaseDriverFactory(private val context: Context) {
                             """.trimIndent()
                         )
                     }
+                    if (oldVersion < 4) {
+                        db.execSQL(
+                            """
+                            CREATE TABLE FamilyMember (
+                                email TEXT NOT NULL PRIMARY KEY,
+                                name TEXT NOT NULL DEFAULT '',
+                                firebaseUid TEXT,
+                                isOwner INTEGER NOT NULL DEFAULT 0,
+                                addedAt INTEGER NOT NULL DEFAULT 0
+                            )
+                            """.trimIndent()
+                        )
+                    }
                 }
             }
         )
@@ -68,6 +81,7 @@ class DatabaseDriverFactory(private val context: Context) {
         ensureBaseFoodSyncColumns(driver)
         ensureDishSyncColumns(driver)
         ensureSettingSyncColumns(driver)
+        ensureFamilyMemberTable(driver)
         return driver
     }
 
@@ -101,6 +115,21 @@ class DatabaseDriverFactory(private val context: Context) {
     private fun ensureSettingSyncColumns(driver: SqlDriver) {
         safeExecute(driver, "ALTER TABLE Setting ADD COLUMN needsSync INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE Setting ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
+    }
+
+    private fun ensureFamilyMemberTable(driver: SqlDriver) {
+        safeExecute(
+            driver,
+            """
+            CREATE TABLE IF NOT EXISTS FamilyMember (
+                email TEXT NOT NULL PRIMARY KEY,
+                name TEXT NOT NULL DEFAULT '',
+                firebaseUid TEXT,
+                isOwner INTEGER NOT NULL DEFAULT 0,
+                addedAt INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent()
+        )
     }
 
     private fun safeExecute(driver: SqlDriver, sql: String) {

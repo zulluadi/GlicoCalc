@@ -15,7 +15,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.FirebaseException
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -68,18 +71,9 @@ class FirebaseFoodSyncManager(
     fun currentSyncAccountLabel(): String? {
         val user = auth?.currentUser ?: return null
         if (user.isAnonymous) return null
-        val providerLabel = user.providerData
-            .asSequence()
-            .filter { it.providerId != "firebase" }
-            .mapNotNull { providerUser ->
-                providerUser.email ?: providerUser.displayName ?: providerUser.phoneNumber
-            }
-            .firstOrNull()
-
         return user.email
             ?: user.displayName
             ?: user.phoneNumber
-            ?: providerLabel
             ?: "Google account linked"
     }
 
@@ -94,9 +88,20 @@ class FirebaseFoodSyncManager(
         } else {
             auth?.signInWithCredential(credential)?.await()
         }
+        autoAddCurrentUserToFamily()
         syncMutex.withLock {
             runSync()
         }
+    }
+
+    private fun autoAddCurrentUserToFamily() {
+        val user = auth?.currentUser ?: return
+        if (user.isAnonymous) return
+        repository.getOrCreateCurrentFamilyMember(
+            firebaseUid = user.uid,
+            email = user.email,
+            displayName = user.displayName
+        )
     }
 
     suspend fun signOut() {
@@ -143,17 +148,117 @@ class FirebaseFoodSyncManager(
         )
     }
 
+    fun getCurrentFamilyId(): String? {
+        return repository.getFamilyId()
+    }
+
+    suspend fun removeMemberFromFamily(memberFirebaseUid: String) {
+        val familyId = repository.getFamilyId() ?: return
+        try {
+            firestore!!.collection("families").document(familyId)
+                .update("members.$memberFirebaseUid", FieldValue.delete())
+                .await()
+            Log.i(TAG, "Removed member $memberFirebaseUid from family $familyId")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to remove member $memberFirebaseUid from family $familyId", e)
+        }
+    }
+
     private fun isConfigurationFailure(exception: FirebaseException): Boolean {
         val message = exception.message.orEmpty()
         return "CONFIGURATION_NOT_FOUND" in message || "API key not valid" in message
     }
 
+    private fun getCurrentUser(): FirebaseUser? {
+        val user = auth?.currentUser ?: return null
+        if (user.isAnonymous) return null
+        return user
+    }
+
+    private suspend fun getOrCreateFamilyId(user: FirebaseUser): String? {
+        val localFamilyId = repository.getFamilyId()
+        if (localFamilyId != null) return localFamilyId
+
+        return try {
+            val userDoc = firestore!!.collection("users").document(user.uid)
+            val snapshot = userDoc.get().await()
+            val remoteFamilyId = snapshot.getString("familyId")
+            if (remoteFamilyId != null) {
+                repository.setFamilyId(remoteFamilyId)
+                ensureFamilyMemberDoc(user, remoteFamilyId)
+                return remoteFamilyId
+            }
+            userDoc.set(mapOf("familyId" to user.uid)).await()
+            repository.setFamilyId(user.uid)
+            ensureFamilyMemberDoc(user, user.uid)
+            user.uid
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to get/create family ID.", e)
+            null
+        }
+    }
+
+    private suspend fun ensureFamilyMemberDoc(user: FirebaseUser, familyId: String) {
+        try {
+            firestore!!.collection("families").document(familyId)
+                .update("members.${user.uid}", true)
+                .await()
+        } catch (_: Exception) {
+            try {
+                firestore!!.collection("families").document(familyId)
+                    .set(mapOf("members" to mapOf(user.uid to true)))
+                    .await()
+            } catch (_: Exception) { }
+        }
+    }
+
+    private suspend fun checkFamilyMembership(user: FirebaseUser, familyId: String): Boolean {
+        return try {
+            firestore!!.collection("families").document(familyId)
+                .update("members.${user.uid}", true)
+                .await()
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private suspend fun forkToOwnFamily(user: FirebaseUser, oldFamilyId: String): String {
+        val newFamilyId = user.uid
+
+        val newFamilyDoc = firestore!!.collection("families").document(newFamilyId)
+        newFamilyDoc.set(mapOf("members" to mapOf(user.uid to true))).await()
+
+        firestore!!.collection("users").document(user.uid)
+            .set(mapOf("familyId" to newFamilyId)).await()
+
+        repository.setFamilyId(newFamilyId)
+        repository.clearAllFamilyMembers()
+        repository.getOrCreateCurrentFamilyMember(
+            firebaseUid = user.uid,
+            email = user.email,
+            displayName = user.displayName
+        )
+
+        Log.i(TAG, "Forked from family $oldFamilyId to new family $newFamilyId")
+        return newFamilyId
+    }
+
     private suspend fun runSync() {
-        val userId = ensureSignedIn() ?: return
-        val userDocument = firestore!!.collection("users").document(userId)
-        val foodsCollection = userDocument.collection("foodDiffs")
-        val dishesCollection = userDocument.collection("dishes")
-        val settingsCollection = userDocument.collection("settings")
+        val user = getCurrentUser() ?: return
+        var familyId = getOrCreateFamilyId(user) ?: return
+
+        if (!checkFamilyMembership(user, familyId)) {
+            Log.i(TAG, "User ${user.uid} removed from family $familyId. Forking data.")
+            familyId = forkToOwnFamily(user, familyId)
+        }
+
+        val familyDoc = firestore!!.collection("families").document(familyId)
+        val foodsCollection = familyDoc.collection("foodDiffs")
+        val dishesCollection = familyDoc.collection("dishes")
+        val settingsCollection = familyDoc.collection("settings")
+
+        migrateFromOldPathIfNeeded(user.uid, foodsCollection, dishesCollection, settingsCollection)
 
         repository.reconcileRemoteFoods(fetchRemoteFoods(foodsCollection))
         repository.reconcileRemoteDishes(fetchRemoteDishes(dishesCollection))
@@ -179,14 +284,59 @@ class FirebaseFoodSyncManager(
         repository.reconcileRemoteSettings(fetchRemoteSettings(settingsCollection))
     }
 
-    private suspend fun ensureSignedIn(): String? {
-        val user = auth?.currentUser ?: return null
-        if (user.isAnonymous) return null
-        return user.uid
+    private suspend fun migrateFromOldPathIfNeeded(
+        uid: String,
+        foodsCollection: CollectionReference,
+        dishesCollection: CollectionReference,
+        settingsCollection: CollectionReference
+    ) {
+        val hasFamilyFoods = try {
+            !foodsCollection.limit(1).get().await().isEmpty
+        } catch (_: Exception) { false }
+        if (hasFamilyFoods) return
+
+        val oldDoc = firestore!!.collection("users").document(uid)
+        try {
+            val oldFoods = fetchRemoteFoods(oldDoc.collection("foodDiffs"))
+            oldFoods.forEach { food ->
+                foodsCollection.document(food.remoteKey).set(
+                    mapOf(
+                        "source" to food.source.value,
+                        "name" to food.name,
+                        "carbsPer100g" to food.carbsPer100g,
+                        "isDeleted" to food.isDeleted,
+                        "updatedAt" to food.updatedAt,
+                        "isPacked" to food.isPacked,
+                        "packWeight" to food.packWeight,
+                        "packCount" to food.packCount
+                    )
+                ).await()
+            }
+            val oldDishes = fetchRemoteDishes(oldDoc.collection("dishes"))
+            oldDishes.forEach { dish ->
+                dishesCollection.document(dish.remoteKey).set(
+                    mapOf(
+                        "name" to dish.name,
+                        "totalCookedWeight" to dish.totalCookedWeight,
+                        "isDeleted" to dish.isDeleted,
+                        "updatedAt" to dish.updatedAt,
+                        "components" to dish.components.map { c ->
+                            mapOf("foodRemoteKey" to c.foodRemoteKey, "weightGrams" to c.weightGrams)
+                        }
+                    )
+                ).await()
+            }
+            val oldSettings = fetchRemoteSettings(oldDoc.collection("settings"))
+            oldSettings.forEach { setting ->
+                settingsCollection.document(setting.key).set(
+                    mapOf("content" to setting.content, "updatedAt" to setting.updatedAt)
+                ).await()
+            }
+        } catch (_: Exception) { }
     }
 
     private suspend fun fetchRemoteFoods(
-        collection: com.google.firebase.firestore.CollectionReference
+        collection: CollectionReference
     ): List<RemoteFoodRecord> {
         return collection.get().await().documents.mapNotNull { document ->
             val data = document.data ?: return@mapNotNull null
@@ -213,7 +363,7 @@ class FirebaseFoodSyncManager(
     }
 
     private suspend fun syncFood(
-        collection: com.google.firebase.firestore.CollectionReference,
+        collection: CollectionReference,
         food: BaseFood
     ) {
         val remoteKey = food.remoteKey ?: return
@@ -240,7 +390,7 @@ class FirebaseFoodSyncManager(
     }
 
     private suspend fun fetchRemoteDishes(
-        collection: com.google.firebase.firestore.CollectionReference
+        collection: CollectionReference
     ): List<RemoteDishRecord> {
         return collection.get().await().documents.mapNotNull { document ->
             val data = document.data ?: return@mapNotNull null
@@ -267,7 +417,7 @@ class FirebaseFoodSyncManager(
     }
 
     private suspend fun fetchRemoteSettings(
-        collection: com.google.firebase.firestore.CollectionReference
+        collection: CollectionReference
     ): List<RemoteSettingRecord> {
         return collection.get().await().documents.mapNotNull { document ->
             val data = document.data ?: return@mapNotNull null
@@ -281,7 +431,7 @@ class FirebaseFoodSyncManager(
     }
 
     private suspend fun syncDish(
-        collection: com.google.firebase.firestore.CollectionReference,
+        collection: CollectionReference,
         dishId: Long
     ) {
         val remoteDish = repository.getRemoteDishRecord(dishId) ?: return
@@ -308,7 +458,7 @@ class FirebaseFoodSyncManager(
     }
 
     private suspend fun syncSetting(
-        collection: com.google.firebase.firestore.CollectionReference,
+        collection: CollectionReference,
         setting: com.glicocalc.database.Setting
     ) {
         collection.document(setting.key).set(

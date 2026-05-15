@@ -71,6 +71,8 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         queries.markBaseFoodSynced(id)
     }
 
+    // Default foods are identified by stable remote keys. Looking up the seed lets sync
+    // distinguish an unchanged bundled food from a user-specific edit or deletion.
     fun seedFoodFor(baseFood: BaseFood): SeedFood? {
         return baseFood.remoteKey?.let(InitialData::defaultFoodByRemoteKey)
     }
@@ -404,7 +406,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     }
 
     fun seedInitialData() {
-        val existingFoods = queries.selectAllBaseFoods().executeAsList()
+        val existingFoods = queries.selectAllBaseFoodsIncludingDeleted().executeAsList()
         val existingMealTypes = queries.selectAllMealTypes().executeAsList()
 
         if (existingFoods.isEmpty()) {
@@ -422,6 +424,27 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                         packWeight = null,
                         packCount = null
                     )
+                }
+            }
+        } else {
+            val existingDefaultRemoteKeys = existingFoods.mapNotNull { it.remoteKey }.toSet()
+            val missingDefaultFoods = InitialData.seededFoods.filterNot { it.remoteKey in existingDefaultRemoteKeys }
+            if (missingDefaultFoods.isNotEmpty()) {
+                database.transaction {
+                    missingDefaultFoods.forEach {
+                        queries.insertBaseFood(
+                            name = it.name,
+                            carbsPer100g = it.carbs,
+                            remoteKey = it.remoteKey,
+                            source = FoodSource.DEFAULT.value,
+                            isDeleted = 0,
+                            needsSync = 0,
+                            updatedAt = 0,
+                            isPacked = 0,
+                            packWeight = null,
+                            packCount = null
+                        )
+                    }
                 }
             }
         }
@@ -472,6 +495,95 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     fun clearCalculatorDraft() {
         saveCalculatorMealDraft(null)
         saveCalculatorMealTypeId(null)
+    }
+
+    fun getFamilyId(): String? {
+        return queries.selectSettingByKey("family_id").executeAsOneOrNull()?.content
+    }
+
+    fun setFamilyId(id: String?) {
+        queries.applyRemoteSetting("family_id", id, PlatformTime.currentTimeMillis())
+    }
+
+    fun getAllFamilyMembers(): List<FamilyMember> {
+        return queries.selectAllFamilyMembers().executeAsList()
+    }
+
+    fun addFamilyMember(email: String, name: String, firebaseUid: String? = null, isOwner: Boolean = false) {
+        queries.insertFamilyMember(
+            email = email,
+            name = name,
+            firebaseUid = firebaseUid,
+            isOwner = if (isOwner) 1 else 0,
+            addedAt = PlatformTime.currentTimeMillis()
+        )
+    }
+
+    fun removeFamilyMember(email: String) {
+        queries.deleteFamilyMemberByEmail(email)
+    }
+
+    fun getFamilyMemberByEmail(email: String): FamilyMember? {
+        return queries.selectFamilyMemberByEmail(email).executeAsOneOrNull()
+    }
+
+    fun getFamilyMemberByFirebaseUid(uid: String): FamilyMember? {
+        return queries.selectFamilyMemberByFirebaseUid(uid).executeAsOneOrNull()
+    }
+
+    fun updateFamilyMemberFirebaseUid(email: String, firebaseUid: String?) {
+        queries.updateFamilyMemberFirebaseUid(firebaseUid, email)
+    }
+
+    fun updateFamilyMemberName(email: String, name: String) {
+        queries.updateFamilyMemberName(name, email)
+    }
+
+    fun getFamilyOwnerUid(): String? {
+        return queries.getFamilyOwnerUid().executeAsOneOrNull()
+    }
+
+    fun setFamilyOwner(email: String) {
+        queries.clearOwner()
+        queries.setOwner(email)
+    }
+
+    fun countFamilyMembers(): Long {
+        return queries.countFamilyMembers().executeAsOne()
+    }
+
+    fun clearAllFamilyMembers() {
+        queries.deleteAllFamilyMembers()
+    }
+
+    fun getOrCreateCurrentFamilyMember(firebaseUid: String?, email: String?, displayName: String?): FamilyMember {
+        val member = firebaseUid?.let { getFamilyMemberByFirebaseUid(it) }
+        if (member != null) {
+            if (getFamilyOwnerUid() == null) {
+                setFamilyOwner(member.email)
+            }
+            return member
+        }
+        val emailMember = email?.let { getFamilyMemberByEmail(it) }
+        if (emailMember != null) {
+            if (firebaseUid != null) {
+                updateFamilyMemberFirebaseUid(emailMember.email, firebaseUid)
+            }
+            if (getFamilyOwnerUid() == null) {
+                setFamilyOwner(emailMember.email)
+            }
+            return emailMember
+        }
+        val defaultName = displayName ?: email ?: firebaseUid ?: "Unknown"
+        val memberEmail = email ?: "$defaultName@family.local"
+        val isOwner = getFamilyOwnerUid() == null
+        addFamilyMember(
+            email = memberEmail,
+            name = defaultName,
+            firebaseUid = firebaseUid,
+            isOwner = isOwner
+        )
+        return queries.selectFamilyMemberByEmail(memberEmail).executeAsOne()
     }
 
     private fun notifyLocalDataChanged() {

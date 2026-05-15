@@ -3,59 +3,63 @@ package com.glicocalc.sync
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.glicocalc.database.FamilyMember
 
 class IosSyncController {
-    var syncAccountLabel by mutableStateOf<String?>(null)
+    var familyMembers by mutableStateOf<List<FamilyMember>>(emptyList())
         private set
-    var syncAccountStatusMessage by mutableStateOf<String?>(null)
+    var familyId by mutableStateOf<String?>(null)
         private set
     var syncStatusMessage by mutableStateOf("Sign in to link a Google account.")
         private set
     var lastSyncedMessage by mutableStateOf<String?>(null)
         private set
-    var canSignIn by mutableStateOf(false)
+    var isSignedIn by mutableStateOf(false)
         private set
     var canManualSync by mutableStateOf(false)
         private set
 
     var onSignInRequested: (() -> Unit)? = null
-    var onSwitchAccountRequested: (() -> Unit)? = null
     var onSignOutRequested: (() -> Unit)? = null
     var onManualSyncRequested: (() -> Unit)? = null
+    var onAddFamilyMemberRequested: ((email: String, name: String) -> Unit)? = null
+    var onRemoveFamilyMemberRequested: ((email: String) -> Unit)? = null
+    var onRefreshFamilyMembersRequested: (() -> List<FamilyMember>)? = null
+    var onRefreshFamilyIdRequested: (() -> String?)? = null
 
     fun setUnavailable(message: String) {
-        syncAccountLabel = null
-        syncAccountStatusMessage = message
+        familyMembers = emptyList()
         syncStatusMessage = "Local data only"
         lastSyncedMessage = null
-        canSignIn = false
+        isSignedIn = false
         canManualSync = false
     }
 
     fun setSignedOut() {
-        syncAccountLabel = null
-        syncAccountStatusMessage = null
+        isSignedIn = false
         syncStatusMessage = "Sign in to link a Google account."
         lastSyncedMessage = null
-        canSignIn = true
         canManualSync = false
+        refreshFamilyMembers()
     }
 
     fun setSigningIn() {
-        syncAccountStatusMessage = null
         syncStatusMessage = "Signing in..."
     }
 
     fun setSignedIn(label: String) {
-        syncAccountLabel = label
-        syncAccountStatusMessage = null
+        isSignedIn = true
         syncStatusMessage = "Google account linked."
-        canSignIn = true
         canManualSync = false
+        refreshFamilyMembers()
     }
 
     fun setError(message: String) {
-        syncAccountStatusMessage = message
         syncStatusMessage = message
+    }
+
+    fun refreshFamilyMembers() {
+        familyMembers = onRefreshFamilyMembersRequested?.invoke() ?: emptyList()
+        familyId = onRefreshFamilyIdRequested?.invoke()
     }
 }

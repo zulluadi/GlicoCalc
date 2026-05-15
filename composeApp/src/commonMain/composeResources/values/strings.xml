@@ -84,4 +84,17 @@
     <string name="pieces">Pieces</string>
     <string name="pcs">pcs</string>
     <string name="total_cooked_weight">Total cooked weight (g)</string>
+
+    <!-- Family & Sync -->
+    <string name="family_and_sync">Family &amp; Sync</string>
+    <string name="family_members">Family Members</string>
+    <string name="family_sharing_description">Family members share the same foods and food edits.</string>
+    <string name="family_no_members">No family members yet.</string>
+    <string name="add_member">Add Member</string>
+    <string name="remove_member">Remove</string>
+    <string name="member_email">Email</string>
+    <string name="member_name">Name</string>
+    <string name="signed_in">Signed in</string>
+    <string name="not_signed_in">Not signed in</string>
+    <string name="owner_badge">Owner</string>
 </resources>

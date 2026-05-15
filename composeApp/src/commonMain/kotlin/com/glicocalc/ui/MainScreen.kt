@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.glicocalc.database.FamilyMember
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.telemetry.Telemetry
 import com.glicocalc.ui.theme.GlicoCalcTheme
@@ -24,14 +25,16 @@ import kotlinx.coroutines.launch
 fun MainApp(
     repository: GlicoRepository,
     telemetry: Telemetry,
-    syncAccountLabel: String? = null,
-    syncAccountStatusMessage: String? = null,
+    familyMembers: List<FamilyMember> = emptyList(),
+    familyId: String? = null,
+    isSignedIn: Boolean = false,
     syncStatusMessage: String? = null,
     lastSyncedMessage: String? = null,
     onSignInToSync: (() -> Unit)? = null,
-    onSwitchSyncAccount: (() -> Unit)? = null,
     onSignOutFromSync: (() -> Unit)? = null,
     onManualSync: (() -> Unit)? = null,
+    onAddFamilyMember: ((email: String, name: String) -> Unit)? = null,
+    onRemoveFamilyMember: ((email: String) -> Unit)? = null,
     resumeSignal: Int = 0
 ) {
     LaunchedEffect(repository) {
@@ -91,7 +94,7 @@ fun MainApp(
                                 label = { Text(Strings.navFoods()) }
                             )
                             NavigationBarItem(
-                                selected = currentScreen == Screen.Settings || currentScreen == Screen.MealTypes,
+                                selected = currentScreen == Screen.Settings || currentScreen == Screen.MealTypes || currentScreen == Screen.FamilyManager,
                                 onClick = { currentScreen = Screen.Settings },
                                 icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                                 label = { Text(Strings.settings()) }
@@ -182,17 +185,35 @@ fun MainApp(
                     Screen.Settings -> SettingsScreen(
                         selectedLanguage = customAppLocale,
                         selectedFoodLanguage = customFoodLocale,
-                        syncAccountLabel = syncAccountLabel,
-                        syncAccountStatusMessage = syncAccountStatusMessage,
+                        familyMembers = familyMembers,
                         syncStatusMessage = syncStatusMessage,
                         lastSyncedMessage = lastSyncedMessage,
+                        isSignedIn = isSignedIn,
                         onOpenLanguagePicker = { showLanguageDialog = true },
                         onOpenFoodLanguagePicker = { showFoodLanguageDialog = true },
                         onSignInToSync = onSignInToSync,
-                        onSwitchSyncAccount = onSwitchSyncAccount,
-                        onSignOutFromSync = onSignOutFromSync,
-                        onManualSync = onManualSync,
+                        onOpenFamilyManager = { currentScreen = Screen.FamilyManager },
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },
+                        modifier = modifier
+                    )
+                    Screen.FamilyManager -> FamilyManagerScreen(
+                        familyMembers = familyMembers,
+                        familyId = familyId,
+                        syncStatusMessage = syncStatusMessage,
+                        lastSyncedMessage = lastSyncedMessage,
+                        isSignedIn = isSignedIn,
+                        onAddMember = { email, name ->
+                            telemetry.action("family_member_added")
+                            onAddFamilyMember?.invoke(email, name)
+                        },
+                        onRemoveMember = { email ->
+                            telemetry.action("family_member_removed")
+                            onRemoveFamilyMember?.invoke(email)
+                        },
+                        onSignIn = { onSignInToSync?.invoke() },
+                        onSignOut = { onSignOutFromSync?.invoke() },
+                        onManualSync = onManualSync,
+                        onBack = { currentScreen = Screen.Settings },
                         modifier = modifier
                     )
                     Screen.MealTypes -> MealTypesScreen(
@@ -249,7 +270,7 @@ fun MainApp(
 }
 
 enum class Screen {
-    Calculator, FoodList, Dishes, DishEditor, Settings, MealTypes
+    Calculator, FoodList, Dishes, DishEditor, Settings, MealTypes, FamilyManager
 }
 
 @Composable
