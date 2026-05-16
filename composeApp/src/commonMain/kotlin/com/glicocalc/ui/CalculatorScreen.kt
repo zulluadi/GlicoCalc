@@ -1,6 +1,8 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -440,6 +442,11 @@ fun CalculatorScreen(
                             } else {
                                 mealItems[index] = MealItem()
                             }
+                        },
+                        onExpanded = {
+                            scope.launch {
+                                listState.animateScrollToItem(index)
+                            }
                         }
                     )
                 }
@@ -621,7 +628,8 @@ private fun MealItemRow(
     onSelectBaseFood: (Long) -> BaseFood?,
     onUpdate: (MealItem) -> Unit,
     canDelete: Boolean,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onExpanded: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     var expanded by remember { mutableStateOf(false) }
@@ -638,6 +646,12 @@ private fun MealItemRow(
             }
         }
     )
+    
+    LaunchedEffect(expanded) {
+        if (expanded) {
+            // Removed aggressive scroll
+        }
+    }
 
     LaunchedEffect(item.selectedDish, item.selectedBaseFood, searchableFoods) {
         val newDisplayName = item.selectedDish?.dish?.name
@@ -654,7 +668,7 @@ private fun MealItemRow(
     val filteredResults by remember(searchQuery, searchableDishes, searchableFoods) {
         derivedStateOf {
             val matchingDishes = if (searchQuery.isBlank()) {
-                searchableDishes.take(16).map { it.dish }
+                searchableDishes.take(50).map { it.dish }
             } else {
                 searchableDishes
                     .asSequence()
@@ -664,7 +678,7 @@ private fun MealItemRow(
                     .toList()
             }
             val matchingFoods = if (searchQuery.isBlank()) {
-                searchableFoods.take(24)
+                searchableFoods.take(50)
             } else {
                 searchableFoods
                     .asSequence()
@@ -789,13 +803,25 @@ private fun MealItemRow(
                             }
                         )
 
-                        if (filteredDishList.isNotEmpty() || filteredFoodList.isNotEmpty()) {
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                properties = androidx.compose.ui.window.PopupProperties(focusable = false),
-                                modifier = Modifier.exposedDropdownSize().heightIn(max = 280.dp)
-                            ) {
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .exposedDropdownSize()
+                                .heightIn(max = 250.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            if (filteredDishList.isEmpty() && filteredFoodList.isEmpty()) {
+                                if (searchQuery.isNotBlank()) {
+                                    DropdownMenuItem(
+                                        text = { Text(Strings.noResultsFound(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline) },
+                                        onClick = { },
+                                        enabled = false
+                                    )
+                                } else {
+                                    // Keep empty or show a hint
+                                }
+                            } else {
                                 filteredDishList.forEach { dish ->
                                     DropdownMenuItem(
                                         text = {

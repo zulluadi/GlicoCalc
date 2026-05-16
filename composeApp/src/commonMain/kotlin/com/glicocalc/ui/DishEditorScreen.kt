@@ -1,8 +1,11 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.glicocalc.database.BaseFood
 import com.glicocalc.logic.removeDiacritics
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +34,8 @@ fun DishEditorScreen(
     onCancel: () -> Unit
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     var dishName by remember { mutableStateOf(initialName) }
     var totalCookedWeightText by remember { mutableStateOf(initialTotalCookedWeight?.toString() ?: "") }
     val components = remember { mutableStateListOf<ComponentState>().apply { 
@@ -104,7 +110,10 @@ fun DishEditorScreen(
             
             Text(Strings.compositionIngredients(), fontWeight = FontWeight.Bold)
             
-            LazyColumn(modifier = Modifier.weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                state = listState
+            ) {
                 itemsIndexed(components) { index, component ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -115,6 +124,12 @@ fun DishEditorScreen(
                         }
 
                         var expanded by remember { mutableStateOf(false) }
+                        
+                        LaunchedEffect(expanded) {
+                            if (expanded) {
+                                // Removed aggressive scroll
+                            }
+                        }
                         
                         Box(modifier = Modifier.weight(1.5f)) {
                             ExposedDropdownMenuBox(
@@ -129,7 +144,7 @@ fun DishEditorScreen(
                                                 it.name.removeDiacritics().equals(normalizedQuery, ignoreCase = true) ||
                                                     localizedName.removeDiacritics().equals(normalizedQuery, ignoreCase = true)
                                             }) {
-                                            allBaseFoods
+                                            allBaseFoods.take(50)
                                         } else {
                                             allBaseFoods.filter { food ->
                                                 matchesBaseFoodQuery(
@@ -153,29 +168,41 @@ fun DishEditorScreen(
                                     modifier = Modifier.menuAnchor().fillMaxWidth()
                                 )
                                 
-                                if (filteredFoods.isNotEmpty()) {
-                                    DropdownMenu(
+                                    ExposedDropdownMenu(
                                         expanded = expanded,
                                         onDismissRequest = { expanded = false },
-                                        properties = androidx.compose.ui.window.PopupProperties(focusable = false),
-                                        modifier = Modifier.exposedDropdownSize().heightIn(max = 280.dp)
+                                        modifier = Modifier
+                                            .exposedDropdownSize()
+                                            .heightIn(max = 280.dp)
+                                            .verticalScroll(rememberScrollState())
                                     ) {
-                                        filteredFoods.forEach { food ->
-                                            DropdownMenuItem(
-                                                text = { Text(resolveFoodName(food.name)) },
-                                                onClick = {
-                                                    components[index] = component.copy(
-                                                        foodId = food.id,
-                                                        searchQuery = resolveFoodName(food.name)
+                                            if (filteredFoods.isEmpty()) {
+                                                if (component.searchQuery.isNotBlank()) {
+                                                    DropdownMenuItem(
+                                                        text = { Text(Strings.noResultsFound(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline) },
+                                                        onClick = { },
+                                                        enabled = false
                                                     )
-                                                    expanded = false
+                                                } else {
+                                                    // Keep empty
                                                 }
-                                            )
+                                            } else {
+                                                filteredFoods.forEach { food ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(resolveFoodName(food.name)) },
+                                                        onClick = {
+                                                            components[index] = component.copy(
+                                                                foodId = food.id,
+                                                                searchQuery = resolveFoodName(food.name)
+                                                            )
+                                                            expanded = false
+                                                        }
+                                                    )
+                                                }
                                         }
                                     }
                                 }
                             }
-                        }
 
                         Spacer(modifier = Modifier.width(8.dp))
 

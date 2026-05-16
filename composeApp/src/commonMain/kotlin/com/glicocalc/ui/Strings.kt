@@ -251,4 +251,5 @@ object Strings {
     @Composable fun joinFamilyDescription() = stringResource(Res.string.join_family_description)
     @Composable fun joinByFamilyId() = stringResource(Res.string.join_by_family_id)
     @Composable fun familyId() = stringResource(Res.string.family_id)
+    @Composable fun noResultsFound() = "No results found"
 }
