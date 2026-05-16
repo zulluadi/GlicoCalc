@@ -84,11 +84,6 @@ class MainActivity : ComponentActivity() {
         val database = GlicoDatabase(driver)
         repository = GlicoRepository(database, driver)
 
-        repository.migrateSchemaIfNeeded()
-        repository.seedInitialData()
-        repository.prepareBaseFoodCatalog()
-        syncIntervalMinutes = repository.getSyncIntervalMinutes()
-
         foodSyncManager = FirebaseFoodSyncManager(
             context = applicationContext,
             repository = repository,
@@ -109,14 +104,30 @@ class MainActivity : ComponentActivity() {
                 refreshPendingFamilyInvite()
             }
         }
-        foodSyncManager.start()
-        refreshFamilyMembers()
         syncUiState = foodSyncManager.currentSyncUiState()
 
-        customAppLocale = repository.getLanguage()
-        customFoodLocale = repository.getFoodLanguage()
-        hasLoadedPersistedAppLocale = true
-        hasLoadedPersistedFoodLocale = true
+        lifecycleScope.launch(Dispatchers.IO) {
+            repository.migrateSchemaIfNeeded()
+            repository.seedInitialData()
+            repository.prepareBaseFoodCatalog()
+
+            val interval = repository.getSyncIntervalMinutes()
+            val language = repository.getLanguage()
+            val foodLanguage = repository.getFoodLanguage()
+            val members = repository.getAllFamilyMembers()
+
+            runOnUiThread {
+                syncIntervalMinutes = interval
+                customAppLocale = language
+                customFoodLocale = foodLanguage
+                hasLoadedPersistedAppLocale = true
+                hasLoadedPersistedFoodLocale = true
+                familyMembers = members
+                familyId = foodSyncManager.getCurrentFamilyId()
+                familyName = foodSyncManager.getCurrentFamilyName()
+                foodSyncManager.start()
+            }
+        }
 
         setContent {
             MainApp(
@@ -154,7 +165,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         resumeSignal += 1
-        refreshFamilyMembers()
+        lifecycleScope.launch(Dispatchers.IO) {
+            val members = repository.getAllFamilyMembers()
+            runOnUiThread {
+                familyMembers = members
+            }
+        }
+        familyId = foodSyncManager.getCurrentFamilyId()
+        familyName = foodSyncManager.getCurrentFamilyName()
         refreshPendingFamilyInvite()
         syncUiState = foodSyncManager.currentSyncUiState()
     }

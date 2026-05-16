@@ -19,7 +19,9 @@ import com.glicocalc.database.FamilyMember
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.telemetry.Telemetry
 import com.glicocalc.ui.theme.GlicoCalcTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MainApp(
@@ -156,7 +158,12 @@ fun MainApp(
                         modifier = modifier
                     )
                     Screen.Dishes -> {
-                        val dishesWithCarbs = remember(dishes, baseFoods) { repository.getAllDishesWithCarbs() }
+                        var dishesWithCarbs by remember(dishes, baseFoods) { mutableStateOf(emptyList<GlicoRepository.DishWithCarbs>()) }
+                        LaunchedEffect(dishes, baseFoods) {
+                            dishesWithCarbs = withContext(Dispatchers.Default) {
+                                repository.getAllDishesWithCarbs()
+                            }
+                        }
                         DishListScreen(
                             dishesWithCarbs = dishesWithCarbs,
                             onAddDish = {

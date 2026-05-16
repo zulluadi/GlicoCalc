@@ -48,7 +48,7 @@ fun DishListScreen(
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
 
             LazyColumn {
-                items(dishesWithCarbs) { dishWithCarbs ->
+                items(dishesWithCarbs, key = { it.dish.id }) { dishWithCarbs ->
                     ListItem(
                         headlineContent = { Text(dishWithCarbs.dish.name) },
                         supportingContent = { Text(Strings.carbsPer100g(((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0).toString())) },

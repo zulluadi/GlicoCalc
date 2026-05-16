@@ -76,7 +76,7 @@ fun FoodListScreen(
             )
 
             LazyColumn {
-                items(filteredFoods) { food ->
+                items(filteredFoods, key = { it.id }) { food ->
                     ListItem(
                         headlineContent = { Text(resolveFoodName(food.name)) },
                         supportingContent = { Text(Strings.carbsPer100g(food.carbsPer100g.toString())) },

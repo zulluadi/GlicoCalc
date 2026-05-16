@@ -80,7 +80,7 @@ fun MealTypesScreen(
                 )
                 HorizontalDivider()
             }
-            items(mealTypes) { mealType ->
+            items(mealTypes, key = { it.id }) { mealType ->
                 ListItem(
                     headlineContent = { Text(resolveMealTypeName(mealType.name)) },
                     supportingContent = {

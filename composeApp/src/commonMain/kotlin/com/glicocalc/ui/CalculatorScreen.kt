@@ -30,6 +30,8 @@ import com.glicocalc.database.MealType
 import com.glicocalc.logic.CarbCalculator
 import com.glicocalc.logic.removeDiacritics
 import com.glicocalc.models.DishWithComposition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private var nextMealItemId = 0L
 
@@ -281,16 +283,26 @@ fun CalculatorScreen(
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
     val resolveMealTypeName = rememberMealTypeNameResolver()
-    val initialMealItems = remember {
-        deserializeMealItems(
-            serialized = repository.getCalculatorMealDraft().orEmpty(),
+    val mealItems = remember { mutableStateListOf<MealItem>() }
+    var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
+    var dishesWithCarbs by remember(dishes, baseFoods) { mutableStateOf(emptyList<GlicoRepository.DishWithCarbs>()) }
+
+    LaunchedEffect(Unit) {
+        val draft = withContext(Dispatchers.IO) {
+            repository.getCalculatorMealDraft()
+        }
+        val items = deserializeMealItems(
+            serialized = draft.orEmpty(),
             onSelectDish = onSelectDish,
             onSelectBaseFood = onSelectBaseFood
         ).ifEmpty { listOf(MealItem()) }
+        mealItems.addAll(items)
     }
-    val mealItems = remember { mutableStateListOf<MealItem>().apply { addAll(initialMealItems) } }
-    var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
-    val dishesWithCarbs = remember(dishes, baseFoods) { repository.getAllDishesWithCarbs() }
+    LaunchedEffect(dishes, baseFoods) {
+        dishesWithCarbs = withContext(Dispatchers.Default) {
+            repository.getAllDishesWithCarbs()
+        }
+    }
     val dishCarbsMap = remember(dishesWithCarbs) {
         dishesWithCarbs.associate { it.dish.id to it.carbsPer100g }
     }
