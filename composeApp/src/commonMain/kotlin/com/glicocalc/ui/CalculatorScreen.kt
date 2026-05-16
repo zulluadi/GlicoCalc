@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -31,6 +32,8 @@ import com.glicocalc.logic.CarbCalculator
 import com.glicocalc.logic.removeDiacritics
 import com.glicocalc.models.DishWithComposition
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private var nextMealItemId = 0L
@@ -284,6 +287,8 @@ fun CalculatorScreen(
     val resolveFoodName = rememberBaseFoodNameResolver()
     val resolveMealTypeName = rememberMealTypeNameResolver()
     val mealItems = remember { mutableStateListOf<MealItem>() }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
     var dishesWithCarbs by remember(dishes, baseFoods) { mutableStateOf(emptyList<GlicoRepository.DishWithCarbs>()) }
 
@@ -332,7 +337,7 @@ fun CalculatorScreen(
     val selectedMealType = remember(selectedMealTypeId, mealTypes) {
         mealTypes.firstOrNull { it.id == selectedMealTypeId }
     }
-    val hasEditableMeal = remember(mealItems.toList()) { mealItems.any(::isMeaningfulMealItem) }
+    val hasEditableMeal = remember(mealItems.toList()) { mealItems.any(::isMeaningfulMealItem) || mealItems.size > 1 }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(resumeSignal, mealTypes) {
@@ -415,6 +420,7 @@ fun CalculatorScreen(
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(listGap)
             ) {
                 itemsIndexed(mealItems, key = { _, item -> item.id }) { index: Int, item: MealItem ->
@@ -446,7 +452,10 @@ fun CalculatorScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { mealItems.add(MealItem()) },
+                        onClick = {
+                            mealItems.add(0, MealItem())
+                            scope.launch { listState.scrollToItem(0) }
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = if (isCompactHeight) 44.dp else 48.dp),
