@@ -10,6 +10,7 @@
 		71E3C34837114677B94ED001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 71E3C34737114677B94ED001 /* FirebaseAuth */; };
 		71E3C34A37114677B94ED001 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 71E3C34937114677B94ED001 /* FirebaseCore */; };
 		71E3C34C37114677B94ED001 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 71E3C34B37114677B94ED001 /* GoogleSignIn */; };
+		71E3C34E37114677B94ED001 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 71E3C34D37114677B94ED001 /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +51,7 @@
 				71E3C34837114677B94ED001 /* FirebaseAuth in Frameworks */,
 				71E3C34A37114677B94ED001 /* FirebaseCore in Frameworks */,
 				71E3C34C37114677B94ED001 /* GoogleSignIn in Frameworks */,
+				71E3C34E37114677B94ED001 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,6 +99,7 @@
 				71E3C34737114677B94ED001 /* FirebaseAuth */,
 				71E3C34937114677B94ED001 /* FirebaseCore */,
 				71E3C34B37114677B94ED001 /* GoogleSignIn */,
+				71E3C34D37114677B94ED001 /* FirebaseFirestore */,
 			);
 			productName = iosApp;
 			productReference = 8E5AAF7297C738D291EA46E2 /* GlicoCalc.app */;
@@ -439,6 +442,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 71E3C34637114677B94ED001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		71E3C34D37114677B94ED001 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71E3C34537114677B94ED001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

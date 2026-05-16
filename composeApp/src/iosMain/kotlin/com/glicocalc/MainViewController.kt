@@ -13,16 +13,10 @@ import com.glicocalc.ui.customFoodLocale
 import com.glicocalc.ui.hasLoadedPersistedAppLocale
 import com.glicocalc.ui.hasLoadedPersistedFoodLocale
 
-fun MainViewController(syncController: IosSyncController) = ComposeUIViewController {
-    val repository = remember {
-        val driver = DatabaseDriverFactory().createDriver()
-        GlicoRepository(GlicoDatabase(driver), driver).also {
-            it.migrateSchemaIfNeeded()
-            it.seedInitialData()
-            it.prepareBaseFoodCatalog()
-        }
-    }
-
+fun MainViewController(
+    repository: GlicoRepository,
+    syncController: IosSyncController
+) = ComposeUIViewController {
     remember(repository) {
         customAppLocale = repository.getLanguage()
         customFoodLocale = repository.getFoodLanguage()
@@ -43,11 +37,18 @@ fun MainViewController(syncController: IosSyncController) = ComposeUIViewControl
         isSignedIn = syncController.isSignedIn,
         syncStatusMessage = syncController.syncStatusMessage,
         lastSyncedMessage = syncController.lastSyncedMessage,
+        pendingFamilyInviteLabel = syncController.pendingFamilyInviteLabel,
+        isFamilyOwner = syncController.isFamilyOwner,
+        currentUserEmail = syncController.currentUserEmail,
         onSignInToSync = if (!syncController.isSignedIn) syncController.onSignInRequested else null,
         onSignOutFromSync = if (syncController.isSignedIn) syncController.onSignOutRequested else null,
         onSwitchAccount = if (syncController.isSignedIn) syncController.onSwitchAccountRequested else null,
         onManualSync = if (syncController.canManualSync) syncController.onManualSyncRequested else null,
         onAddFamilyMember = syncController.onAddFamilyMemberRequested,
-        onRemoveFamilyMember = syncController.onRemoveFamilyMemberRequested
+        onRemoveFamilyMember = syncController.onRemoveFamilyMemberRequested,
+        onLeaveFamily = syncController.onLeaveFamilyRequested ?: {},
+        onJoinPendingFamilyInvite = syncController.onJoinPendingFamilyInviteRequested ?: {},
+        onJoinFamilyById = syncController.onJoinFamilyByIdRequested ?: {},
+        onUpdateFamilyName = syncController.onUpdateFamilyNameRequested ?: {}
     )
 }

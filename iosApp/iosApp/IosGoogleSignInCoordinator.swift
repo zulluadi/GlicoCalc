@@ -7,7 +7,9 @@ import UIKit
 
 @MainActor
 final class IosGoogleSignInCoordinator: ObservableObject {
+    let repository: GlicoRepository = RepositoryFactory.shared.create()
     let syncController = IosSyncController()
+    private lazy var syncManager = IosFirebaseSyncManager(repository: repository, syncController: syncController)
 
     private var isConfigured = false
 
@@ -33,7 +35,65 @@ final class IosGoogleSignInCoordinator: ObservableObject {
                 self?.signOut()
             }
         }
+        
+        syncController.onRefreshFamilyMembersRequested = { [weak self] in
+            self?.repository.getAllFamilyMembers() ?? []
+        }
+        syncController.onRefreshFamilyIdRequested = { [weak self] in
+            self?.repository.getFamilyId()
+        }
+        syncController.onRefreshFamilyNameRequested = { [weak self] in
+            self?.repository.getFamilyName()
+        }
+        
+        syncController.onManualSyncRequested = { [weak self] in
+            self?.syncManager.requestSync()
+        }
+        
+        syncController.onAddFamilyMemberRequested = { [weak self] email, name in
+            Task { @MainActor in
+                await self?.syncManager.inviteMember(email: email, name: name)
+            }
+        }
+        
+        syncController.onRemoveFamilyMemberRequested = { [weak self] email in
+            Task { @MainActor in
+                await self?.syncManager.removeMember(email: email)
+            }
+        }
+        
+        syncController.onLeaveFamilyRequested = { [weak self] in
+            Task { @MainActor in
+                await self?.syncManager.leaveFamily()
+            }
+        }
+        
+        syncController.onJoinFamilyByIdRequested = { [weak self] familyId in
+            Task { @MainActor in
+                await self?.syncManager.joinFamilyById(familyId: familyId)
+            }
+        }
+        
+        syncController.onJoinPendingFamilyInviteRequested = { [weak self] in
+            Task { @MainActor in
+                _ = try? await self?.syncManager.acceptPendingInvite(user: Auth.auth().currentUser!)
+                await self?.syncManager.requestSync()
+            }
+        }
+        
+        syncController.onUpdateFamilyNameRequested = { [weak self] name in
+            Task { @MainActor in
+                await self?.syncManager.updateFamilyName(name: name)
+            }
+        }
+        
+        syncController.onRefreshPendingInviteLabelRequested = { [weak self] in
+            Task { @MainActor in
+                await self?.syncManager.refreshPendingInviteLabel()
+            }
+        }
 
+        syncManager.start()
         refreshAuthState()
     }
 

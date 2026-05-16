@@ -20,6 +20,12 @@ class IosSyncController {
         private set
     var canManualSync by mutableStateOf(false)
         private set
+    var pendingFamilyInviteLabel by mutableStateOf<String?>(null)
+        private set
+    var isFamilyOwner by mutableStateOf(false)
+        private set
+    var currentUserEmail by mutableStateOf<String?>(null)
+        private set
 
     var onSignInRequested: (() -> Unit)? = null
     var onSignOutRequested: (() -> Unit)? = null
@@ -30,6 +36,11 @@ class IosSyncController {
     var onRefreshFamilyMembersRequested: (() -> List<FamilyMember>)? = null
     var onRefreshFamilyIdRequested: (() -> String?)? = null
     var onRefreshFamilyNameRequested: (() -> String?)? = null
+    var onRefreshPendingInviteLabelRequested: (() -> Unit)? = null
+    var onJoinFamilyByIdRequested: ((String) -> Unit)? = null
+    var onJoinPendingFamilyInviteRequested: (() -> Unit)? = null
+    var onLeaveFamilyRequested: (() -> Unit)? = null
+    var onUpdateFamilyNameRequested: ((String?) -> Unit)? = null
 
     fun setUnavailable(message: String) {
         familyMembers = emptyList()
@@ -66,5 +77,26 @@ class IosSyncController {
         familyMembers = onRefreshFamilyMembersRequested?.invoke() ?: emptyList()
         familyId = onRefreshFamilyIdRequested?.invoke()
         familyName = onRefreshFamilyNameRequested?.invoke()
+        onRefreshPendingInviteLabelRequested?.invoke()
+    }
+
+    fun setPendingFamilyInviteLabel(label: String?) {
+        pendingFamilyInviteLabel = label
+    }
+
+    fun setCanManualSync(enabled: Boolean) {
+        canManualSync = enabled
+    }
+
+    fun setLastSyncedMessage(message: String?) {
+        lastSyncedMessage = message
+    }
+
+    fun setIsFamilyOwner(isOwner: Boolean) {
+        isFamilyOwner = isOwner
+    }
+
+    fun setCurrentUserEmail(email: String?) {
+        currentUserEmail = email
     }
 }

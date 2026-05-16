@@ -7,6 +7,7 @@ struct ContentView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
         googleSignInCoordinator.configure()
         return MainViewControllerKt.MainViewController(
+            repository: googleSignInCoordinator.repository,
             syncController: googleSignInCoordinator.syncController
         )
     }
