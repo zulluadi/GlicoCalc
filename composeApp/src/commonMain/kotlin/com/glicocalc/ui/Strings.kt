@@ -113,6 +113,11 @@ import glicocalc.composeapp.generated.resources.family_id
 import glicocalc.composeapp.generated.resources.sync_status_not_signed_in
 import glicocalc.composeapp.generated.resources.sync_status_pending
 import glicocalc.composeapp.generated.resources.sync_status_up_to_date
+import glicocalc.composeapp.generated.resources.reset
+import glicocalc.composeapp.generated.resources.reset_food_list
+import glicocalc.composeapp.generated.resources.reset_food_list_confirm
+import glicocalc.composeapp.generated.resources.reset_food_list_description
+import glicocalc.composeapp.generated.resources.reset_food_list_warning
 import org.jetbrains.compose.resources.stringResource
 import glicocalc.composeapp.generated.resources.total_carbs
 import glicocalc.composeapp.generated.resources.undo
@@ -252,4 +257,9 @@ object Strings {
     @Composable fun joinByFamilyId() = stringResource(Res.string.join_by_family_id)
     @Composable fun familyId() = stringResource(Res.string.family_id)
     @Composable fun noResultsFound() = "No results found"
+    @Composable fun resetFoodList() = stringResource(Res.string.reset_food_list)
+    @Composable fun resetFoodListDescription() = stringResource(Res.string.reset_food_list_description)
+    @Composable fun resetFoodListConfirm() = stringResource(Res.string.reset_food_list_confirm)
+    @Composable fun resetFoodListWarning() = stringResource(Res.string.reset_food_list_warning)
+    @Composable fun reset() = stringResource(Res.string.reset)
 }

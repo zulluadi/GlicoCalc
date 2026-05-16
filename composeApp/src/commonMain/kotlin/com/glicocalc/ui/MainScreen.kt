@@ -230,6 +230,11 @@ fun MainApp(
                         onOpenFamilyManager = { currentScreen = Screen.FamilyManager },
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },
                         onOpenDeletedItems = { currentScreen = Screen.DeletedItems },
+                        onResetFoodList = {
+                            telemetry.action("food_list_reset")
+                            scope.launch { repository.resetFoodListToDefault() }
+                        },
+                        isFamilyOwner = familyId == null || isFamilyOwner,
                         modifier = modifier
                     )
                     Screen.DeletedItems -> DeletedItemsScreen(

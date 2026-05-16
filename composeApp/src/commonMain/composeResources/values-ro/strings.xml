@@ -118,4 +118,9 @@
     <string name="join_family_description">Vei părăsi familia curentă și vei muta sincronizarea în familia în care ai fost invitat. Dacă administrezi familia curentă, proprietatea va fi transferată altui membru când este posibil.</string>
     <string name="join_by_family_id">Alătură-te cu ID-ul familiei</string>
     <string name="family_id">ID familie</string>
+    <string name="reset_food_list">Resetează lista de alimente</string>
+    <string name="reset_food_list_description">Înlocuiește toate alimentele curente cu lista implicită a aplicației. Alimentele personalizate vor fi șterse.</string>
+    <string name="reset_food_list_confirm">Resetezi lista de alimente?</string>
+    <string name="reset_food_list_warning">Această acțiune va șterge toate alimentele personalizate și va reseta alimentele implicite. Acțiunea se va aplica tuturor membrilor familiei.</string>
+    <string name="reset">Resetează</string>
 </resources>

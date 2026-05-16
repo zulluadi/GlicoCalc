@@ -411,6 +411,53 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         }
     }
 
+    fun resetFoodListToDefault() {
+        val now = PlatformTime.currentTimeMillis()
+        val allFoods = queries.selectAllBaseFoodsIncludingDeleted().executeAsList()
+
+        database.transaction {
+            // 1. Mark all existing foods as deleted and needing sync
+            allFoods.forEach { food ->
+                queries.deleteBaseFood(needsSync = 1, updatedAt = now, id = food.id)
+            }
+
+            // 2. Restore or Insert the new defaults
+            InitialData.seededFoods.forEach { seed ->
+                val existing = queries.selectBaseFoodByRemoteKey(seed.remoteKey).executeAsOneOrNull()
+                if (existing != null) {
+                    // Restore and update existing record
+                    queries.applyRemoteBaseFood(
+                        name = seed.name,
+                        carbsPer100g = seed.carbs,
+                        isPacked = 0,
+                        packWeight = null,
+                        packCount = null,
+                        isDeleted = 0,
+                        updatedAt = now,
+                        id = existing.id
+                    )
+                    // Mark as needing sync
+                    queries.updateBaseFoodSyncMetadata(seed.remoteKey, FoodSource.DEFAULT.value, 1, now, existing.id)
+                } else {
+                    // Insert new default food
+                    queries.insertBaseFood(
+                        name = seed.name,
+                        carbsPer100g = seed.carbs,
+                        remoteKey = seed.remoteKey,
+                        source = FoodSource.DEFAULT.value,
+                        isDeleted = 0,
+                        needsSync = 1,
+                        updatedAt = now,
+                        isPacked = 0,
+                        packWeight = null,
+                        packCount = null
+                    )
+                }
+            }
+        }
+        notifyLocalDataChanged()
+    }
+
     fun migrateSchemaIfNeeded() {
         val d = driver ?: return
         try {

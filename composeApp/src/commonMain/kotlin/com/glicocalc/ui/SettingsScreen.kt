@@ -16,6 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.glicocalc.database.FamilyMember
@@ -35,8 +39,12 @@ fun SettingsScreen(
     onOpenFamilyManager: () -> Unit,
     onOpenMealTypes: () -> Unit,
     onOpenDeletedItems: () -> Unit,
+    onResetFoodList: () -> Unit,
+    isFamilyOwner: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var showResetDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -50,6 +58,7 @@ fun SettingsScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            // ... (existing items)
             item {
                 ListItem(
                     headlineContent = { Text(Strings.language()) },
@@ -164,7 +173,48 @@ fun SettingsScreen(
                 )
                 HorizontalDivider()
             }
+            if (isFamilyOwner) {
+                item {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = Strings.resetFoodList(),
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                            )
+                        },
+                        supportingContent = { Text(Strings.resetFoodListDescription()) },
+                        modifier = Modifier.clickable { showResetDialog = true }
+                    )
+                    HorizontalDivider()
+                }
+            }
         }
+    }
+
+    if (showResetDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text(Strings.resetFoodListConfirm()) },
+            text = { Text(Strings.resetFoodListWarning()) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onResetFoodList()
+                        showResetDialog = false
+                    }
+                ) {
+                    Text(
+                        text = Strings.reset(),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text(Strings.cancel())
+                }
+            }
+        )
     }
 }
 
