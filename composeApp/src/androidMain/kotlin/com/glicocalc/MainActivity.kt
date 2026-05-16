@@ -6,6 +6,7 @@ import android.widget.Toast
 import java.text.DateFormat
 import java.util.Date
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.compose.setContent
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.Credential
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import com.glicocalc.database.DatabaseDriverFactory
 import com.glicocalc.database.FamilyMember
+import com.glicocalc.database.FoodSource
 import com.glicocalc.database.GlicoDatabase
 import com.glicocalc.database.GlicoRepository
 import com.glicocalc.sync.FirebaseFoodSyncManager
@@ -29,6 +31,7 @@ import com.glicocalc.sync.SyncUiState
 import com.glicocalc.telemetry.NoopTelemetry
 import com.glicocalc.ui.MainApp
 import com.glicocalc.ui.customAppLocale
+import com.glicocalc.ui.familyIdFromQrPayload
 import com.glicocalc.ui.customFoodLocale
 import com.glicocalc.ui.hasLoadedPersistedAppLocale
 import com.glicocalc.ui.hasLoadedPersistedFoodLocale
@@ -37,6 +40,8 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,16 +56,28 @@ class MainActivity : ComponentActivity() {
     private var resumeSignal by mutableStateOf(0)
     private var familyMembers by mutableStateOf<List<FamilyMember>>(emptyList())
     private var familyId by mutableStateOf<String?>(null)
+    private var familyName by mutableStateOf<String?>(null)
+    private var pendingFamilyInviteLabel by mutableStateOf<String?>(null)
+    private var syncIntervalMinutes by mutableStateOf(10)
     private var syncUiState by mutableStateOf(SyncUiState(status = SyncStatus.IDLE, pendingCount = 0, isSignedIn = false))
     private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private lateinit var repository: GlicoRepository
     private lateinit var foodSyncManager: FirebaseFoodSyncManager
     private lateinit var credentialManager: CredentialManager
+    private lateinit var familyQrScanLauncher: ActivityResultLauncher<ScanOptions>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         credentialManager = CredentialManager.create(this)
+        familyQrScanLauncher = registerForActivityResult(ScanContract()) { result ->
+            val familyId = result.contents?.let(::familyIdFromQrPayload)
+            if (familyId == null) {
+                showToast("No family QR code was scanned.")
+            } else {
+                joinFamilyById(familyId)
+            }
+        }
 
         val driverFactory = DatabaseDriverFactory(this)
         val driver = driverFactory.createDriver()
@@ -70,6 +87,7 @@ class MainActivity : ComponentActivity() {
         repository.migrateSchemaIfNeeded()
         repository.seedInitialData()
         repository.prepareBaseFoodCatalog()
+        syncIntervalMinutes = repository.getSyncIntervalMinutes()
 
         foodSyncManager = FirebaseFoodSyncManager(
             context = applicationContext,
@@ -80,12 +98,15 @@ class MainActivity : ComponentActivity() {
         foodSyncManager.onAccountStateChanged = { _ ->
             runOnUiThread {
                 refreshFamilyMembers()
+                refreshPendingFamilyInvite()
                 syncUiState = foodSyncManager.currentSyncUiState(syncUiState.status)
             }
         }
         foodSyncManager.onSyncStateChanged = { state ->
             runOnUiThread {
                 syncUiState = state
+                refreshFamilyMembers()
+                refreshPendingFamilyInvite()
             }
         }
         foodSyncManager.start()
@@ -103,14 +124,27 @@ class MainActivity : ComponentActivity() {
                 telemetry = NoopTelemetry,
                 familyMembers = familyMembers,
                 familyId = foodSyncManager.getCurrentFamilyId(),
+                familyName = familyName,
+                currentUserEmail = foodSyncManager.currentUserEmail(),
+                isFamilyOwner = foodSyncManager.isCurrentUserFamilyOwner(),
+                pendingFamilyInviteLabel = pendingFamilyInviteLabel,
                 isSignedIn = syncUiState.isSignedIn,
                 syncStatusMessage = syncStatusMessage(),
                 lastSyncedMessage = lastSyncedMessage(),
+                syncIntervalMinutes = syncIntervalMinutes,
                 onSignInToSync = if (canOfferGoogleSignIn()) ::launchGoogleSignIn else null,
                 onSignOutFromSync = if (canOfferGoogleSignIn()) ::signOutFromSync else null,
                 onManualSync = if (foodSyncManager.isEnabled) foodSyncManager::requestSync else null,
+                onSyncIntervalChanged = ::updateSyncIntervalMinutes,
+                onScanFamilyQr = ::scanFamilyQr,
+                onFamilyQrDialogClosed = foodSyncManager::requestSync,
                 onAddFamilyMember = ::addFamilyMember,
                 onRemoveFamilyMember = ::removeFamilyMember,
+                onUpdateFamilyName = ::updateFamilyName,
+                onLeaveFamily = ::leaveFamily,
+                onJoinPendingFamilyInvite = ::joinPendingFamilyInvite,
+                onJoinFamilyById = ::joinFamilyById,
+                onPermanentlyDeleteFood = ::permanentlyDeleteFood,
                 resumeSignal = resumeSignal
             )
         }
@@ -120,6 +154,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         resumeSignal += 1
         refreshFamilyMembers()
+        refreshPendingFamilyInvite()
         syncUiState = foodSyncManager.currentSyncUiState()
     }
 
@@ -132,13 +167,36 @@ class MainActivity : ComponentActivity() {
     private fun refreshFamilyMembers() {
         familyMembers = repository.getAllFamilyMembers()
         familyId = foodSyncManager.getCurrentFamilyId()
+        familyName = foodSyncManager.getCurrentFamilyName()
+    }
+
+    private fun refreshPendingFamilyInvite() {
+        if (!foodSyncManager.isEnabled || foodSyncManager.currentUserEmail() == null) {
+            pendingFamilyInviteLabel = null
+            return
+        }
+        syncScope.launch {
+            val inviteLabel = try {
+                foodSyncManager.pendingFamilyInviteLabel()
+            } catch (exception: Exception) {
+                Log.w(TAG, "Failed to refresh pending family invite.", exception)
+                null
+            }
+            runOnUiThread {
+                pendingFamilyInviteLabel = inviteLabel?.takeIf { it != familyId }
+            }
+        }
     }
 
     private fun addFamilyMember(email: String, name: String) {
-        if (repository.getFamilyMemberByEmail(email) != null) return
-        repository.addFamilyMember(email = email, name = name)
+        if (repository.getFamilyMemberByEmail(email) == null) {
+            repository.addFamilyMember(email = email, name = name)
+        }
         if (repository.getFamilyOwnerUid() == null) {
             repository.setFamilyOwner(email)
+        }
+        syncScope.launch {
+            foodSyncManager.inviteFamilyMember(email, name)
         }
         refreshFamilyMembers()
     }
@@ -146,13 +204,97 @@ class MainActivity : ComponentActivity() {
     private fun removeFamilyMember(email: String) {
         val member = repository.getFamilyMemberByEmail(email)
         repository.removeFamilyMember(email)
-        member?.firebaseUid?.let { uid ->
-            syncScope.launch {
+        syncScope.launch {
+            member?.firebaseUid?.let { uid ->
                 foodSyncManager.removeMemberFromFamily(uid)
             }
+            foodSyncManager.removeFamilyInvite(email)
         }
         refreshFamilyMembers()
         foodSyncManager.requestSync()
+    }
+
+    private fun updateFamilyName(name: String?) {
+        syncScope.launch {
+            foodSyncManager.updateFamilyName(name)
+            runOnUiThread {
+                refreshFamilyMembers()
+            }
+        }
+    }
+
+    private fun leaveFamily() {
+        syncScope.launch {
+            foodSyncManager.leaveCurrentFamily()
+            runOnUiThread {
+                refreshFamilyMembers()
+                syncUiState = foodSyncManager.currentSyncUiState(SyncStatus.SYNCING)
+            }
+            foodSyncManager.requestSync()
+        }
+    }
+
+    private fun joinPendingFamilyInvite() {
+        syncScope.launch {
+            val joined = try {
+                foodSyncManager.joinPendingFamilyInvite()
+            } catch (exception: Exception) {
+                Log.w(TAG, "Failed to join pending family invite.", exception)
+                false
+            }
+            runOnUiThread {
+                refreshFamilyMembers()
+                pendingFamilyInviteLabel = null
+                syncUiState = foodSyncManager.currentSyncUiState(if (joined) SyncStatus.SYNCING else syncUiState.status)
+            }
+            if (joined) {
+                foodSyncManager.requestSync()
+            }
+        }
+    }
+
+    private fun joinFamilyById(familyId: String) {
+        syncScope.launch {
+            val joined = try {
+                foodSyncManager.joinFamilyById(familyId)
+            } catch (exception: Exception) {
+                Log.w(TAG, "Failed to join family by ID.", exception)
+                false
+            }
+            runOnUiThread {
+                refreshFamilyMembers()
+                pendingFamilyInviteLabel = null
+                syncUiState = foodSyncManager.currentSyncUiState(if (joined) SyncStatus.SYNCING else syncUiState.status)
+            }
+            if (joined) {
+                foodSyncManager.requestSync()
+            }
+        }
+    }
+
+    private fun scanFamilyQr() {
+        val options = ScanOptions()
+            .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            .setPrompt("Scan a GlicoCalc family QR code")
+            .setBeepEnabled(false)
+            .setOrientationLocked(false)
+        familyQrScanLauncher.launch(options)
+    }
+
+    private fun permanentlyDeleteFood(foodId: Long) {
+        val food = repository.getBaseFood(foodId) ?: return
+        syncScope.launch {
+            if (food.source == FoodSource.CUSTOM.value) {
+                food.remoteKey?.let { foodSyncManager.permanentlyDeleteFood(it) }
+            }
+            repository.permanentlyDeleteBaseFood(foodId)
+        }
+    }
+
+    private fun updateSyncIntervalMinutes(minutes: Int) {
+        repository.saveSyncIntervalMinutes(minutes)
+        syncIntervalMinutes = repository.getSyncIntervalMinutes()
+        foodSyncManager.restartPeriodicSync()
     }
 
     private fun canOfferGoogleSignIn(): Boolean {

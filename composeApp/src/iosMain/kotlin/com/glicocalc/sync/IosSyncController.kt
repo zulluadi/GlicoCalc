@@ -10,6 +10,8 @@ class IosSyncController {
         private set
     var familyId by mutableStateOf<String?>(null)
         private set
+    var familyName by mutableStateOf<String?>(null)
+        private set
     var syncStatusMessage by mutableStateOf("Sign in to link a Google account.")
         private set
     var lastSyncedMessage by mutableStateOf<String?>(null)
@@ -26,6 +28,7 @@ class IosSyncController {
     var onRemoveFamilyMemberRequested: ((email: String) -> Unit)? = null
     var onRefreshFamilyMembersRequested: (() -> List<FamilyMember>)? = null
     var onRefreshFamilyIdRequested: (() -> String?)? = null
+    var onRefreshFamilyNameRequested: (() -> String?)? = null
 
     fun setUnavailable(message: String) {
         familyMembers = emptyList()
@@ -61,5 +64,6 @@ class IosSyncController {
     fun refreshFamilyMembers() {
         familyMembers = onRefreshFamilyMembersRequested?.invoke() ?: emptyList()
         familyId = onRefreshFamilyIdRequested?.invoke()
+        familyName = onRefreshFamilyNameRequested?.invoke()
     }
 }

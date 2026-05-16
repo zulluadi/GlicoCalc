@@ -14,6 +14,11 @@
     <string name="add_food">Adaugă Aliment</string>
     <string name="search_food_placeholder">Caută aliment...</string>
     <string name="food_deleted">Aliment șters</string>
+    <string name="deleted_foods">Alimente șterse</string>
+    <string name="restore">Restaurează</string>
+    <string name="delete_permanently">Șterge definitiv</string>
+    <string name="delete_permanently_confirm">Șterge</string>
+    <string name="delete_permanently_description">Aceasta elimină definitiv alimentul din lista alimentelor șterse și din sincronizarea familiei. Acțiunea nu poate fi anulată.</string>
     <string name="undo">Anulează</string>
     <string name="edit">Editează</string>
     <string name="add_food_title">Adaugă Aliment</string>
@@ -58,6 +63,7 @@
     <string name="dish_deleted">Preparatul a fost șters</string>
     <string name="food_language">Limba alimentelor</string>
     <string name="same_as_app_language">La fel ca limba aplicației</string>
+    <string name="actions">Acțiuni</string>
     <string name="sync_account">Cont de sincronizare</string>
     <string name="sync_account_description">Conectează-te pentru a păstra modificările alimentelor după reinstalarea aplicației sau schimbarea dispozitivului.</string>
     <string name="sync_account_unavailable">Conectarea pentru sincronizare nu este disponibilă până când Firebase nu este configurat corect.</string>
@@ -73,13 +79,24 @@
     <string name="sync_status_pending">Modificări în așteptare: %1$d</string>
     <string name="sync_status_failed">Ultima sincronizare a eșuat. Poți reîncerca manual.</string>
     <string name="sync_last_synced">Ultima sincronizare: %1$s</string>
+    <string name="sync_interval">Interval sincronizare</string>
+    <string name="sync_interval_value">La fiecare %1$d min</string>
+    <string name="sync_interval_description">Alege cât de des acest dispozitiv verifică actualizările alimentelor din familie. Minimum 1 minut, maximum 60 de minute.</string>
     <string name="sync_now">Sincronizează acum</string>
 
     <!-- Family & Sync -->
     <string name="family_and_sync">Familie și Sincronizare</string>
+    <string name="family_title">Familie</string>
+    <string name="family_title_with_id">Familie (%1$s)</string>
+    <string name="family_name">Numele familiei</string>
     <string name="family_members">Membrii Familiei</string>
     <string name="family_sharing_description">Membrii familiei împart aceleași alimente și modificări.</string>
     <string name="family_no_members">Încă nu există membri ai familiei.</string>
+    <string name="family_sign_in_prompt">Conectează-te pentru a crea o familie sau pentru a te alătura uneia.</string>
+    <string name="family_qr_code">Cod QR familie</string>
+    <string name="family_qr_description">Scanează acest cod de pe alt dispozitiv conectat pentru a te alătura acestei familii.</string>
+    <string name="family_qr_unavailable">Codul QR al familiei nu este disponibil pe această platformă.</string>
+    <string name="scan_family_qr">Scanează codul QR al familiei</string>
     <string name="add_member">Adaugă Membru</string>
     <string name="remove_member">Elimină</string>
     <string name="member_email">Email</string>
@@ -87,4 +104,14 @@
     <string name="signed_in">Conectat</string>
     <string name="not_signed_in">Neconectat</string>
     <string name="owner_badge">Proprietar</string>
+    <string name="leave_family">Părăsește familia</string>
+    <string name="leave_family_confirm">Părăsește</string>
+    <string name="leave_family_description">Vei părăsi această familie și vei păstra alimentele, mâncărurile și setările locale în propriul spațiu de sincronizare.</string>
+    <string name="family_invitation">Invitație în familie</string>
+    <string name="family_invitation_description">Ai fost invitat în familia %1$s.</string>
+    <string name="join_family">Alătură-te familiei</string>
+    <string name="join_family_confirm">Alătură-te</string>
+    <string name="join_family_description">Vei părăsi familia curentă și vei muta sincronizarea în familia în care ai fost invitat. Dacă administrezi familia curentă, proprietatea va fi transferată altui membru când este posibil.</string>
+    <string name="join_by_family_id">Alătură-te cu ID-ul familiei</string>
+    <string name="family_id">ID familie</string>
 </resources>

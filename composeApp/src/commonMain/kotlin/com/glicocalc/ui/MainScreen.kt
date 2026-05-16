@@ -27,14 +27,27 @@ fun MainApp(
     telemetry: Telemetry,
     familyMembers: List<FamilyMember> = emptyList(),
     familyId: String? = null,
+    familyName: String? = null,
+    currentUserEmail: String? = null,
+    isFamilyOwner: Boolean = false,
+    pendingFamilyInviteLabel: String? = null,
     isSignedIn: Boolean = false,
     syncStatusMessage: String? = null,
     lastSyncedMessage: String? = null,
+    syncIntervalMinutes: Int = 10,
     onSignInToSync: (() -> Unit)? = null,
     onSignOutFromSync: (() -> Unit)? = null,
     onManualSync: (() -> Unit)? = null,
+    onSyncIntervalChanged: ((Int) -> Unit)? = null,
+    onScanFamilyQr: (() -> Unit)? = null,
+    onFamilyQrDialogClosed: (() -> Unit)? = null,
     onAddFamilyMember: ((email: String, name: String) -> Unit)? = null,
     onRemoveFamilyMember: ((email: String) -> Unit)? = null,
+    onUpdateFamilyName: ((String?) -> Unit)? = null,
+    onLeaveFamily: (() -> Unit)? = null,
+    onJoinPendingFamilyInvite: (() -> Unit)? = null,
+    onJoinFamilyById: ((String) -> Unit)? = null,
+    onPermanentlyDeleteFood: ((Long) -> Unit)? = null,
     resumeSignal: Int = 0
 ) {
     LaunchedEffect(repository) {
@@ -118,6 +131,9 @@ fun MainApp(
                     )
                     Screen.FoodList -> FoodListScreen(
                         foods = baseFoods,
+                        deletedFoods = remember(baseFoods, resumeSignal) {
+                            repository.getAllBaseFoodsIncludingDeleted().filter { it.isDeleted != 0L }
+                        },
                         onAddFood = { name, carbs, isPacked, packWeight, packCount ->
                             telemetry.action("food_added")
                             scope.launch { repository.insertBaseFood(name, carbs, isPacked, packWeight, packCount) }
@@ -133,6 +149,11 @@ fun MainApp(
                         onUndeleteFood = { id ->
                             telemetry.action("food_restored")
                             scope.launch { repository.restoreBaseFood(id) }
+                        },
+                        onPermanentlyDeleteFood = { id ->
+                            telemetry.action("food_permanently_deleted")
+                            onPermanentlyDeleteFood?.invoke(id)
+                                ?: scope.launch { repository.permanentlyDeleteBaseFood(id) }
                         },
                         modifier = modifier
                     )
@@ -199,8 +220,13 @@ fun MainApp(
                     Screen.FamilyManager -> FamilyManagerScreen(
                         familyMembers = familyMembers,
                         familyId = familyId,
+                        familyName = familyName,
+                        currentUserEmail = currentUserEmail,
+                        isFamilyOwner = isFamilyOwner,
+                        pendingFamilyInviteLabel = pendingFamilyInviteLabel,
                         syncStatusMessage = syncStatusMessage,
                         lastSyncedMessage = lastSyncedMessage,
+                        syncIntervalMinutes = syncIntervalMinutes,
                         isSignedIn = isSignedIn,
                         onAddMember = { email, name ->
                             telemetry.action("family_member_added")
@@ -210,9 +236,39 @@ fun MainApp(
                             telemetry.action("family_member_removed")
                             onRemoveFamilyMember?.invoke(email)
                         },
+                        onUpdateFamilyName = { name ->
+                            telemetry.action("family_name_updated")
+                            onUpdateFamilyName?.invoke(name)
+                        },
+                        onLeaveFamily = {
+                            telemetry.action("family_left")
+                            onLeaveFamily?.invoke()
+                        },
+                        onJoinPendingFamilyInvite = {
+                            telemetry.action("family_invite_joined")
+                            onJoinPendingFamilyInvite?.invoke()
+                        },
+                        onJoinFamilyById = { familyId ->
+                            telemetry.action("family_joined_by_id")
+                            onJoinFamilyById?.invoke(familyId)
+                        },
                         onSignIn = { onSignInToSync?.invoke() },
                         onSignOut = { onSignOutFromSync?.invoke() },
                         onManualSync = onManualSync,
+                        onSyncIntervalChanged = { minutes ->
+                            telemetry.action("sync_interval_changed")
+                            onSyncIntervalChanged?.invoke(minutes)
+                        },
+                        onScanFamilyQr = onScanFamilyQr?.let { scan ->
+                            {
+                                telemetry.action("family_qr_scan_opened")
+                                scan()
+                            }
+                        },
+                        onFamilyQrDialogClosed = {
+                            telemetry.action("family_qr_dialog_closed")
+                            onFamilyQrDialogClosed?.invoke()
+                        },
                         onBack = { currentScreen = Screen.Settings },
                         modifier = modifier
                     )

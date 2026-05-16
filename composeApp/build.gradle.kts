@@ -63,6 +63,7 @@ kotlin {
                 implementation("com.squareup.sqldelight:runtime:1.5.5")
                 implementation("com.squareup.sqldelight:coroutines-extensions:1.5.5")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+                implementation("io.github.g0dkar:qrcode-kotlin:4.0.7")
             }
         }
         val androidMain by getting {
@@ -77,6 +78,7 @@ kotlin {
                 implementation("com.google.firebase:firebase-firestore:24.7.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+                implementation("com.journeyapps:zxing-android-embedded:4.3.0")
             }
         }
         val iosMain by creating {

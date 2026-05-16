@@ -68,6 +68,9 @@ UPDATE BaseFood SET isDeleted = 1, needsSync = ?, updatedAt = ? WHERE id = ?;
 restoreBaseFood:
 UPDATE BaseFood SET isDeleted = 0, needsSync = ?, updatedAt = ? WHERE id = ?;
 
+deleteBaseFoodPermanently:
+DELETE FROM BaseFood WHERE id = ?;
+
 selectAllBaseFoods:
 SELECT * FROM BaseFood WHERE isDeleted = 0 ORDER BY name;
 
@@ -85,6 +88,9 @@ SELECT * FROM BaseFood WHERE needsSync = 1 ORDER BY updatedAt, id;
 
 markBaseFoodSynced:
 UPDATE BaseFood SET needsSync = 0 WHERE id = ?;
+
+markAllBaseFoodsForSync:
+UPDATE BaseFood SET needsSync = 1, updatedAt = ?;
 
 updateBaseFoodSyncMetadata:
 UPDATE BaseFood
@@ -125,6 +131,9 @@ SELECT * FROM Dish WHERE needsSync = 1 ORDER BY updatedAt, id;
 
 markDishSynced:
 UPDATE Dish SET needsSync = 0 WHERE id = ?;
+
+markAllDishesForSync:
+UPDATE Dish SET needsSync = 1, updatedAt = ?;
 
 updateDishSyncMetadata:
 UPDATE Dish SET remoteKey = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
@@ -183,6 +192,9 @@ SELECT * FROM Setting WHERE key = ?;
 markSettingSynced:
 UPDATE Setting SET needsSync = 0 WHERE key = ?;
 
+markSyncableSettingsForSync:
+UPDATE Setting SET needsSync = 1, updatedAt = ? WHERE key IN ('language', 'food_language');
+
 applyRemoteSetting:
 INSERT OR REPLACE INTO Setting(key, content, needsSync, updatedAt) VALUES (?, ?, 0, ?);
 
@@ -191,6 +203,9 @@ INSERT OR IGNORE INTO FamilyMember(email, name, firebaseUid, isOwner, addedAt) V
 
 deleteFamilyMemberByEmail:
 DELETE FROM FamilyMember WHERE email = ?;
+
+deleteFamilyMemberByFirebaseUid:
+DELETE FROM FamilyMember WHERE firebaseUid = ?;
 
 selectAllFamilyMembers:
 SELECT * FROM FamilyMember ORDER BY addedAt;

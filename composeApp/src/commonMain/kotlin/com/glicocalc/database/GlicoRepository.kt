@@ -14,6 +14,11 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     private companion object {
         const val CALCULATOR_MEAL_DRAFT_KEY = "calculator_meal_draft"
         const val CALCULATOR_MEAL_TYPE_ID_KEY = "calculator_meal_type_id"
+        const val SYNC_INTERVAL_MINUTES_KEY = "sync_interval_minutes"
+        const val FAMILY_NAME_KEY = "family_name"
+        const val DEFAULT_SYNC_INTERVAL_MINUTES = 10
+        const val MIN_SYNC_INTERVAL_MINUTES = 1
+        const val MAX_SYNC_INTERVAL_MINUTES = 60
     }
 
     fun getAllBaseFoods(): Flow<List<BaseFood>> {
@@ -59,6 +64,11 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         notifyLocalDataChanged()
     }
 
+    fun permanentlyDeleteBaseFood(id: Long) {
+        queries.deleteBaseFoodPermanently(id)
+        notifyLocalDataChanged()
+    }
+
     fun getAllBaseFoodsIncludingDeleted(): List<BaseFood> {
         return queries.selectAllBaseFoodsIncludingDeleted().executeAsList()
     }
@@ -69,6 +79,15 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
 
     fun markBaseFoodSynced(id: Long) {
         queries.markBaseFoodSynced(id)
+    }
+
+    fun markAllSyncableDataForSync() {
+        val now = PlatformTime.currentTimeMillis()
+        database.transaction {
+            queries.markAllBaseFoodsForSync(now)
+            queries.markAllDishesForSync(now)
+            queries.markSyncableSettingsForSync(now)
+        }
     }
 
     // Default foods are identified by stable remote keys. Looking up the seed lets sync
@@ -497,6 +516,24 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         saveCalculatorMealTypeId(null)
     }
 
+    fun getSyncIntervalMinutes(): Int {
+        val savedValue = queries.selectSettingByKey(SYNC_INTERVAL_MINUTES_KEY)
+            .executeAsOneOrNull()
+            ?.content
+            ?.toIntOrNull()
+        return (savedValue ?: DEFAULT_SYNC_INTERVAL_MINUTES)
+            .coerceIn(MIN_SYNC_INTERVAL_MINUTES, MAX_SYNC_INTERVAL_MINUTES)
+    }
+
+    fun saveSyncIntervalMinutes(minutes: Int) {
+        val clampedMinutes = minutes.coerceIn(MIN_SYNC_INTERVAL_MINUTES, MAX_SYNC_INTERVAL_MINUTES)
+        queries.applyRemoteSetting(
+            key = SYNC_INTERVAL_MINUTES_KEY,
+            content = clampedMinutes.toString(),
+            updatedAt = PlatformTime.currentTimeMillis()
+        )
+    }
+
     fun getFamilyId(): String? {
         return queries.selectSettingByKey("family_id").executeAsOneOrNull()?.content
     }
@@ -505,13 +542,25 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         queries.applyRemoteSetting("family_id", id, PlatformTime.currentTimeMillis())
     }
 
+    fun getFamilyName(): String? {
+        return queries.selectSettingByKey(FAMILY_NAME_KEY)
+            .executeAsOneOrNull()
+            ?.content
+            ?.takeIf { it.isNotBlank() }
+    }
+
+    fun setFamilyName(name: String?) {
+        queries.applyRemoteSetting(FAMILY_NAME_KEY, name?.takeIf { it.isNotBlank() }, PlatformTime.currentTimeMillis())
+    }
+
     fun getAllFamilyMembers(): List<FamilyMember> {
         return queries.selectAllFamilyMembers().executeAsList()
     }
 
     fun addFamilyMember(email: String, name: String, firebaseUid: String? = null, isOwner: Boolean = false) {
+        val normalizedEmail = normalizeFamilyEmail(email) ?: return
         queries.insertFamilyMember(
-            email = email,
+            email = normalizedEmail,
             name = name,
             firebaseUid = firebaseUid,
             isOwner = if (isOwner) 1 else 0,
@@ -520,11 +569,16 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     }
 
     fun removeFamilyMember(email: String) {
-        queries.deleteFamilyMemberByEmail(email)
+        normalizeFamilyEmail(email)?.let(queries::deleteFamilyMemberByEmail)
+    }
+
+    fun removeFamilyMemberByFirebaseUid(firebaseUid: String) {
+        queries.deleteFamilyMemberByFirebaseUid(firebaseUid)
     }
 
     fun getFamilyMemberByEmail(email: String): FamilyMember? {
-        return queries.selectFamilyMemberByEmail(email).executeAsOneOrNull()
+        val normalizedEmail = normalizeFamilyEmail(email) ?: return null
+        return queries.selectFamilyMemberByEmail(normalizedEmail).executeAsOneOrNull()
     }
 
     fun getFamilyMemberByFirebaseUid(uid: String): FamilyMember? {
@@ -532,11 +586,11 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     }
 
     fun updateFamilyMemberFirebaseUid(email: String, firebaseUid: String?) {
-        queries.updateFamilyMemberFirebaseUid(firebaseUid, email)
+        normalizeFamilyEmail(email)?.let { queries.updateFamilyMemberFirebaseUid(firebaseUid, it) }
     }
 
     fun updateFamilyMemberName(email: String, name: String) {
-        queries.updateFamilyMemberName(name, email)
+        normalizeFamilyEmail(email)?.let { queries.updateFamilyMemberName(name, it) }
     }
 
     fun getFamilyOwnerUid(): String? {
@@ -545,7 +599,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
 
     fun setFamilyOwner(email: String) {
         queries.clearOwner()
-        queries.setOwner(email)
+        normalizeFamilyEmail(email)?.let(queries::setOwner)
     }
 
     fun countFamilyMembers(): Long {
@@ -564,7 +618,8 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             }
             return member
         }
-        val emailMember = email?.let { getFamilyMemberByEmail(it) }
+        val normalizedEmail = normalizeFamilyEmail(email)
+        val emailMember = normalizedEmail?.let { getFamilyMemberByEmail(it) }
         if (emailMember != null) {
             if (firebaseUid != null) {
                 updateFamilyMemberFirebaseUid(emailMember.email, firebaseUid)
@@ -574,8 +629,8 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             }
             return emailMember
         }
-        val defaultName = displayName ?: email ?: firebaseUid ?: "Unknown"
-        val memberEmail = email ?: "$defaultName@family.local"
+        val defaultName = displayName ?: normalizedEmail ?: firebaseUid ?: "Unknown"
+        val memberEmail = normalizedEmail ?: normalizeFamilyEmail("${defaultName.trim()}@family.local") ?: "unknown@family.local"
         val isOwner = getFamilyOwnerUid() == null
         addFamilyMember(
             email = memberEmail,
@@ -584,6 +639,13 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             isOwner = isOwner
         )
         return queries.selectFamilyMemberByEmail(memberEmail).executeAsOne()
+    }
+
+    private fun normalizeFamilyEmail(email: String?): String? {
+        return email
+            ?.trim()
+            ?.lowercase()
+            ?.takeIf { it.isNotBlank() }
     }
 
     private fun notifyLocalDataChanged() {

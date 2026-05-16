@@ -30,25 +30,111 @@ When you are ready to enable Firebase:
     *   The current iOS implementation links the Google account with Firebase Auth. Food diff syncing is still implemented on Android only.
 6.  Use a dedicated release keystore for GitHub-distributed builds. Add that keystore's `SHA-1` and `SHA-256` to the Android app in Firebase, then download `google-services.json` again after the fingerprints are saved.
 7.  Until the app is published to a Google Play internal testing, closed testing, open testing, or production track, distribute signed APKs through Firebase App Distribution. Android App Bundle uploads require the Firebase project to be linked to a published Google Play app with the same package name.
-8.  Use Firestore rules that isolate each user's food diffs under their own UID, for example:
+8.  Use Firestore rules that isolate family data to family members and allow invited emails to join, for example:
 
     ```text
     rules_version = '2';
     service cloud.firestore {
       match /databases/{database}/documents {
-        match /users/{userId}/foodDiffs/{foodId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
+        function signedIn() {
+          return request.auth != null;
+        }
+
+        function family(familyId) {
+          return get(/databases/$(database)/documents/families/$(familyId));
+        }
+
+        function isMember(familyId) {
+          return signedIn()
+            && family(familyId).data.members[request.auth.uid] == true;
+        }
+
+        function isOwner(familyId) {
+          return signedIn()
+            && family(familyId).data.ownerUid == request.auth.uid;
+        }
+
+        function isInvited(familyId) {
+          return signedIn()
+            && request.auth.token.email_verified == true
+            && family(familyId).data.invitedEmails[request.auth.token.email] == true;
+        }
+
+        function isAcceptingInvite(familyId) {
+          return isInvited(familyId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['members', 'memberProfiles', 'updatedAt'])
+            && request.resource.data.members[request.auth.uid] == true
+            && request.resource.data.members.diff(resource.data.members)
+              .affectedKeys().hasOnly([request.auth.uid])
+            && request.resource.data.memberProfiles[request.auth.uid].email
+              == request.auth.token.email
+            && request.resource.data.memberProfiles.diff(resource.data.memberProfiles)
+              .affectedKeys().hasOnly([request.auth.uid]);
+        }
+
+        function isLeavingFamily(familyId) {
+          return isMember(familyId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['members', 'memberProfiles', 'updatedAt'])
+            && !request.resource.data.members.keys().hasAny([request.auth.uid])
+            && !request.resource.data.memberProfiles.keys().hasAny([request.auth.uid])
+            && request.resource.data.members.diff(resource.data.members)
+              .affectedKeys().hasOnly([request.auth.uid])
+            && request.resource.data.memberProfiles.diff(resource.data.memberProfiles)
+              .affectedKeys().hasOnly([request.auth.uid]);
+        }
+
+        match /users/{userId} {
+          allow read, write: if signedIn() && request.auth.uid == userId;
+        }
+
+        match /families/{familyId} {
+          allow create: if signedIn()
+            && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.members[request.auth.uid] == true
+            && request.resource.data.memberProfiles[request.auth.uid].email
+              == request.auth.token.email;
+
+          allow read: if isMember(familyId) || isInvited(familyId);
+          allow update, delete: if isOwner(familyId);
+          allow update: if isAcceptingInvite(familyId);
+          allow update: if isLeavingFamily(familyId);
+        }
+
+        match /families/{familyId}/{document=**} {
+          allow read, write: if isMember(familyId);
+        }
+
+        match /familyInvites/{inviteId} {
+          allow create: if signedIn()
+            && isOwner(request.resource.data.familyId)
+            && request.resource.data.email == inviteId;
+
+          allow read, update, delete: if signedIn()
+            && isOwner(resource.data.familyId);
+
+          allow get, delete: if signedIn()
+            && request.auth.token.email_verified == true
+            && inviteId == request.auth.token.email;
         }
       }
     }
     ```
 
-9.  The app sync stores only user-specific food diffs:
+9.  The app sync stores family-shared data under `families/{familyId}`:
     *   custom foods
     *   edits to default foods
     *   deletions of default foods
-10.  Keep Firebase config files and keystores out of Git (already added to `.gitignore`).
-11.  For GitHub Actions, add the following **Repository Secrets**:
+    *   dishes
+    *   syncable settings
+    Shared custom food and dish deletions are synced as `isDeleted = true` tombstones rather than hard deletes, so a later restore can be propagated across the family.
+10. Family managers can name the family, invite members by email, and remove members. The family name is stored on `families/{familyId}.name` and is shown to all members after sync. Invites are in-app allowlist records; no email is sent unless you add a server-side mailer such as a Cloud Function plus an email provider. Invited signed-in users see an in-app join action when the invite matches their verified email. Existing families also show a QR code that encodes the family join payload; Android can scan that QR code when the user wants to join or switch families.
+11. Existing users, including family managers, do not move families automatically when invited. They must explicitly join the invited family. If a manager joins another family, the app removes them from the old family and transfers ownership to another remaining member when possible.
+12. Non-owner members can leave a family and are moved into their own family sync space. Their UID and profile are removed from the old `families/{familyId}` document, and the remaining family members prune that account from their local member list on the next sync.
+13. If invite lookup logs `PERMISSION_DENIED`, verify the deployed Firestore rules include the `familyInvites` read rule above, invites are stored as `familyInvites/{normalizedEmail}`, and the signed-in account has `request.auth.token.email_verified == true`.
+14. Keep Firebase config files and keystores out of Git (already added to `.gitignore`).
+15. For GitHub Actions, add the following **Repository Secrets**:
     *   `FIREBASE_TOKEN`: Obtain via `firebase login:ci`.
     *   `FIREBASE_APP_ID`: Your Firebase App ID.
     *   `FIREBASE_TESTERS`: Comma-separated list of tester emails.
@@ -57,7 +143,7 @@ When you are ready to enable Firebase:
     *   `ANDROID_RELEASE_STORE_PASSWORD`: The release keystore password.
     *   `ANDROID_RELEASE_KEY_ALIAS`: The alias of the release signing key inside the keystore.
     *   `ANDROID_RELEASE_KEY_PASSWORD`: The password for that release key.
-12.  The GitHub Actions workflow prints the release keystore `SHA-1` during the build. Verify that the printed fingerprint matches the one registered in Firebase whenever Google sign-in is changed or release signing is rotated.
+16.  The GitHub Actions workflow prints the release keystore `SHA-1` during the build. Verify that the printed fingerprint matches the one registered in Firebase whenever Google sign-in is changed or release signing is rotated.
 
 ## Why This Setup?
 

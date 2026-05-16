@@ -18,7 +18,11 @@ import glicocalc.composeapp.generated.resources.clear_text
 import glicocalc.composeapp.generated.resources.close
 import glicocalc.composeapp.generated.resources.composition_ingredients
 import glicocalc.composeapp.generated.resources.delete
+import glicocalc.composeapp.generated.resources.delete_permanently
+import glicocalc.composeapp.generated.resources.delete_permanently_confirm
+import glicocalc.composeapp.generated.resources.delete_permanently_description
 import glicocalc.composeapp.generated.resources.delete_row
+import glicocalc.composeapp.generated.resources.deleted_foods
 import glicocalc.composeapp.generated.resources.dish_name_label
 import glicocalc.composeapp.generated.resources.dish_deleted
 import glicocalc.composeapp.generated.resources.dishes_title
@@ -53,6 +57,7 @@ import glicocalc.composeapp.generated.resources.nav_foods
 import glicocalc.composeapp.generated.resources.new_dish_title
 import glicocalc.composeapp.generated.resources.save
 import glicocalc.composeapp.generated.resources.search_food_placeholder
+import glicocalc.composeapp.generated.resources.restore
 import glicocalc.composeapp.generated.resources.sign_in_with_google
 import glicocalc.composeapp.generated.resources.sign_out
 import glicocalc.composeapp.generated.resources.switch_account
@@ -60,18 +65,30 @@ import glicocalc.composeapp.generated.resources.settings
 import glicocalc.composeapp.generated.resources.same_as_app_language
 import glicocalc.composeapp.generated.resources.add_meal_type
 import glicocalc.composeapp.generated.resources.add_meal_type_title
+import glicocalc.composeapp.generated.resources.actions
 import glicocalc.composeapp.generated.resources.sync_account
 import glicocalc.composeapp.generated.resources.sync_account_description
 import glicocalc.composeapp.generated.resources.sync_last_synced
+import glicocalc.composeapp.generated.resources.sync_interval
+import glicocalc.composeapp.generated.resources.sync_interval_description
+import glicocalc.composeapp.generated.resources.sync_interval_value
 import glicocalc.composeapp.generated.resources.sync_now
 import glicocalc.composeapp.generated.resources.sync_signed_in_as
 import glicocalc.composeapp.generated.resources.sync_signed_in_google
 import glicocalc.composeapp.generated.resources.sync_status
 import glicocalc.composeapp.generated.resources.sync_status_failed
 import glicocalc.composeapp.generated.resources.family_and_sync
+import glicocalc.composeapp.generated.resources.family_title
+import glicocalc.composeapp.generated.resources.family_title_with_id
+import glicocalc.composeapp.generated.resources.family_name
 import glicocalc.composeapp.generated.resources.family_members
 import glicocalc.composeapp.generated.resources.family_sharing_description
 import glicocalc.composeapp.generated.resources.family_no_members
+import glicocalc.composeapp.generated.resources.family_sign_in_prompt
+import glicocalc.composeapp.generated.resources.family_qr_code
+import glicocalc.composeapp.generated.resources.family_qr_description
+import glicocalc.composeapp.generated.resources.family_qr_unavailable
+import glicocalc.composeapp.generated.resources.scan_family_qr
 import glicocalc.composeapp.generated.resources.add_member
 import glicocalc.composeapp.generated.resources.remove_member
 import glicocalc.composeapp.generated.resources.member_email
@@ -79,6 +96,16 @@ import glicocalc.composeapp.generated.resources.member_name
 import glicocalc.composeapp.generated.resources.signed_in
 import glicocalc.composeapp.generated.resources.not_signed_in
 import glicocalc.composeapp.generated.resources.owner_badge
+import glicocalc.composeapp.generated.resources.leave_family
+import glicocalc.composeapp.generated.resources.leave_family_confirm
+import glicocalc.composeapp.generated.resources.leave_family_description
+import glicocalc.composeapp.generated.resources.family_invitation
+import glicocalc.composeapp.generated.resources.family_invitation_description
+import glicocalc.composeapp.generated.resources.join_family
+import glicocalc.composeapp.generated.resources.join_family_confirm
+import glicocalc.composeapp.generated.resources.join_family_description
+import glicocalc.composeapp.generated.resources.join_by_family_id
+import glicocalc.composeapp.generated.resources.family_id
 import glicocalc.composeapp.generated.resources.sync_status_not_signed_in
 import glicocalc.composeapp.generated.resources.sync_status_pending
 import glicocalc.composeapp.generated.resources.sync_status_up_to_date
@@ -111,12 +138,18 @@ object Strings {
     @Composable fun addFood() = stringResource(Res.string.add_food)
     @Composable fun searchFoodPlaceholder() = stringResource(Res.string.search_food_placeholder)
     @Composable fun foodDeleted() = stringResource(Res.string.food_deleted)
+    @Composable fun deletedFoods() = stringResource(Res.string.deleted_foods)
+    @Composable fun restore() = stringResource(Res.string.restore)
+    @Composable fun deletePermanently() = stringResource(Res.string.delete_permanently)
+    @Composable fun deletePermanentlyConfirm() = stringResource(Res.string.delete_permanently_confirm)
+    @Composable fun deletePermanentlyDescription() = stringResource(Res.string.delete_permanently_description)
     @Composable fun dishDeleted() = stringResource(Res.string.dish_deleted)
     @Composable fun undo() = stringResource(Res.string.undo)
     @Composable fun edit() = stringResource(Res.string.edit)
     @Composable fun addFoodTitle() = stringResource(Res.string.add_food_title)
     @Composable fun editFoodTitle() = stringResource(Res.string.edit_food_title)
     @Composable fun addMealType() = stringResource(Res.string.add_meal_type)
+    @Composable fun actions() = stringResource(Res.string.actions)
     @Composable fun addMealTypeTitle() = stringResource(Res.string.add_meal_type_title)
     @Composable fun editMealTypeTitle() = stringResource(Res.string.edit_meal_type_title)
     @Composable fun foodName() = stringResource(Res.string.food_name)
@@ -151,6 +184,9 @@ object Strings {
     @Composable fun syncStatusPending(value: Int) = stringResource(Res.string.sync_status_pending, value)
     @Composable fun syncStatusFailed() = stringResource(Res.string.sync_status_failed)
     @Composable fun syncLastSynced(value: String) = stringResource(Res.string.sync_last_synced, value)
+    @Composable fun syncInterval() = stringResource(Res.string.sync_interval)
+    @Composable fun syncIntervalValue(value: Int) = stringResource(Res.string.sync_interval_value, value)
+    @Composable fun syncIntervalDescription() = stringResource(Res.string.sync_interval_description)
     @Composable fun syncNow() = stringResource(Res.string.sync_now)
     @Composable fun syncSignedInGoogle() = stringResource(Res.string.sync_signed_in_google)
     @Composable fun signInWithGoogle() = stringResource(Res.string.sign_in_with_google)
@@ -179,9 +215,17 @@ object Strings {
     @Composable fun totalCookedWeight() = stringResource(Res.string.total_cooked_weight)
 
     @Composable fun familyAndSync() = stringResource(Res.string.family_and_sync)
+    @Composable fun familyTitle() = stringResource(Res.string.family_title)
+    @Composable fun familyTitleWithId(familyId: String) = stringResource(Res.string.family_title_with_id, familyId)
+    @Composable fun familyName() = stringResource(Res.string.family_name)
     @Composable fun familyMembers() = stringResource(Res.string.family_members)
     @Composable fun familySharingDescription() = stringResource(Res.string.family_sharing_description)
     @Composable fun familyNoMembers() = stringResource(Res.string.family_no_members)
+    @Composable fun familySignInPrompt() = stringResource(Res.string.family_sign_in_prompt)
+    @Composable fun familyQrCode() = stringResource(Res.string.family_qr_code)
+    @Composable fun familyQrDescription() = stringResource(Res.string.family_qr_description)
+    @Composable fun familyQrUnavailable() = stringResource(Res.string.family_qr_unavailable)
+    @Composable fun scanFamilyQr() = stringResource(Res.string.scan_family_qr)
     @Composable fun addMember() = stringResource(Res.string.add_member)
     @Composable fun removeMember() = stringResource(Res.string.remove_member)
     @Composable fun memberEmail() = stringResource(Res.string.member_email)
@@ -189,4 +233,14 @@ object Strings {
     @Composable fun signedIn() = stringResource(Res.string.signed_in)
     @Composable fun notSignedIn() = stringResource(Res.string.not_signed_in)
     @Composable fun ownerBadge() = stringResource(Res.string.owner_badge)
+    @Composable fun leaveFamily() = stringResource(Res.string.leave_family)
+    @Composable fun leaveFamilyConfirm() = stringResource(Res.string.leave_family_confirm)
+    @Composable fun leaveFamilyDescription() = stringResource(Res.string.leave_family_description)
+    @Composable fun familyInvitation() = stringResource(Res.string.family_invitation)
+    @Composable fun familyInvitationDescription(familyId: String) = stringResource(Res.string.family_invitation_description, familyId)
+    @Composable fun joinFamily() = stringResource(Res.string.join_family)
+    @Composable fun joinFamilyConfirm() = stringResource(Res.string.join_family_confirm)
+    @Composable fun joinFamilyDescription() = stringResource(Res.string.join_family_description)
+    @Composable fun joinByFamilyId() = stringResource(Res.string.join_by_family_id)
+    @Composable fun familyId() = stringResource(Res.string.family_id)
 }

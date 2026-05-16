@@ -30,6 +30,7 @@ fun MainViewController(syncController: IosSyncController) = ComposeUIViewControl
         hasLoadedPersistedFoodLocale = true
         syncController.onRefreshFamilyMembersRequested = { repository.getAllFamilyMembers() }
         syncController.onRefreshFamilyIdRequested = { repository.getFamilyId() }
+        syncController.onRefreshFamilyNameRequested = { repository.getFamilyName() }
         syncController.refreshFamilyMembers()
     }
 
@@ -38,6 +39,7 @@ fun MainViewController(syncController: IosSyncController) = ComposeUIViewControl
         telemetry = NoopTelemetry,
         familyMembers = syncController.familyMembers,
         familyId = syncController.familyId,
+        familyName = syncController.familyName,
         isSignedIn = syncController.isSignedIn,
         syncStatusMessage = syncController.syncStatusMessage,
         lastSyncedMessage = syncController.lastSyncedMessage,
