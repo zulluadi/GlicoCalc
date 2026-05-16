@@ -74,6 +74,7 @@ fun FamilyManagerScreen(
     onJoinFamilyById: (String) -> Unit,
     onSignIn: () -> Unit,
     onSignOut: () -> Unit,
+    onSwitchAccount: (() -> Unit)? = null,
     onManualSync: (() -> Unit)?,
     onSyncIntervalChanged: (Int) -> Unit,
     onScanFamilyQr: (() -> Unit)?,
@@ -257,15 +258,25 @@ fun FamilyManagerScreen(
                             ) {
                                 Text(Strings.signOut())
                             }
-                            if (familyId != null && !isFamilyOwner) {
+                            if (onSwitchAccount != null) {
                                 OutlinedButton(
-                                    onClick = { showLeaveDialog = true },
+                                    onClick = onSwitchAccount,
                                     modifier = Modifier
                                         .weight(1f)
                                         .heightIn(min = 48.dp)
                                 ) {
-                                    Text(Strings.leaveFamily())
+                                    Text(Strings.switchAccount())
                                 }
+                            }
+                        }
+                        if (familyId != null && !isFamilyOwner) {
+                            OutlinedButton(
+                                onClick = { showLeaveDialog = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                            ) {
+                                Text(Strings.leaveFamily())
                             }
                         }
                         OutlinedButton(

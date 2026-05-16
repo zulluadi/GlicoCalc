@@ -23,6 +23,7 @@ class IosSyncController {
 
     var onSignInRequested: (() -> Unit)? = null
     var onSignOutRequested: (() -> Unit)? = null
+    var onSwitchAccountRequested: (() -> Unit)? = null
     var onManualSyncRequested: (() -> Unit)? = null
     var onAddFamilyMemberRequested: ((email: String, name: String) -> Unit)? = null
     var onRemoveFamilyMemberRequested: ((email: String) -> Unit)? = null

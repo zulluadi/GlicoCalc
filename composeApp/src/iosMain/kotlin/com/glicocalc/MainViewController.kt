@@ -45,6 +45,7 @@ fun MainViewController(syncController: IosSyncController) = ComposeUIViewControl
         lastSyncedMessage = syncController.lastSyncedMessage,
         onSignInToSync = if (!syncController.isSignedIn) syncController.onSignInRequested else null,
         onSignOutFromSync = if (syncController.isSignedIn) syncController.onSignOutRequested else null,
+        onSwitchAccount = if (syncController.isSignedIn) syncController.onSwitchAccountRequested else null,
         onManualSync = if (syncController.canManualSync) syncController.onManualSyncRequested else null,
         onAddFamilyMember = syncController.onAddFamilyMemberRequested,
         onRemoveFamilyMember = syncController.onRemoveFamilyMemberRequested

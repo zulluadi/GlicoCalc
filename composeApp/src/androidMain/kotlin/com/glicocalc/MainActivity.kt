@@ -145,6 +145,7 @@ class MainActivity : ComponentActivity() {
                 syncIntervalMinutes = syncIntervalMinutes,
                 onSignInToSync = if (canOfferGoogleSignIn()) ::launchGoogleSignIn else null,
                 onSignOutFromSync = if (canOfferGoogleSignIn()) ::signOutFromSync else null,
+                onSwitchAccount = if (canOfferGoogleSignIn() && syncUiState.isSignedIn) ::switchAccount else null,
                 onManualSync = if (foodSyncManager.isEnabled) foodSyncManager::requestSync else null,
                 onSyncIntervalChanged = ::updateSyncIntervalMinutes,
                 onScanFamilyQr = ::scanFamilyQr,
@@ -388,6 +389,19 @@ class MainActivity : ComponentActivity() {
             } catch (exception: Exception) {
                 Log.w(TAG, "Unexpected Google sign-in failure.", exception)
                 showToast(googleSignInErrorMessage(exception))
+            }
+        }
+    }
+
+    private fun switchAccount() {
+        lifecycleScope.launch {
+            try {
+                foodSyncManager.signOut()
+                credentialManager.clearCredentialState(ClearCredentialStateRequest())
+            } catch (_: ClearCredentialException) {
+            } finally {
+                refreshFamilyMembers()
+                launchGoogleSignIn()
             }
         }
     }

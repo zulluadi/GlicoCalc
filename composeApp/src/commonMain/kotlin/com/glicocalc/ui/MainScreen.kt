@@ -39,6 +39,7 @@ fun MainApp(
     syncIntervalMinutes: Int = 10,
     onSignInToSync: (() -> Unit)? = null,
     onSignOutFromSync: (() -> Unit)? = null,
+    onSwitchAccount: (() -> Unit)? = null,
     onManualSync: (() -> Unit)? = null,
     onSyncIntervalChanged: ((Int) -> Unit)? = null,
     onScanFamilyQr: (() -> Unit)? = null,
@@ -296,6 +297,7 @@ fun MainApp(
                         },
                         onSignIn = { onSignInToSync?.invoke() },
                         onSignOut = { onSignOutFromSync?.invoke() },
+                        onSwitchAccount = onSwitchAccount,
                         onManualSync = onManualSync,
                         onSyncIntervalChanged = { minutes ->
                             telemetry.action("sync_interval_changed")
