@@ -114,6 +114,9 @@ UPDATE Dish SET isDeleted = 1, needsSync = ?, updatedAt = ? WHERE id = ?;
 restoreDish:
 UPDATE Dish SET isDeleted = 0, needsSync = ?, updatedAt = ? WHERE id = ?;
 
+deleteDishPermanently:
+DELETE FROM Dish WHERE id = ?;
+
 selectAllDishes:
 SELECT * FROM Dish WHERE isDeleted = 0 ORDER BY name;
 

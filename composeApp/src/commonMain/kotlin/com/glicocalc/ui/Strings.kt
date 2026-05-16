@@ -22,7 +22,10 @@ import glicocalc.composeapp.generated.resources.delete_permanently
 import glicocalc.composeapp.generated.resources.delete_permanently_confirm
 import glicocalc.composeapp.generated.resources.delete_permanently_description
 import glicocalc.composeapp.generated.resources.delete_row
+import glicocalc.composeapp.generated.resources.deleted_dishes
 import glicocalc.composeapp.generated.resources.deleted_foods
+import glicocalc.composeapp.generated.resources.deleted_items
+import glicocalc.composeapp.generated.resources.deleted_items_description
 import glicocalc.composeapp.generated.resources.dish_name_label
 import glicocalc.composeapp.generated.resources.dish_deleted
 import glicocalc.composeapp.generated.resources.dishes_title
@@ -50,6 +53,7 @@ import glicocalc.composeapp.generated.resources.meal_type_selector
 import glicocalc.composeapp.generated.resources.meal_types
 import glicocalc.composeapp.generated.resources.meal_types_care_plan_note
 import glicocalc.composeapp.generated.resources.meal_types_description
+import glicocalc.composeapp.generated.resources.no_deleted_items
 import glicocalc.composeapp.generated.resources.no_meal_types_configured
 import glicocalc.composeapp.generated.resources.nav_calculator
 import glicocalc.composeapp.generated.resources.nav_dishes
@@ -138,7 +142,11 @@ object Strings {
     @Composable fun addFood() = stringResource(Res.string.add_food)
     @Composable fun searchFoodPlaceholder() = stringResource(Res.string.search_food_placeholder)
     @Composable fun foodDeleted() = stringResource(Res.string.food_deleted)
+    @Composable fun deletedItems() = stringResource(Res.string.deleted_items)
+    @Composable fun deletedItemsDescription() = stringResource(Res.string.deleted_items_description)
     @Composable fun deletedFoods() = stringResource(Res.string.deleted_foods)
+    @Composable fun deletedDishes() = stringResource(Res.string.deleted_dishes)
+    @Composable fun noDeletedItems() = stringResource(Res.string.no_deleted_items)
     @Composable fun restore() = stringResource(Res.string.restore)
     @Composable fun deletePermanently() = stringResource(Res.string.delete_permanently)
     @Composable fun deletePermanentlyConfirm() = stringResource(Res.string.delete_permanently_confirm)

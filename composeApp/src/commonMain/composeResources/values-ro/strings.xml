@@ -14,11 +14,15 @@
     <string name="add_food">Adaugă Aliment</string>
     <string name="search_food_placeholder">Caută aliment...</string>
     <string name="food_deleted">Aliment șters</string>
+    <string name="deleted_items">Elemente șterse</string>
+    <string name="deleted_items_description">Restaurează alimente și preparate șterse.</string>
     <string name="deleted_foods">Alimente șterse</string>
+    <string name="deleted_dishes">Preparate șterse</string>
+    <string name="no_deleted_items">Nu există elemente șterse.</string>
     <string name="restore">Restaurează</string>
     <string name="delete_permanently">Șterge definitiv</string>
     <string name="delete_permanently_confirm">Șterge</string>
-    <string name="delete_permanently_description">Aceasta elimină definitiv alimentul din lista alimentelor șterse și din sincronizarea familiei. Acțiunea nu poate fi anulată.</string>
+    <string name="delete_permanently_description">Aceasta elimină definitiv elementul din lista elementelor șterse și din sincronizarea familiei. Acțiunea nu poate fi anulată.</string>
     <string name="undo">Anulează</string>
     <string name="edit">Editează</string>
     <string name="add_food_title">Adaugă Aliment</string>

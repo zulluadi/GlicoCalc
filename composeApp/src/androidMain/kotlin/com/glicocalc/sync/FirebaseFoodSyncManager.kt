@@ -369,6 +369,20 @@ class FirebaseFoodSyncManager(
         }
     }
 
+    suspend fun permanentlyDeleteDish(remoteKey: String) {
+        val familyId = repository.getFamilyId() ?: return
+        try {
+            firestore!!.collection("families").document(familyId)
+                .collection("dishes")
+                .document(remoteKey)
+                .delete()
+                .await()
+            Log.i(TAG, "Permanently deleted dish $remoteKey from family $familyId")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to permanently delete dish $remoteKey from family $familyId", e)
+        }
+    }
+
     private fun isConfigurationFailure(exception: FirebaseException): Boolean {
         val message = exception.message.orEmpty()
         return "CONFIGURATION_NOT_FOUND" in message || "API key not valid" in message

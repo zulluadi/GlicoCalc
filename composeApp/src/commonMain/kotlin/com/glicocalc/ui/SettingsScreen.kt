@@ -34,6 +34,7 @@ fun SettingsScreen(
     onSignInToSync: (() -> Unit)?,
     onOpenFamilyManager: () -> Unit,
     onOpenMealTypes: () -> Unit,
+    onOpenDeletedItems: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -146,6 +147,20 @@ fun SettingsScreen(
                         )
                     },
                     modifier = Modifier.clickable(onClick = onOpenMealTypes)
+                )
+                HorizontalDivider()
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text(Strings.deletedItems()) },
+                    supportingContent = { Text(Strings.deletedItemsDescription()) },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null
+                        )
+                    },
+                    modifier = Modifier.clickable(onClick = onOpenDeletedItems)
                 )
                 HorizontalDivider()
             }

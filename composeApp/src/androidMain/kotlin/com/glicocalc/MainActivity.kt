@@ -145,6 +145,7 @@ class MainActivity : ComponentActivity() {
                 onJoinPendingFamilyInvite = ::joinPendingFamilyInvite,
                 onJoinFamilyById = ::joinFamilyById,
                 onPermanentlyDeleteFood = ::permanentlyDeleteFood,
+                onPermanentlyDeleteDish = ::permanentlyDeleteDish,
                 resumeSignal = resumeSignal
             )
         }
@@ -288,6 +289,14 @@ class MainActivity : ComponentActivity() {
                 food.remoteKey?.let { foodSyncManager.permanentlyDeleteFood(it) }
             }
             repository.permanentlyDeleteBaseFood(foodId)
+        }
+    }
+
+    private fun permanentlyDeleteDish(dishId: Long) {
+        val dish = repository.getDishWithComposition(dishId)?.dish ?: return
+        syncScope.launch {
+            dish.remoteKey?.let { foodSyncManager.permanentlyDeleteDish(it) }
+            repository.permanentlyDeleteDish(dishId)
         }
     }
 

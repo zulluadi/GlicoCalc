@@ -48,6 +48,7 @@ fun MainApp(
     onJoinPendingFamilyInvite: (() -> Unit)? = null,
     onJoinFamilyById: ((String) -> Unit)? = null,
     onPermanentlyDeleteFood: ((Long) -> Unit)? = null,
+    onPermanentlyDeleteDish: ((Long) -> Unit)? = null,
     resumeSignal: Int = 0
 ) {
     LaunchedEffect(repository) {
@@ -70,7 +71,9 @@ fun MainApp(
         var showFoodLanguageDialog by remember { mutableStateOf(false) }
 
         val baseFoods by repository.getAllBaseFoods().collectAsState(initial = emptyList())
+        val allBaseFoods by repository.getAllBaseFoodsIncludingDeletedFlow().collectAsState(initial = emptyList())
         val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
+        val allDishes by repository.getAllDishesIncludingDeletedFlow().collectAsState(initial = emptyList())
         val mealTypes by repository.getAllMealTypes().collectAsState(initial = emptyList())
 
         LaunchedEffect(currentScreen) {
@@ -107,7 +110,10 @@ fun MainApp(
                                 label = { Text(Strings.navFoods()) }
                             )
                             NavigationBarItem(
-                                selected = currentScreen == Screen.Settings || currentScreen == Screen.MealTypes || currentScreen == Screen.FamilyManager,
+                                selected = currentScreen == Screen.Settings ||
+                                    currentScreen == Screen.MealTypes ||
+                                    currentScreen == Screen.DeletedItems ||
+                                    currentScreen == Screen.FamilyManager,
                                 onClick = { currentScreen = Screen.Settings },
                                 icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                                 label = { Text(Strings.settings()) }
@@ -131,9 +137,6 @@ fun MainApp(
                     )
                     Screen.FoodList -> FoodListScreen(
                         foods = baseFoods,
-                        deletedFoods = remember(baseFoods, resumeSignal) {
-                            repository.getAllBaseFoodsIncludingDeleted().filter { it.isDeleted != 0L }
-                        },
                         onAddFood = { name, carbs, isPacked, packWeight, packCount ->
                             telemetry.action("food_added")
                             scope.launch { repository.insertBaseFood(name, carbs, isPacked, packWeight, packCount) }
@@ -149,11 +152,6 @@ fun MainApp(
                         onUndeleteFood = { id ->
                             telemetry.action("food_restored")
                             scope.launch { repository.restoreBaseFood(id) }
-                        },
-                        onPermanentlyDeleteFood = { id ->
-                            telemetry.action("food_permanently_deleted")
-                            onPermanentlyDeleteFood?.invoke(id)
-                                ?: scope.launch { repository.permanentlyDeleteBaseFood(id) }
                         },
                         modifier = modifier
                     )
@@ -215,6 +213,35 @@ fun MainApp(
                         onSignInToSync = onSignInToSync,
                         onOpenFamilyManager = { currentScreen = Screen.FamilyManager },
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },
+                        onOpenDeletedItems = { currentScreen = Screen.DeletedItems },
+                        modifier = modifier
+                    )
+                    Screen.DeletedItems -> DeletedItemsScreen(
+                        deletedFoods = remember(allBaseFoods) {
+                            allBaseFoods.filter { it.isDeleted != 0L }
+                        },
+                        deletedDishes = remember(allDishes) {
+                            allDishes.filter { it.isDeleted != 0L }
+                        },
+                        onRestoreFood = { id ->
+                            telemetry.action("food_restored")
+                            scope.launch { repository.restoreBaseFood(id) }
+                        },
+                        onRestoreDish = { id ->
+                            telemetry.action("dish_restored")
+                            scope.launch { repository.restoreDish(id) }
+                        },
+                        onPermanentlyDeleteFood = { id ->
+                            telemetry.action("food_permanently_deleted")
+                            onPermanentlyDeleteFood?.invoke(id)
+                                ?: scope.launch { repository.permanentlyDeleteBaseFood(id) }
+                        },
+                        onPermanentlyDeleteDish = { id ->
+                            telemetry.action("dish_permanently_deleted")
+                            onPermanentlyDeleteDish?.invoke(id)
+                                ?: scope.launch { repository.permanentlyDeleteDish(id) }
+                        },
+                        onBack = { currentScreen = Screen.Settings },
                         modifier = modifier
                     )
                     Screen.FamilyManager -> FamilyManagerScreen(
@@ -326,7 +353,7 @@ fun MainApp(
 }
 
 enum class Screen {
-    Calculator, FoodList, Dishes, DishEditor, Settings, MealTypes, FamilyManager
+    Calculator, FoodList, Dishes, DishEditor, Settings, MealTypes, DeletedItems, FamilyManager
 }
 
 @Composable

@@ -73,6 +73,10 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         return queries.selectAllBaseFoodsIncludingDeleted().executeAsList()
     }
 
+    fun getAllBaseFoodsIncludingDeletedFlow(): Flow<List<BaseFood>> {
+        return queries.selectAllBaseFoodsIncludingDeleted().asFlow().mapToList()
+    }
+
     fun getBaseFoodsNeedingSync(): List<BaseFood> {
         return queries.selectBaseFoodsNeedingSync().executeAsList()
     }
@@ -206,6 +210,10 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         return queries.selectAllDishesIncludingDeleted().executeAsList()
     }
 
+    fun getAllDishesIncludingDeletedFlow(): Flow<List<Dish>> {
+        return queries.selectAllDishesIncludingDeleted().asFlow().mapToList()
+    }
+
     fun getDishesNeedingSync(): List<Dish> {
         return queries.selectDishesNeedingSync().executeAsList()
     }
@@ -311,6 +319,14 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     fun restoreDish(dishId: Long) {
         val now = PlatformTime.currentTimeMillis()
         queries.restoreDish(1, now, dishId)
+        notifyLocalDataChanged()
+    }
+
+    fun permanentlyDeleteDish(dishId: Long) {
+        database.transaction {
+            queries.deleteComponentsByDishId(dishId)
+            queries.deleteDishPermanently(dishId)
+        }
         notifyLocalDataChanged()
     }
 
