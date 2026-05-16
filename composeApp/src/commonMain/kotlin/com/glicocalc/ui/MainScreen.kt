@@ -72,6 +72,14 @@ fun MainApp(
         var showLanguageDialog by remember { mutableStateOf(false) }
         var showFoodLanguageDialog by remember { mutableStateOf(false) }
 
+        BackHandler(enabled = currentScreen != Screen.Calculator) {
+            when (currentScreen) {
+                Screen.DishEditor -> currentScreen = Screen.Dishes
+                Screen.MealTypes, Screen.DeletedItems, Screen.FamilyManager -> currentScreen = Screen.Settings
+                else -> currentScreen = Screen.Calculator
+            }
+        }
+
         val baseFoods by repository.getAllBaseFoods().collectAsState(initial = emptyList())
         val allBaseFoods by repository.getAllBaseFoodsIncludingDeletedFlow().collectAsState(initial = emptyList())
         val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
