@@ -52,6 +52,7 @@ fun MainApp(
     onJoinFamilyById: ((String) -> Unit)? = null,
     onPermanentlyDeleteFood: ((Long) -> Unit)? = null,
     onPermanentlyDeleteDish: ((Long) -> Unit)? = null,
+    onPermanentlyDeleteAll: (() -> Unit)? = null,
     resumeSignal: Int = 0
 ) {
     LaunchedEffect(repository) {
@@ -261,6 +262,11 @@ fun MainApp(
                             telemetry.action("dish_permanently_deleted")
                             onPermanentlyDeleteDish?.invoke(id)
                                 ?: scope.launch { repository.permanentlyDeleteDish(id) }
+                        },
+                        onPermanentlyDeleteAll = {
+                            telemetry.action("all_items_permanently_deleted")
+                            onPermanentlyDeleteAll?.invoke()
+                                ?: scope.launch { repository.permanentlyDeleteAllDeletedItems() }
                         },
                         onBack = { currentScreen = Screen.Settings },
                         modifier = modifier

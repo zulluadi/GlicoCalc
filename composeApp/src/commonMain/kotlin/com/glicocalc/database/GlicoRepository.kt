@@ -330,6 +330,15 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         notifyLocalDataChanged()
     }
 
+    fun permanentlyDeleteAllDeletedItems() {
+        database.transaction {
+            queries.deleteDeletedDishComponentsPermanently()
+            queries.deleteDeletedDishesPermanently()
+            queries.deleteDeletedBaseFoodsPermanently()
+        }
+        notifyLocalDataChanged()
+    }
+
     fun getDishWithComposition(dishId: Long): DishWithComposition? {
         val dish = queries.selectDishById(dishId).executeAsOneOrNull() ?: return null
         val components = queries.selectComponentsByDishId(dishId).executeAsList().map {

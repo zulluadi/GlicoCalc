@@ -21,6 +21,9 @@ import glicocalc.composeapp.generated.resources.delete
 import glicocalc.composeapp.generated.resources.delete_permanently
 import glicocalc.composeapp.generated.resources.delete_permanently_confirm
 import glicocalc.composeapp.generated.resources.delete_permanently_description
+import glicocalc.composeapp.generated.resources.delete_all_permanently
+import glicocalc.composeapp.generated.resources.delete_all_permanently_confirm
+import glicocalc.composeapp.generated.resources.delete_all_permanently_description
 import glicocalc.composeapp.generated.resources.delete_row
 import glicocalc.composeapp.generated.resources.deleted_dishes
 import glicocalc.composeapp.generated.resources.deleted_foods
@@ -156,6 +159,9 @@ object Strings {
     @Composable fun deletePermanently() = stringResource(Res.string.delete_permanently)
     @Composable fun deletePermanentlyConfirm() = stringResource(Res.string.delete_permanently_confirm)
     @Composable fun deletePermanentlyDescription() = stringResource(Res.string.delete_permanently_description)
+    @Composable fun deleteAllPermanently() = stringResource(Res.string.delete_all_permanently)
+    @Composable fun deleteAllPermanentlyConfirm() = stringResource(Res.string.delete_all_permanently_confirm)
+    @Composable fun deleteAllPermanentlyDescription() = stringResource(Res.string.delete_all_permanently_description)
     @Composable fun dishDeleted() = stringResource(Res.string.dish_deleted)
     @Composable fun undo() = stringResource(Res.string.undo)
     @Composable fun edit() = stringResource(Res.string.edit)

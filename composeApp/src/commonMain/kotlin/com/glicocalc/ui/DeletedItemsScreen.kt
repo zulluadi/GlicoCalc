@@ -38,12 +38,14 @@ fun DeletedItemsScreen(
     onRestoreDish: (Long) -> Unit,
     onPermanentlyDeleteFood: (Long) -> Unit,
     onPermanentlyDeleteDish: (Long) -> Unit,
+    onPermanentlyDeleteAll: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
     var foodToDeletePermanently by remember { mutableStateOf<BaseFood?>(null) }
     var dishToDeletePermanently by remember { mutableStateOf<Dish?>(null) }
+    var showDeleteAllConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -52,6 +54,13 @@ fun DeletedItemsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.close())
+                    }
+                },
+                actions = {
+                    if (deletedFoods.isNotEmpty() || deletedDishes.isNotEmpty()) {
+                        IconButton(onClick = { showDeleteAllConfirm = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = Strings.deleteAllPermanently())
+                        }
                     }
                 }
             )
@@ -171,6 +180,29 @@ fun DeletedItemsScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { dishToDeletePermanently = null }) {
+                        Text(Strings.cancel())
+                    }
+                }
+            )
+        }
+
+        if (showDeleteAllConfirm) {
+            AlertDialog(
+                onDismissRequest = { showDeleteAllConfirm = false },
+                title = { Text(Strings.deleteAllPermanently()) },
+                text = { Text(Strings.deleteAllPermanentlyDescription()) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onPermanentlyDeleteAll()
+                            showDeleteAllConfirm = false
+                        }
+                    ) {
+                        Text(Strings.deleteAllPermanentlyConfirm())
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteAllConfirm = false }) {
                         Text(Strings.cancel())
                     }
                 }

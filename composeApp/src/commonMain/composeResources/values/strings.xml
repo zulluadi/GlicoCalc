@@ -23,6 +23,9 @@
     <string name="delete_permanently">Delete permanently</string>
     <string name="delete_permanently_confirm">Delete</string>
     <string name="delete_permanently_description">This permanently removes the item from deleted items and from family sync. This cannot be undone.</string>
+    <string name="delete_all_permanently">Delete all permanently</string>
+    <string name="delete_all_permanently_confirm">Delete all</string>
+    <string name="delete_all_permanently_description">This permanently removes all items from deleted items and from family sync. This cannot be undone.</string>
     <string name="dish_deleted">Dish deleted</string>
     <string name="undo">Undo</string>
     <string name="edit">Edit</string>

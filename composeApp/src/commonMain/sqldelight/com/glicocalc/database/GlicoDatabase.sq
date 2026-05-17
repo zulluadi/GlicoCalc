@@ -239,3 +239,13 @@ SELECT COUNT(*) FROM FamilyMember;
 
 deleteAllFamilyMembers:
 DELETE FROM FamilyMember;
+
+deleteDeletedDishComponentsPermanently:
+DELETE FROM DishComponent WHERE dishId IN (SELECT id FROM Dish WHERE isDeleted = 1);
+
+deleteDeletedDishesPermanently:
+DELETE FROM Dish WHERE isDeleted = 1;
+
+deleteDeletedBaseFoodsPermanently:
+DELETE FROM BaseFood WHERE isDeleted = 1;
+

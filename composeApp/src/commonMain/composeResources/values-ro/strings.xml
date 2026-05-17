@@ -23,6 +23,9 @@
     <string name="delete_permanently">Șterge definitiv</string>
     <string name="delete_permanently_confirm">Șterge</string>
     <string name="delete_permanently_description">Aceasta elimină definitiv elementul din lista elementelor șterse și din sincronizarea familiei. Acțiunea nu poate fi anulată.</string>
+    <string name="delete_all_permanently">Șterge-le pe toate definitiv</string>
+    <string name="delete_all_permanently_confirm">Șterge tot</string>
+    <string name="delete_all_permanently_description">Aceasta elimină definitiv toate elementele din lista elementelor șterse și din sincronizarea familiei. Acțiunea nu poate fi anulată.</string>
     <string name="undo">Anulează</string>
     <string name="edit">Editează</string>
     <string name="add_food_title">Adaugă Aliment</string>

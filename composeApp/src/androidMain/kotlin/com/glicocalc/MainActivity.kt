@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
                 onJoinFamilyById = ::joinFamilyById,
                 onPermanentlyDeleteFood = ::permanentlyDeleteFood,
                 onPermanentlyDeleteDish = ::permanentlyDeleteDish,
+                onPermanentlyDeleteAll = ::permanentlyDeleteAllDeletedItems,
                 resumeSignal = resumeSignal
             )
         }
@@ -316,6 +317,22 @@ class MainActivity : ComponentActivity() {
         syncScope.launch {
             dish.remoteKey?.let { foodSyncManager.permanentlyDeleteDish(it) }
             repository.permanentlyDeleteDish(dishId)
+        }
+    }
+
+    private fun permanentlyDeleteAllDeletedItems() {
+        val deletedFoods = repository.getAllBaseFoodsIncludingDeleted().filter { it.isDeleted != 0L }
+        val deletedDishes = repository.getAllDishesIncludingDeleted().filter { it.isDeleted != 0L }
+        syncScope.launch {
+            deletedFoods.forEach { food ->
+                if (food.source == FoodSource.CUSTOM.value) {
+                    food.remoteKey?.let { foodSyncManager.permanentlyDeleteFood(it) }
+                }
+            }
+            deletedDishes.forEach { dish ->
+                dish.remoteKey?.let { foodSyncManager.permanentlyDeleteDish(it) }
+            }
+            repository.permanentlyDeleteAllDeletedItems()
         }
     }
 
