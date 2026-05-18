@@ -120,6 +120,7 @@ import glicocalc.composeapp.generated.resources.reset
 import glicocalc.composeapp.generated.resources.reset_food_list
 import glicocalc.composeapp.generated.resources.reset_food_list_confirm
 import glicocalc.composeapp.generated.resources.reset_food_list_description
+import glicocalc.composeapp.generated.resources.reset_food_list_owner_only
 import glicocalc.composeapp.generated.resources.reset_food_list_warning
 import org.jetbrains.compose.resources.stringResource
 import glicocalc.composeapp.generated.resources.total_carbs
@@ -265,6 +266,7 @@ object Strings {
     @Composable fun noResultsFound() = "No results found"
     @Composable fun resetFoodList() = stringResource(Res.string.reset_food_list)
     @Composable fun resetFoodListDescription() = stringResource(Res.string.reset_food_list_description)
+    @Composable fun resetFoodListOwnerOnly() = stringResource(Res.string.reset_food_list_owner_only)
     @Composable fun resetFoodListConfirm() = stringResource(Res.string.reset_food_list_confirm)
     @Composable fun resetFoodListWarning() = stringResource(Res.string.reset_food_list_warning)
     @Composable fun reset() = stringResource(Res.string.reset)

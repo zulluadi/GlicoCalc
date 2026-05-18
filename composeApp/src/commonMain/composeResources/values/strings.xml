@@ -133,6 +133,7 @@
     <string name="family_id">Family ID</string>
     <string name="reset_food_list">Reset food list</string>
     <string name="reset_food_list_description">Replace all current foods with the default app list. Custom foods will be deleted.</string>
+    <string name="reset_food_list_owner_only">Only the family owner can reset the food list.</string>
     <string name="reset_food_list_confirm">Reset food list?</string>
     <string name="reset_food_list_warning">This will delete all custom foods and reset all default foods. This action will apply to all family members.</string>
     <string name="reset">Reset</string>

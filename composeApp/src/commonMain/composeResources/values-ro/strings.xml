@@ -123,6 +123,7 @@
     <string name="family_id">ID familie</string>
     <string name="reset_food_list">Resetează lista de alimente</string>
     <string name="reset_food_list_description">Înlocuiește toate alimentele curente cu lista implicită a aplicației. Alimentele personalizate vor fi șterse.</string>
+    <string name="reset_food_list_owner_only">Doar proprietarul familiei poate reseta lista de alimente.</string>
     <string name="reset_food_list_confirm">Resetezi lista de alimente?</string>
     <string name="reset_food_list_warning">Această acțiune va șterge toate alimentele personalizate și va reseta alimentele implicite. Acțiunea se va aplica tuturor membrilor familiei.</string>
     <string name="reset">Resetează</string>

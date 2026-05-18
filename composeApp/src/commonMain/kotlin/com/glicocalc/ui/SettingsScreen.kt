@@ -173,20 +173,46 @@ fun SettingsScreen(
                 )
                 HorizontalDivider()
             }
-            if (isFamilyOwner) {
-                item {
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                text = Strings.resetFoodList(),
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.error
-                            )
-                        },
-                        supportingContent = { Text(Strings.resetFoodListDescription()) },
-                        modifier = Modifier.clickable { showResetDialog = true }
-                    )
-                    HorizontalDivider()
+            item {
+                val disabledTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                val disabledSupportingTextColor =
+                    androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                val resetTextColor = if (isFamilyOwner) {
+                    androidx.compose.material3.MaterialTheme.colorScheme.error
+                } else {
+                    disabledTextColor
                 }
+                val supportingTextColor = if (isFamilyOwner) {
+                    androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    disabledSupportingTextColor
+                }
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            text = Strings.resetFoodList(),
+                            color = resetTextColor
+                        )
+                    },
+                    supportingContent = {
+                        Column {
+                            Text(
+                                text = Strings.resetFoodListDescription(),
+                                color = supportingTextColor
+                            )
+                            if (!isFamilyOwner) {
+                                Text(
+                                    text = Strings.resetFoodListOwnerOnly(),
+                                    color = supportingTextColor
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier.clickable(enabled = isFamilyOwner) {
+                        showResetDialog = true
+                    }
+                )
+                HorizontalDivider()
             }
         }
     }

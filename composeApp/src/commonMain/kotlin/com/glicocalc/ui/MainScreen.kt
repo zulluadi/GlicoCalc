@@ -87,6 +87,7 @@ fun MainApp(
         val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
         val allDishes by repository.getAllDishesIncludingDeletedFlow().collectAsState(initial = emptyList())
         val mealTypes by repository.getAllMealTypes().collectAsState(initial = emptyList())
+        val canResetFoodList = !isSignedIn || isFamilyOwner
 
         LaunchedEffect(currentScreen) {
             telemetry.screenViewed(currentScreen.name)
@@ -232,10 +233,11 @@ fun MainApp(
                         onOpenMealTypes = { currentScreen = Screen.MealTypes },
                         onOpenDeletedItems = { currentScreen = Screen.DeletedItems },
                         onResetFoodList = {
+                            if (!canResetFoodList) return@SettingsScreen
                             telemetry.action("food_list_reset")
                             scope.launch { repository.resetFoodListToDefault() }
                         },
-                        isFamilyOwner = familyId == null || isFamilyOwner,
+                        isFamilyOwner = canResetFoodList,
                         modifier = modifier
                     )
                     Screen.DeletedItems -> DeletedItemsScreen(
