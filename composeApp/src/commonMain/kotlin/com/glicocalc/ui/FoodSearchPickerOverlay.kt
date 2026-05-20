@@ -85,91 +85,164 @@ internal fun FoodSearchPickerOverlay(
         }
     }
 
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
+    BoxWithConstraints {
+        val useLandscapePicker = maxWidth > maxHeight
+        val contentPadding = if (useLandscapePicker) 8.dp else 16.dp
+        val contentGap = if (useLandscapePicker) 8.dp else 12.dp
+
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .imePadding(),
+            color = MaterialTheme.colorScheme.surface
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = queryState,
-                    onValueChange = { queryState = it },
-                    label = { Text(Strings.searchFoodPlaceholder()) },
+            if (useLandscapePicker) {
+                Row(
                     modifier = Modifier
-                        .focusRequester(focusRequester)
-                        .weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { onDismiss() }),
-                    suffix = {
-                        if (query.isNotBlank()) {
-                            IconButton(
-                                onClick = {
-                                    queryState = TextFieldValue("")
-                                    onClearSelection()
-                                }
-                            ) {
-                                Icon(Icons.Default.Close, contentDescription = Strings.clearText())
-                            }
-                        }
-                    }
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = Strings.close())
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    horizontalArrangement = Arrangement.spacedBy(contentGap)
+                ) {
+                    FoodSearchControls(
+                        queryState = queryState,
+                        query = query,
+                        compact = true,
+                        focusRequester = focusRequester,
+                        onQueryChange = { queryState = it },
+                        onClearSelection = {
+                            queryState = TextFieldValue("")
+                            onClearSelection()
+                        },
+                        onDismiss = onDismiss,
+                        modifier = Modifier
+                            .widthIn(min = 220.dp, max = 300.dp)
+                            .fillMaxHeight()
+                    )
+                    FoodSearchResults(
+                        query = query,
+                        filteredOptions = filteredOptions,
+                        onSelectOption = onSelectOption,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    verticalArrangement = Arrangement.spacedBy(contentGap)
+                ) {
+                    FoodSearchControls(
+                        queryState = queryState,
+                        query = query,
+                        compact = false,
+                        focusRequester = focusRequester,
+                        onQueryChange = { queryState = it },
+                        onClearSelection = {
+                            queryState = TextFieldValue("")
+                            onClearSelection()
+                        },
+                        onDismiss = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    FoodSearchResults(
+                        query = query,
+                        filteredOptions = filteredOptions,
+                        onSelectOption = onSelectOption,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
+        }
+    }
+}
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if (filteredOptions.isEmpty()) {
-                    if (query.isNotBlank()) {
-                        item {
-                            ListItem(
-                                headlineContent = {
-                                    Text(
-                                        text = Strings.noResultsFound(),
-                                        color = MaterialTheme.colorScheme.outline
-                                    )
-                                }
-                            )
-                        }
-                    }
-                } else {
-                    items(filteredOptions, key = { it.key }) { option ->
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = option.title,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    option.detail?.let { detail ->
-                                        Text(
-                                            text = detail,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            },
-                            onClick = { onSelectOption(option) }
-                        )
+@Composable
+private fun FoodSearchControls(
+    queryState: TextFieldValue,
+    query: String,
+    compact: Boolean,
+    focusRequester: FocusRequester,
+    onQueryChange: (TextFieldValue) -> Unit,
+    onClearSelection: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        OutlinedTextField(
+            value = queryState,
+            onValueChange = onQueryChange,
+            label = if (compact) null else { { Text(Strings.searchFoodPlaceholder()) } },
+            placeholder = if (compact) { { Text(Strings.searchFoodPlaceholder()) } } else null,
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .weight(1f),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onDismiss() }),
+            suffix = {
+                if (query.isNotBlank()) {
+                    IconButton(onClick = onClearSelection) {
+                        Icon(Icons.Default.Close, contentDescription = Strings.clearText())
                     }
                 }
+            }
+        )
+        IconButton(onClick = onDismiss) {
+            Icon(Icons.Default.Close, contentDescription = Strings.close())
+        }
+    }
+}
+
+@Composable
+private fun FoodSearchResults(
+    query: String,
+    filteredOptions: List<FoodPickerOption>,
+    onSelectOption: (FoodPickerOption) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(modifier = modifier.fillMaxHeight()) {
+        if (filteredOptions.isEmpty()) {
+            if (query.isNotBlank()) {
+                item {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = Strings.noResultsFound(),
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                    )
+                }
+            }
+        } else {
+            items(filteredOptions, key = { it.key }) { option ->
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = option.title,
+                                modifier = Modifier.weight(1f)
+                            )
+                            option.detail?.let { detail ->
+                                Text(
+                                    text = detail,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    onClick = { onSelectOption(option) }
+                )
             }
         }
     }

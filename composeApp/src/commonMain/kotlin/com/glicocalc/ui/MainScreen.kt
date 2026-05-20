@@ -1,8 +1,12 @@
 package com.glicocalc.ui
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -12,6 +16,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -97,57 +102,71 @@ fun MainApp(
             val density = LocalDensity.current
             val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
 
-            Scaffold(
-                contentWindowInsets = WindowInsets(0.dp),
-                bottomBar = {
-                    if (!isKeyboardVisible) {
-                        NavigationBar(
-                            windowInsets = WindowInsets(0.dp)
-                        ) {
-                            NavigationBarItem(
-                                selected = currentScreen == Screen.Calculator,
-                                onClick = { currentScreen = Screen.Calculator },
-                                icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
-                                label = { Text(Strings.navCalculator()) }
-                            )
-                            NavigationBarItem(
-                                selected = currentScreen == Screen.Dishes || currentScreen == Screen.DishEditor,
-                                onClick = { currentScreen = Screen.Dishes },
-                                icon = { Icon(Icons.Default.Menu, contentDescription = null) },
-                                label = { Text(Strings.navDishes()) }
-                            )
-                            NavigationBarItem(
-                                selected = currentScreen == Screen.FoodList,
-                                onClick = { currentScreen = Screen.FoodList },
-                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                                label = { Text(Strings.navFoods()) }
-                            )
-                            NavigationBarItem(
-                                selected = currentScreen == Screen.Settings ||
-                                    currentScreen == Screen.MealTypes ||
-                                    currentScreen == Screen.DeletedItems ||
-                                    currentScreen == Screen.FamilyManager,
-                                onClick = { currentScreen = Screen.Settings },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                                label = { Text(Strings.settings()) }
-                            )
+            BoxWithConstraints {
+                val useNavigationRail = maxWidth > maxHeight && maxHeight < 620.dp
+
+                Scaffold(
+                    contentWindowInsets = WindowInsets(0.dp),
+                    bottomBar = {
+                        if (!isKeyboardVisible && !useNavigationRail) {
+                            NavigationBar(
+                                windowInsets = WindowInsets(0.dp)
+                            ) {
+                                NavigationBarItem(
+                                    selected = currentScreen == Screen.Calculator,
+                                    onClick = { currentScreen = Screen.Calculator },
+                                    icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
+                                    label = { Text(Strings.navCalculator()) }
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == Screen.Dishes || currentScreen == Screen.DishEditor,
+                                    onClick = { currentScreen = Screen.Dishes },
+                                    icon = { Icon(Icons.Default.Menu, contentDescription = null) },
+                                    label = { Text(Strings.navDishes()) }
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == Screen.FoodList,
+                                    onClick = { currentScreen = Screen.FoodList },
+                                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                                    label = { Text(Strings.navFoods()) }
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == Screen.Settings ||
+                                        currentScreen == Screen.MealTypes ||
+                                        currentScreen == Screen.DeletedItems ||
+                                        currentScreen == Screen.FamilyManager,
+                                    onClick = { currentScreen = Screen.Settings },
+                                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                    label = { Text(Strings.settings()) }
+                                )
+                            }
                         }
                     }
-                }
-            ) { padding ->
-                val modifier = Modifier.padding(padding)
+                ) { padding ->
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (!isKeyboardVisible && useNavigationRail) {
+                            AppNavigationRail(
+                                currentScreen = currentScreen,
+                                onSelectScreen = { currentScreen = it },
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            )
+                        }
 
-                when (currentScreen) {
-                    Screen.Calculator -> CalculatorScreen(
-                        repository = repository,
-                        dishes = dishes,
-                        baseFoods = baseFoods,
-                        mealTypes = mealTypes,
-                        onSelectDish = { repository.getDishWithComposition(it) },
-                        onSelectBaseFood = { repository.getBaseFood(it) },
-                        resumeSignal = resumeSignal,
-                        modifier = modifier
-                    )
+                    val modifier = Modifier
+                        .padding(padding)
+                        .padding(start = if (!isKeyboardVisible && useNavigationRail) 80.dp else 0.dp)
+
+                    when (currentScreen) {
+                        Screen.Calculator -> CalculatorScreen(
+                            repository = repository,
+                            dishes = dishes,
+                            baseFoods = baseFoods,
+                            mealTypes = mealTypes,
+                            onSelectDish = { repository.getDishWithComposition(it) },
+                            onSelectBaseFood = { repository.getBaseFood(it) },
+                            resumeSignal = resumeSignal,
+                            modifier = modifier
+                        )
                     Screen.FoodList -> FoodListScreen(
                         foods = baseFoods,
                         onAddFood = { name, carbs, isPacked, packWeight, packCount ->
@@ -347,6 +366,8 @@ fun MainApp(
                         modifier = modifier
                     )
                 }
+                    }
+            }
             }
 
             if (showLanguageDialog) {
@@ -384,6 +405,51 @@ fun MainApp(
 
 enum class Screen {
     Calculator, FoodList, Dishes, DishEditor, Settings, MealTypes, DeletedItems, FamilyManager
+}
+
+@Composable
+private fun AppNavigationRail(
+    currentScreen: Screen,
+    onSelectScreen: (Screen) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    NavigationRail(
+        modifier = modifier,
+        windowInsets = WindowInsets(0.dp)
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        NavigationRailItem(
+            selected = currentScreen == Screen.Calculator,
+            onClick = { onSelectScreen(Screen.Calculator) },
+            icon = { Icon(Icons.Default.PlayArrow, contentDescription = Strings.navCalculator()) },
+            label = { Text(Strings.navCalculator()) }
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        NavigationRailItem(
+            selected = currentScreen == Screen.Dishes || currentScreen == Screen.DishEditor,
+            onClick = { onSelectScreen(Screen.Dishes) },
+            icon = { Icon(Icons.Default.Menu, contentDescription = Strings.navDishes()) },
+            label = { Text(Strings.navDishes()) }
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        NavigationRailItem(
+            selected = currentScreen == Screen.FoodList,
+            onClick = { onSelectScreen(Screen.FoodList) },
+            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = Strings.navFoods()) },
+            label = { Text(Strings.navFoods()) }
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        NavigationRailItem(
+            selected = currentScreen == Screen.Settings ||
+                currentScreen == Screen.MealTypes ||
+                currentScreen == Screen.DeletedItems ||
+                currentScreen == Screen.FamilyManager,
+            onClick = { onSelectScreen(Screen.Settings) },
+            icon = { Icon(Icons.Default.Settings, contentDescription = Strings.settings()) },
+            label = { Text(Strings.settings()) }
+        )
+        Spacer(modifier = Modifier.weight(1f))
+    }
 }
 
 @Composable

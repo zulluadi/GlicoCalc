@@ -3,9 +3,12 @@ package com.glicocalc.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -22,6 +25,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.glicocalc.database.BaseFood
@@ -297,10 +302,11 @@ fun CalculatorScreen(
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
     var dishesWithCarbs by remember(dishes, baseFoods) { mutableStateOf(emptyList<GlicoRepository.DishWithCarbs>()) }
     var activeFoodPicker by remember { mutableStateOf<ActiveFoodPicker?>(null) }
+    var hasLoadedCalculatorDraft by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val draft = withContext(Dispatchers.IO) {
-            repository.getCalculatorMealDraft()
+        val (draft, draftMealTypeId) = withContext(Dispatchers.IO) {
+            repository.getCalculatorMealDraft() to repository.getCalculatorMealTypeId()
         }
         val items = deserializeMealItems(
             serialized = draft.orEmpty(),
@@ -308,6 +314,8 @@ fun CalculatorScreen(
             onSelectBaseFood = onSelectBaseFood
         ).ifEmpty { listOf(MealItem()) }
         mealItems.addAll(items)
+        selectedMealTypeId = draftMealTypeId
+        hasLoadedCalculatorDraft = true
     }
     LaunchedEffect(dishes, baseFoods) {
         dishesWithCarbs = withContext(Dispatchers.Default) {
@@ -363,18 +371,21 @@ fun CalculatorScreen(
     val hasEditableMeal = remember(mealItems.toList()) { mealItems.any(::isMeaningfulMealItem) || mealItems.size > 1 }
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(resumeSignal, mealTypes) {
+    LaunchedEffect(resumeSignal, mealTypes, hasLoadedCalculatorDraft) {
+        if (!hasLoadedCalculatorDraft) return@LaunchedEffect
         val activeMealTypeId = selectedMealTypeId?.takeIf { activeId ->
             mealTypes.any { it.id == activeId }
         }
         selectedMealTypeId = activeMealTypeId ?: nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
     }
 
-    LaunchedEffect(mealItems.toList()) {
+    LaunchedEffect(mealItems.toList(), hasLoadedCalculatorDraft) {
+        if (!hasLoadedCalculatorDraft) return@LaunchedEffect
         repository.saveCalculatorMealDraft(serializeMealItems(mealItems))
     }
 
-    LaunchedEffect(selectedMealTypeId) {
+    LaunchedEffect(selectedMealTypeId, hasLoadedCalculatorDraft) {
+        if (!hasLoadedCalculatorDraft) return@LaunchedEffect
         repository.saveCalculatorMealTypeId(selectedMealTypeId)
     }
 
@@ -389,146 +400,162 @@ fun CalculatorScreen(
     ) {
         val density = LocalDensity.current
         val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
+        val useLandscapeLayout = maxWidth > maxHeight && maxWidth >= 600.dp && !isKeyboardVisible
         val isCompactHeight = maxHeight < 620.dp || isKeyboardVisible
         val screenPadding = if (isCompactHeight) 12.dp else 16.dp
         val sectionGap = if (isCompactHeight) 8.dp else 16.dp
         val listGap = if (isCompactHeight) 8.dp else 12.dp
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .padding(screenPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (!isKeyboardVisible) {
-                TotalCarbsCard(
-                    totalCarbs = totalCarbs,
-                    compact = isCompactHeight,
-                    modifier = Modifier.padding(bottom = sectionGap)
-                )
-            }
-
+        if (useLandscapeLayout) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = listGap),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(screenPadding),
+                horizontalArrangement = Arrangement.spacedBy(sectionGap)
             ) {
-                Text(
-                    text = Strings.foodsOnPlate(),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                selectedMealType?.let { mealType ->
-                    val remainingCarbs = totalCarbs - mealType.targetCarbs
-                    val remainingText = when {
-                        kotlin.math.abs(remainingCarbs) < 0.05 -> "0g"
-                        remainingCarbs > 0 -> "+${formatDecimal(remainingCarbs)}g"
-                        else -> "-${formatDecimal(kotlin.math.abs(remainingCarbs))}g"
-                    }
-                    val remainingColor = when {
-                        kotlin.math.abs(remainingCarbs) < 0.05 -> MaterialTheme.colorScheme.primary
-                        remainingCarbs > 0 -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.tertiary
-                    }
-                    Text(
-                        text = remainingText,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = remainingColor
-                    )
-                }
-            }
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                state = listState,
-                verticalArrangement = Arrangement.spacedBy(listGap)
-            ) {
-                itemsIndexed(mealItems, key = { _, item -> item.id }) { index: Int, item: MealItem ->
-                    MealItemRow(
-                        index = index,
-                        item = item,
-                        searchableFoods = searchableFoods,
-                        onUpdate = { updated -> mealItems[index] = updated },
-                        canDelete = mealItems.size > 1,
-                        onEditFood = {
-                            activeFoodPicker = ActiveFoodPicker(
-                                itemId = item.id,
-                                initialQuery = item.selectedDish?.dish?.name
-                                    ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
-                                    ?: item.selectedBaseFood?.name
-                                    ?: ""
-                            )
-                        },
-                        onDelete = {
-                            if (mealItems.size > 1) {
-                                mealItems.removeAt(index)
-                            } else {
-                                mealItems[index] = MealItem()
-                            }
-                        }
-                    )
-                }
-            }
-
-            if (!isKeyboardVisible) {
-                Spacer(modifier = Modifier.height(listGap))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Column(
+                    modifier = Modifier
+                        .widthIn(min = 260.dp, max = 340.dp)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(sectionGap, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Button(
-                        onClick = {
+                    TotalCarbsCard(
+                        totalCarbs = totalCarbs,
+                        compact = isCompactHeight,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    CalculatorActions(
+                        compact = isCompactHeight,
+                        hasEditableMeal = hasEditableMeal,
+                        stacked = true,
+                        onAddFood = {
                             val newItem = MealItem()
                             mealItems.add(0, newItem)
                             activeFoodPicker = ActiveFoodPicker(itemId = newItem.id, initialQuery = "")
                             scope.launch { listState.scrollToItem(0) }
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = if (isCompactHeight) 44.dp else 48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.addAnotherFoodToMeal())
-                    }
-
-                    OutlinedButton(
-                        onClick = {
+                        onClearMeal = {
                             mealItems.clear()
                             mealItems.add(MealItem())
                             selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
                             repository.clearCalculatorDraft()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = if (isCompactHeight) 44.dp else 48.dp),
-                        enabled = hasEditableMeal,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
+                        }
+                    )
+                    if (mealTypes.isNotEmpty()) {
+                        MealTypeSelector(
+                            mealTypes = mealTypes,
+                            selectedMealTypeId = selectedMealTypeId,
+                            onMealTypeSelected = { selectedMealTypeId = it },
+                            resolveMealTypeName = resolveMealTypeName,
+                            compact = isCompactHeight
                         )
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(Strings.clearMeal())
                     }
                 }
 
-                if (mealTypes.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(sectionGap))
-                    MealTypeSelector(
-                        mealTypes = mealTypes,
-                        selectedMealTypeId = selectedMealTypeId,
-                        onMealTypeSelected = { selectedMealTypeId = it },
-                        resolveMealTypeName = resolveMealTypeName,
-                        compact = isCompactHeight
+                MealItemsList(
+                    mealItems = mealItems,
+                    listState = listState,
+                    searchableFoods = searchableFoods,
+                    selectedMealType = selectedMealType,
+                    totalCarbs = totalCarbs,
+                    listGap = listGap,
+                    compact = isCompactHeight,
+                    onEditFood = { item ->
+                        activeFoodPicker = ActiveFoodPicker(
+                            itemId = item.id,
+                            initialQuery = item.selectedDish?.dish?.name
+                                ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
+                                ?: item.selectedBaseFood?.name
+                                ?: ""
+                        )
+                    },
+                    onUpdate = { index, updated -> mealItems[index] = updated },
+                    onDelete = { index ->
+                        if (mealItems.size > 1) {
+                            mealItems.removeAt(index)
+                        } else {
+                            mealItems[index] = MealItem()
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .padding(screenPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (!isKeyboardVisible) {
+                    TotalCarbsCard(
+                        totalCarbs = totalCarbs,
+                        compact = isCompactHeight,
+                        modifier = Modifier.padding(bottom = sectionGap)
                     )
+                }
+
+                MealItemsList(
+                    mealItems = mealItems,
+                    listState = listState,
+                    searchableFoods = searchableFoods,
+                    selectedMealType = selectedMealType,
+                    totalCarbs = totalCarbs,
+                    listGap = listGap,
+                    compact = isCompactHeight,
+                    onEditFood = { item ->
+                        activeFoodPicker = ActiveFoodPicker(
+                            itemId = item.id,
+                            initialQuery = item.selectedDish?.dish?.name
+                                ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
+                                ?: item.selectedBaseFood?.name
+                                ?: ""
+                        )
+                    },
+                    onUpdate = { index, updated -> mealItems[index] = updated },
+                    onDelete = { index ->
+                        if (mealItems.size > 1) {
+                            mealItems.removeAt(index)
+                        } else {
+                            mealItems[index] = MealItem()
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                if (!isKeyboardVisible) {
+                    Spacer(modifier = Modifier.height(listGap))
+                    CalculatorActions(
+                        compact = isCompactHeight,
+                        hasEditableMeal = hasEditableMeal,
+                        stacked = false,
+                        onAddFood = {
+                            val newItem = MealItem()
+                            mealItems.add(0, newItem)
+                            activeFoodPicker = ActiveFoodPicker(itemId = newItem.id, initialQuery = "")
+                            scope.launch { listState.scrollToItem(0) }
+                        },
+                        onClearMeal = {
+                            mealItems.clear()
+                            mealItems.add(MealItem())
+                            selectedMealTypeId = nextMealTypeForHour(mealTypes, DeviceTime.currentHour24())?.id
+                            repository.clearCalculatorDraft()
+                        }
+                    )
+
+                    if (mealTypes.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(sectionGap))
+                        MealTypeSelector(
+                            mealTypes = mealTypes,
+                            selectedMealTypeId = selectedMealTypeId,
+                            onMealTypeSelected = { selectedMealTypeId = it },
+                            resolveMealTypeName = resolveMealTypeName,
+                            compact = isCompactHeight
+                        )
+                    }
                 }
             }
         }
@@ -581,6 +608,162 @@ fun CalculatorScreen(
 }
 
 @Composable
+private fun MealItemsList(
+    mealItems: List<MealItem>,
+    listState: LazyListState,
+    searchableFoods: List<SearchableFood>,
+    selectedMealType: MealType?,
+    totalCarbs: Double,
+    listGap: Dp,
+    compact: Boolean,
+    onEditFood: (MealItem) -> Unit,
+    onUpdate: (index: Int, item: MealItem) -> Unit,
+    onDelete: (index: Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = listGap),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = Strings.foodsOnPlate(),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            selectedMealType?.let { mealType ->
+                val remainingCarbs = totalCarbs - mealType.targetCarbs
+                val remainingText = when {
+                    kotlin.math.abs(remainingCarbs) < 0.05 -> "0g"
+                    remainingCarbs > 0 -> "+${formatDecimal(remainingCarbs)}g"
+                    else -> "-${formatDecimal(kotlin.math.abs(remainingCarbs))}g"
+                }
+                val remainingColor = when {
+                    kotlin.math.abs(remainingCarbs) < 0.05 -> MaterialTheme.colorScheme.primary
+                    remainingCarbs > 0 -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.tertiary
+                }
+                Text(
+                    text = remainingText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = remainingColor
+                )
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(listGap)
+        ) {
+            itemsIndexed(mealItems, key = { _, item -> item.id }) { index: Int, item: MealItem ->
+                MealItemRow(
+                    index = index,
+                    item = item,
+                    searchableFoods = searchableFoods,
+                    onUpdate = { updated -> onUpdate(index, updated) },
+                    canDelete = mealItems.size > 1,
+                    compact = compact,
+                    onEditFood = { onEditFood(item) },
+                    onDelete = { onDelete(index) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalculatorActions(
+    compact: Boolean,
+    hasEditableMeal: Boolean,
+    stacked: Boolean,
+    onAddFood: () -> Unit,
+    onClearMeal: () -> Unit
+) {
+    val buttonHeight = if (compact) 44.dp else 48.dp
+    val content: @Composable RowScope.() -> Unit = {
+        Button(
+            onClick = onAddFood,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = buttonHeight),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(Strings.addAnotherFoodToMeal())
+        }
+
+        OutlinedButton(
+            onClick = onClearMeal,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = buttonHeight),
+            enabled = hasEditableMeal,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Icon(Icons.Default.Delete, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(Strings.clearMeal())
+        }
+    }
+
+    if (stacked) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = onAddFood,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = buttonHeight),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(Strings.addAnotherFoodToMeal())
+            }
+
+            OutlinedButton(
+                onClick = onClearMeal,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = buttonHeight),
+                enabled = hasEditableMeal,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(Strings.clearMeal())
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
 private fun TotalCarbsCard(
     totalCarbs: Double,
     compact: Boolean,
@@ -592,23 +775,29 @@ private fun TotalCarbsCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(
-                horizontal = if (compact) 18.dp else 20.dp,
-                vertical = if (compact) 12.dp else 20.dp
-            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = if (compact) 18.dp else 20.dp,
+                    vertical = if (compact) 12.dp else 20.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = Strings.totalCarbs(),
                 style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
             Text(
                 text = "${((totalCarbs * 10).toInt() / 10.0)}g",
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
-                fontSize = if (compact) 42.sp else 54.sp
+                fontSize = if (compact) 42.sp else 54.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -692,6 +881,7 @@ private fun MealItemRow(
     searchableFoods: List<SearchableFood>,
     onUpdate: (MealItem) -> Unit,
     canDelete: Boolean,
+    compact: Boolean,
     onEditFood: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -780,8 +970,11 @@ private fun MealItemRow(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                    .padding(
+                        horizontal = if (compact) 12.dp else 14.dp,
+                        vertical = if (compact) 6.dp else 8.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
