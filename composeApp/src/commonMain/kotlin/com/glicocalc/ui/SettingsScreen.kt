@@ -90,13 +90,15 @@ fun SettingsScreen(
                                     else Strings.syncStatusNotSignedIn()
                                 )
                             } else {
-                                familyMembers.take(2).forEach { member ->
-                                    val label = member.name.ifBlank { member.email }
-                                    Text(label)
+                                val membersText = buildString {
+                                    append(familyMembers.take(2).joinToString(", ") { member ->
+                                        member.name.ifBlank { member.email }
+                                    })
+                                    if (familyMembers.size > 2) {
+                                        append(", +${familyMembers.size - 2} more")
+                                    }
                                 }
-                                if (familyMembers.size > 2) {
-                                    Text("+${familyMembers.size - 2} more")
-                                }
+                                Text(membersText)
                             }
                             if (isSignedIn) {
                                 val statusText = buildString {
