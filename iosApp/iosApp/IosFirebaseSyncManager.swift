@@ -165,6 +165,9 @@ final class IosFirebaseSyncManager {
         // 3. Fetch and reconcile dishes
         let remoteDishes = try await fetchRemoteDishes(collection: familyDoc.collection("dishes"))
         repository.reconcileRemoteDishes(remoteDishes: remoteDishes)
+
+        let remoteMealTypes = try await fetchRemoteMealTypes(collection: familyDoc.collection("mealTypes"))
+        repository.reconcileRemoteMealTypes(remoteMealTypes: remoteMealTypes, preserveLocalChanges: user.uid == ownerUid)
         
         // 4. Fetch and reconcile settings
         let remoteSettings = try await fetchRemoteSettings(collection: familyDoc.collection("settings"))
@@ -180,6 +183,13 @@ final class IosFirebaseSyncManager {
             if let remoteDish = repository.getRemoteDishRecord(dishId: dish.id) {
                 try await syncDish(collection: familyDoc.collection("dishes"), dish: remoteDish)
                 repository.markDishSynced(id: dish.id)
+            }
+        }
+
+        if user.uid == ownerUid {
+            for mealType in repository.getMealTypesNeedingSync() {
+                try await syncMealType(collection: familyDoc.collection("mealTypes"), mealType: mealType)
+                repository.markMealTypeSynced(id: mealType.id)
             }
         }
         
@@ -251,6 +261,25 @@ final class IosFirebaseSyncManager {
         }
     }
 
+    private func fetchRemoteMealTypes(collection: CollectionReference) async throws -> [RemoteMealTypeRecord] {
+        let snapshot = try await collection.getDocuments()
+        return snapshot.documents.compactMap { doc -> RemoteMealTypeRecord? in
+            let data = doc.data()
+            guard let name = data["name"] as? String,
+                  let targetCarbs = data["targetCarbs"] as? Double,
+                  let hourOfDay = data["hourOfDay"] as? Int64 else { return nil }
+
+            return RemoteMealTypeRecord(
+                remoteKey: doc.documentID,
+                name: name,
+                targetCarbs: targetCarbs,
+                hourOfDay: hourOfDay,
+                isDeleted: data["isDeleted"] as? Bool ?? false,
+                updatedAt: data["updatedAt"] as? Int64 ?? 0
+            )
+        }
+    }
+
     private func syncDish(collection: CollectionReference, dish: RemoteDishRecord) async throws {
         let components = dish.components.map { [
             "foodRemoteKey": $0.foodRemoteKey,
@@ -263,6 +292,17 @@ final class IosFirebaseSyncManager {
             "isDeleted": dish.isDeleted,
             "updatedAt": dish.updatedAt,
             "components": components
+        ], merge: true)
+    }
+
+    private func syncMealType(collection: CollectionReference, mealType: MealType) async throws {
+        guard let remoteMealType = repository.getRemoteMealTypeRecord(mealType: mealType) else { return }
+        try await collection.document(remoteMealType.remoteKey).setData([
+            "name": remoteMealType.name,
+            "targetCarbs": remoteMealType.targetCarbs,
+            "hourOfDay": remoteMealType.hourOfDay,
+            "isDeleted": remoteMealType.isDeleted,
+            "updatedAt": remoteMealType.updatedAt
         ], merge: true)
     }
 

@@ -4,18 +4,22 @@ import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 data class InitialFood(val idSuffix: Int, val name: String, val carbs: Double)
-data class InitialMealType(val name: String, val hourOfDay: Long, val targetCarbs: Double)
+data class InitialMealType(val remoteKey: String, val name: String, val hourOfDay: Long, val targetCarbs: Double)
 data class SeedFood(val remoteKey: String, val name: String, val carbs: Double)
 
 object InitialData {
     val mealTypes = listOf(
-        InitialMealType("Breakfast", 7, 50.0),
-        InitialMealType("Snack 1", 10, 25.0),
-        InitialMealType("Lunch", 13, 75.0),
-        InitialMealType("Snack 2", 16, 25.0),
-        InitialMealType("Dinner", 19, 50.0),
-        InitialMealType("Snack 3", 22, 25.0)
+        InitialMealType("meal-breakfast", "Breakfast", 7, 50.0),
+        InitialMealType("meal-snack-1", "Snack 1", 10, 25.0),
+        InitialMealType("meal-lunch", "Lunch", 13, 75.0),
+        InitialMealType("meal-snack-2", "Snack 2", 16, 25.0),
+        InitialMealType("meal-dinner", "Dinner", 19, 50.0),
+        InitialMealType("meal-snack-3", "Snack 3", 22, 25.0)
     )
+
+    fun defaultMealTypeByRemoteKey(remoteKey: String): InitialMealType? {
+        return mealTypes.firstOrNull { it.remoteKey == remoteKey }
+    }
 
     val foods = listOf(
         // Pâine și Cereale (Bread & Cereals)

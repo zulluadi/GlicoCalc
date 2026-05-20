@@ -6,6 +6,8 @@ import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import kotlinx.coroutines.flow.Flow
+import kotlin.math.absoluteValue
+import kotlin.random.Random
 
 class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver? = null) {
     private val queries = database.glicoDatabaseQueries
@@ -16,6 +18,9 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         const val CALCULATOR_MEAL_TYPE_ID_KEY = "calculator_meal_type_id"
         const val SYNC_INTERVAL_MINUTES_KEY = "sync_interval_minutes"
         const val FAMILY_NAME_KEY = "family_name"
+        const val MEAL_TYPES_USE_LOCAL_KEY = "meal_types_use_local"
+        const val MEAL_TYPE_SCOPE_FAMILY = "family"
+        const val MEAL_TYPE_SCOPE_LOCAL = "local"
         const val DEFAULT_SYNC_INTERVAL_MINUTES = 10
         const val MIN_SYNC_INTERVAL_MINUTES = 1
         const val MAX_SYNC_INTERVAL_MINUTES = 60
@@ -223,7 +228,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     }
 
     fun pendingSyncCount(): Int {
-        return getBaseFoodsNeedingSync().size + getDishesNeedingSync().size + getSettingsNeedingSync().size
+        return getBaseFoodsNeedingSync().size + getDishesNeedingSync().size + getMealTypesNeedingSync().size + getSettingsNeedingSync().size
     }
 
     fun getSettingsNeedingSync(): List<Setting> {
@@ -260,20 +265,133 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         }
     }
 
-    fun getAllMealTypes(): Flow<List<MealType>> {
-        return queries.selectAllMealTypes().asFlow().mapToList()
+    fun getAllMealTypes(useLocalOverride: Boolean = isUsingLocalMealTypes()): Flow<List<MealType>> {
+        return queries.selectAllMealTypes(mealTypeScope(useLocalOverride)).asFlow().mapToList()
     }
 
     fun insertMealType(name: String, targetCarbs: Double, hourOfDay: Long) {
-        queries.insertMealType(name, targetCarbs, hourOfDay)
+        val scope = activeMealTypeScope()
+        val now = PlatformTime.currentTimeMillis()
+        queries.insertMealType(
+            name = name,
+            targetCarbs = targetCarbs,
+            hourOfDay = hourOfDay,
+            remoteKey = generateMealTypeRemoteKey(),
+            scope = scope,
+            isDeleted = 0,
+            needsSync = if (scope == MEAL_TYPE_SCOPE_FAMILY) 1 else 0,
+            updatedAt = now
+        )
+        notifyLocalDataChanged()
     }
 
     fun updateMealType(id: Long, name: String, targetCarbs: Double, hourOfDay: Long) {
-        queries.updateMealType(name, targetCarbs, hourOfDay, id)
+        val mealType = queries.selectAllMealTypesIncludingDeleted(activeMealTypeScope())
+            .executeAsList()
+            .firstOrNull { it.id == id }
+            ?: return
+        val now = PlatformTime.currentTimeMillis()
+        queries.updateMealType(
+            name = name,
+            targetCarbs = targetCarbs,
+            hourOfDay = hourOfDay,
+            needsSync = if (mealType.scope == MEAL_TYPE_SCOPE_FAMILY) 1 else 0,
+            updatedAt = now,
+            id = id
+        )
+        notifyLocalDataChanged()
     }
 
     fun deleteMealType(id: Long) {
-        queries.deleteMealType(id)
+        val mealType = queries.selectAllMealTypesIncludingDeleted(activeMealTypeScope())
+            .executeAsList()
+            .firstOrNull { it.id == id }
+            ?: return
+        val now = PlatformTime.currentTimeMillis()
+        queries.deleteMealType(
+            needsSync = if (mealType.scope == MEAL_TYPE_SCOPE_FAMILY) 1 else 0,
+            updatedAt = now,
+            id = id
+        )
+        notifyLocalDataChanged()
+    }
+
+    fun isUsingLocalMealTypes(): Boolean {
+        return queries.selectSettingByKey(MEAL_TYPES_USE_LOCAL_KEY).executeAsOneOrNull()?.content == "true"
+    }
+
+    fun setUseLocalMealTypes(useLocal: Boolean) {
+        if (useLocal && queries.selectAllMealTypes(MEAL_TYPE_SCOPE_LOCAL).executeAsList().isEmpty()) {
+            copyActiveMealTypesToLocal()
+        }
+        queries.applyRemoteSetting(MEAL_TYPES_USE_LOCAL_KEY, useLocal.toString(), PlatformTime.currentTimeMillis())
+        notifyLocalDataChanged()
+    }
+
+    fun getMealTypesNeedingSync(): List<MealType> {
+        return queries.selectMealTypesNeedingSync().executeAsList()
+    }
+
+    fun markMealTypeSynced(id: Long) {
+        queries.markMealTypeSynced(id)
+    }
+
+    fun reconcileRemoteMealTypes(remoteMealTypes: List<RemoteMealTypeRecord>, preserveLocalChanges: Boolean = true) {
+        val remoteByKey = remoteMealTypes.associateBy { it.remoteKey }
+        val localMealTypes = queries.selectAllMealTypesIncludingDeleted(MEAL_TYPE_SCOPE_FAMILY).executeAsList()
+        val localByKey = localMealTypes.mapNotNull { mealType -> mealType.remoteKey?.let { it to mealType } }.toMap()
+
+        database.transaction {
+            remoteMealTypes.forEach { remoteMealType ->
+                val local = localByKey[remoteMealType.remoteKey]
+                if (local == null) {
+                    queries.insertMealType(
+                        name = remoteMealType.name,
+                        targetCarbs = remoteMealType.targetCarbs,
+                        hourOfDay = remoteMealType.hourOfDay,
+                        remoteKey = remoteMealType.remoteKey,
+                        scope = MEAL_TYPE_SCOPE_FAMILY,
+                        isDeleted = if (remoteMealType.isDeleted) 1 else 0,
+                        needsSync = 0,
+                        updatedAt = remoteMealType.updatedAt
+                    )
+                } else if ((!preserveLocalChanges || local.needsSync == 0L) && remoteMealType.updatedAt >= local.updatedAt) {
+                    queries.applyRemoteMealType(
+                        remoteMealType.name,
+                        remoteMealType.targetCarbs,
+                        remoteMealType.hourOfDay,
+                        if (remoteMealType.isDeleted) 1 else 0,
+                        remoteMealType.updatedAt,
+                        local.id
+                    )
+                }
+            }
+
+            localMealTypes.forEach { local ->
+                val remoteKey = local.remoteKey ?: return@forEach
+                if (preserveLocalChanges && local.needsSync != 0L) return@forEach
+                if (remoteByKey.containsKey(remoteKey)) return@forEach
+                val seed = InitialData.defaultMealTypeByRemoteKey(remoteKey)
+                if (seed != null) {
+                    queries.applyRemoteMealType(seed.name, seed.targetCarbs, seed.hourOfDay, 0, 0, local.id)
+                } else if (local.isDeleted == 0L) {
+                    queries.applyRemoteMealType(local.name, local.targetCarbs, local.hourOfDay, 1, local.updatedAt, local.id)
+                }
+            }
+        }
+    }
+
+    fun getRemoteMealTypeRecord(mealType: MealType): RemoteMealTypeRecord? {
+        val remoteKey = mealType.remoteKey ?: return null
+        if (mealType.scope != MEAL_TYPE_SCOPE_FAMILY) return null
+        return RemoteMealTypeRecord(
+            remoteKey = remoteKey,
+            name = mealType.name,
+            targetCarbs = mealType.targetCarbs,
+            hourOfDay = mealType.hourOfDay,
+            isDeleted = mealType.isDeleted != 0L,
+            updatedAt = mealType.updatedAt
+        )
     }
 
     fun insertDishWithComponents(name: String, totalCookedWeight: Double?, components: List<Pair<Long, Double>>) {
@@ -494,11 +612,37 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         } catch (_: Exception) {
             // Column already exists, ignore
         }
+        try {
+            d.execute(null, "ALTER TABLE MealType ADD COLUMN remoteKey TEXT", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE MealType ADD COLUMN scope TEXT NOT NULL DEFAULT 'family'", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE MealType ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE MealType ADD COLUMN needsSync INTEGER NOT NULL DEFAULT 0", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
+            d.execute(null, "ALTER TABLE MealType ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        prepareMealTypesForSync()
     }
 
     fun seedInitialData() {
         val existingFoods = queries.selectAllBaseFoodsIncludingDeleted().executeAsList()
-        val existingMealTypes = queries.selectAllMealTypes().executeAsList()
+        val existingMealTypes = queries.selectAllMealTypesIncludingDeleted(MEAL_TYPE_SCOPE_FAMILY).executeAsList()
 
         if (existingFoods.isEmpty()) {
             database.transaction {
@@ -543,9 +687,20 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         if (existingMealTypes.isEmpty()) {
             database.transaction {
                 InitialData.mealTypes.forEach {
-                    queries.insertMealType(it.name, it.targetCarbs, it.hourOfDay)
+                    queries.insertMealType(
+                        name = it.name,
+                        targetCarbs = it.targetCarbs,
+                        hourOfDay = it.hourOfDay,
+                        remoteKey = it.remoteKey,
+                        scope = MEAL_TYPE_SCOPE_FAMILY,
+                        isDeleted = 0,
+                        needsSync = 0,
+                        updatedAt = 0
+                    )
                 }
             }
+        } else {
+            prepareMealTypesForSync()
         }
     }
 
@@ -720,6 +875,56 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             ?.takeIf { it.isNotBlank() }
     }
 
+    private fun activeMealTypeScope(): String {
+        return mealTypeScope(isUsingLocalMealTypes())
+    }
+
+    private fun mealTypeScope(useLocalOverride: Boolean): String {
+        return if (useLocalOverride) MEAL_TYPE_SCOPE_LOCAL else MEAL_TYPE_SCOPE_FAMILY
+    }
+
+    private fun copyActiveMealTypesToLocal() {
+        val sourceMealTypes = queries.selectAllMealTypes(MEAL_TYPE_SCOPE_FAMILY).executeAsList()
+        database.transaction {
+            queries.deleteMealTypesByScope(MEAL_TYPE_SCOPE_LOCAL)
+            sourceMealTypes.forEach { mealType ->
+                queries.insertMealType(
+                    name = mealType.name,
+                    targetCarbs = mealType.targetCarbs,
+                    hourOfDay = mealType.hourOfDay,
+                    remoteKey = "local-${generateMealTypeRemoteKey()}",
+                    scope = MEAL_TYPE_SCOPE_LOCAL,
+                    isDeleted = 0,
+                    needsSync = 0,
+                    updatedAt = PlatformTime.currentTimeMillis()
+                )
+            }
+        }
+    }
+
+    private fun prepareMealTypesForSync() {
+        val mealTypes = queries.selectAllMealTypesIncludingDeleted(MEAL_TYPE_SCOPE_FAMILY).executeAsList()
+        val seededByName = InitialData.mealTypes.associateBy { it.name }
+        val now = PlatformTime.currentTimeMillis()
+        database.transaction {
+            mealTypes.forEach { mealType ->
+                if (mealType.remoteKey != null) return@forEach
+                val seed = seededByName[mealType.name]
+                queries.updateMealTypeSyncMetadata(
+                    remoteKey = seed?.remoteKey ?: generateMealTypeRemoteKey(),
+                    scope = MEAL_TYPE_SCOPE_FAMILY,
+                    needsSync = if (seed != null && mealType.targetCarbs == seed.targetCarbs && mealType.hourOfDay == seed.hourOfDay) 0 else 1,
+                    updatedAt = now,
+                    id = mealType.id
+                )
+            }
+        }
+    }
+
+    private fun generateMealTypeRemoteKey(): String {
+        return "meal-${PlatformTime.currentTimeMillis()}-${Random.nextInt().absoluteValue}"
+    }
+
     private fun notifyLocalDataChanged() {
         onFoodsChanged?.invoke()
     }
@@ -755,6 +960,15 @@ data class RemoteDishRecord(
 data class RemoteDishComponentRecord(
     val foodRemoteKey: String,
     val weightGrams: Double
+)
+
+data class RemoteMealTypeRecord(
+    val remoteKey: String,
+    val name: String,
+    val targetCarbs: Double,
+    val hourOfDay: Long,
+    val isDeleted: Boolean,
+    val updatedAt: Long
 )
 
 enum class FoodSource(val value: String) {

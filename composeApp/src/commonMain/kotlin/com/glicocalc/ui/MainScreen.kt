@@ -78,6 +78,7 @@ fun MainApp(
         var editingDishId by remember { mutableStateOf<Long?>(null) }
         var showLanguageDialog by remember { mutableStateOf(false) }
         var showFoodLanguageDialog by remember { mutableStateOf(false) }
+        var useLocalMealTypes by remember { mutableStateOf(repository.isUsingLocalMealTypes()) }
 
         BackHandler(enabled = currentScreen != Screen.Calculator) {
             when (currentScreen) {
@@ -91,8 +92,12 @@ fun MainApp(
         val allBaseFoods by repository.getAllBaseFoodsIncludingDeletedFlow().collectAsState(initial = emptyList())
         val dishes by repository.getAllDishes().collectAsState(initial = emptyList())
         val allDishes by repository.getAllDishesIncludingDeletedFlow().collectAsState(initial = emptyList())
-        val mealTypes by repository.getAllMealTypes().collectAsState(initial = emptyList())
+        val mealTypesFlow = remember(repository, useLocalMealTypes) {
+            repository.getAllMealTypes(useLocalMealTypes)
+        }
+        val mealTypes by mealTypesFlow.collectAsState(initial = emptyList())
         val canResetFoodList = !isSignedIn || isFamilyOwner
+        val canManageMealTypes = !isSignedIn || isFamilyOwner || useLocalMealTypes
 
         LaunchedEffect(currentScreen) {
             telemetry.screenViewed(currentScreen.name)
@@ -350,7 +355,16 @@ fun MainApp(
                     )
                     Screen.MealTypes -> MealTypesScreen(
                         mealTypes = mealTypes,
+                        useLocalMealTypes = useLocalMealTypes,
+                        canManageMealTypes = canManageMealTypes,
+                        showLocalMealTypesOption = isSignedIn && !isFamilyOwner,
+                        isSignedIn = isSignedIn,
+                        isFamilyOwner = isFamilyOwner,
                         onBack = { currentScreen = Screen.Settings },
+                        onUseLocalMealTypesChanged = { useLocal ->
+                            useLocalMealTypes = useLocal
+                            repository.setUseLocalMealTypes(useLocal)
+                        },
                         onAddMealType = { name, targetCarbs, hourOfDay ->
                             telemetry.action("meal_type_added")
                             scope.launch { repository.insertMealType(name, targetCarbs, hourOfDay.toLong()) }

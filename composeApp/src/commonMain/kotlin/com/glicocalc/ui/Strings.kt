@@ -125,6 +125,11 @@ import glicocalc.composeapp.generated.resources.reset_food_list_warning
 import org.jetbrains.compose.resources.stringResource
 import glicocalc.composeapp.generated.resources.total_carbs
 import glicocalc.composeapp.generated.resources.undo
+import glicocalc.composeapp.generated.resources.use_local_meal_types
+import glicocalc.composeapp.generated.resources.use_local_meal_types_description
+import glicocalc.composeapp.generated.resources.meal_types_status_local
+import glicocalc.composeapp.generated.resources.meal_types_status_synced
+import glicocalc.composeapp.generated.resources.meal_types_status_managed_by_owner
 import glicocalc.composeapp.generated.resources.weight
 import glicocalc.composeapp.generated.resources.packed_food
 import glicocalc.composeapp.generated.resources.pack_total_weight
@@ -215,6 +220,11 @@ object Strings {
     @Composable fun mealTypes() = stringResource(Res.string.meal_types)
     @Composable fun mealTypesDescription() = stringResource(Res.string.meal_types_description)
     @Composable fun mealTypesCarePlanNote() = stringResource(Res.string.meal_types_care_plan_note)
+    @Composable fun useLocalMealTypes() = stringResource(Res.string.use_local_meal_types)
+    @Composable fun useLocalMealTypesDescription() = stringResource(Res.string.use_local_meal_types_description)
+    @Composable fun mealTypesStatusLocal() = stringResource(Res.string.meal_types_status_local)
+    @Composable fun mealTypesStatusSynced() = stringResource(Res.string.meal_types_status_synced)
+    @Composable fun mealTypesStatusManagedByOwner() = stringResource(Res.string.meal_types_status_managed_by_owner)
     @Composable fun noMealTypesConfigured() = stringResource(Res.string.no_meal_types_configured)
     @Composable fun mealType() = stringResource(Res.string.meal_type)
     @Composable fun mealTypeSelector() = stringResource(Res.string.meal_type_selector)

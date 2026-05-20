@@ -5,9 +5,11 @@ import android.util.Log
 import com.glicocalc.database.BaseFood
 import com.glicocalc.database.FoodSource
 import com.glicocalc.database.GlicoRepository
+import com.glicocalc.database.MealType
 import com.glicocalc.database.RemoteDishComponentRecord
 import com.glicocalc.database.RemoteDishRecord
 import com.glicocalc.database.RemoteFoodRecord
+import com.glicocalc.database.RemoteMealTypeRecord
 import com.glicocalc.database.RemoteSettingRecord
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.AuthCredential
@@ -609,16 +611,19 @@ class FirebaseFoodSyncManager(
         publishCurrentUserProfileIfOwner(user, familyId)
         syncFamilyMemberProfiles(familyId)
         publishPendingFamilyInvites(user, familyId)
+        val isFamilyOwner = isCurrentUserFamilyOwner()
 
         val familyDoc = firestore!!.collection("families").document(familyId)
         val foodsCollection = familyDoc.collection("foodDiffs")
         val dishesCollection = familyDoc.collection("dishes")
+        val mealTypesCollection = familyDoc.collection("mealTypes")
         val settingsCollection = familyDoc.collection("settings")
 
         migrateFromOldPathIfNeeded(user.uid, foodsCollection, dishesCollection, settingsCollection)
 
         repository.reconcileRemoteFoods(fetchRemoteFoods(foodsCollection))
         repository.reconcileRemoteDishes(fetchRemoteDishes(dishesCollection))
+        repository.reconcileRemoteMealTypes(fetchRemoteMealTypes(mealTypesCollection), preserveLocalChanges = isFamilyOwner)
         repository.reconcileRemoteSettings(fetchRemoteSettings(settingsCollection))
 
         repository.getBaseFoodsNeedingSync().forEach { food ->
@@ -631,6 +636,13 @@ class FirebaseFoodSyncManager(
             repository.markDishSynced(dish.id)
         }
 
+        if (isFamilyOwner) {
+            repository.getMealTypesNeedingSync().forEach { mealType ->
+                syncMealType(mealTypesCollection, mealType)
+                repository.markMealTypeSynced(mealType.id)
+            }
+        }
+
         repository.getSettingsNeedingSync().forEach { setting ->
             syncSetting(settingsCollection, setting)
             repository.markSettingSynced(setting.key)
@@ -638,6 +650,7 @@ class FirebaseFoodSyncManager(
 
         repository.reconcileRemoteFoods(fetchRemoteFoods(foodsCollection))
         repository.reconcileRemoteDishes(fetchRemoteDishes(dishesCollection))
+        repository.reconcileRemoteMealTypes(fetchRemoteMealTypes(mealTypesCollection), preserveLocalChanges = isFamilyOwner)
         repository.reconcileRemoteSettings(fetchRemoteSettings(settingsCollection))
     }
 
@@ -769,6 +782,27 @@ class FirebaseFoodSyncManager(
         }
     }
 
+    private suspend fun fetchRemoteMealTypes(
+        collection: CollectionReference
+    ): List<RemoteMealTypeRecord> {
+        return collection.get().await().documents.mapNotNull { document ->
+            val data = document.data ?: return@mapNotNull null
+            val name = data["name"] as? String ?: return@mapNotNull null
+            val targetCarbs = (data["targetCarbs"] as? Number)?.toDouble() ?: return@mapNotNull null
+            val hourOfDay = (data["hourOfDay"] as? Number)?.toLong() ?: return@mapNotNull null
+            val updatedAt = (data["updatedAt"] as? Number)?.toLong() ?: 0L
+            val isDeleted = data["isDeleted"] as? Boolean ?: false
+            RemoteMealTypeRecord(
+                remoteKey = document.id,
+                name = name,
+                targetCarbs = targetCarbs,
+                hourOfDay = hourOfDay,
+                isDeleted = isDeleted,
+                updatedAt = updatedAt
+            )
+        }
+    }
+
     private suspend fun fetchRemoteSettings(
         collection: CollectionReference
     ): List<RemoteSettingRecord> {
@@ -814,6 +848,22 @@ class FirebaseFoodSyncManager(
             mapOf(
                 "content" to setting.content,
                 "updatedAt" to setting.updatedAt
+            )
+        ).await()
+    }
+
+    private suspend fun syncMealType(
+        collection: CollectionReference,
+        mealType: MealType
+    ) {
+        val remoteMealType = repository.getRemoteMealTypeRecord(mealType) ?: return
+        collection.document(remoteMealType.remoteKey).set(
+            mapOf(
+                "name" to remoteMealType.name,
+                "targetCarbs" to remoteMealType.targetCarbs,
+                "hourOfDay" to remoteMealType.hourOfDay,
+                "isDeleted" to remoteMealType.isDeleted,
+                "updatedAt" to remoteMealType.updatedAt
             )
         ).await()
     }

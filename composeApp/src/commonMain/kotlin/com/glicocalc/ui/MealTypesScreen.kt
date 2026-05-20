@@ -17,6 +17,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -32,7 +36,13 @@ import com.glicocalc.ui.components.MealTypeEditorDialog
 @Composable
 fun MealTypesScreen(
     mealTypes: List<MealType>,
+    useLocalMealTypes: Boolean,
+    canManageMealTypes: Boolean,
+    showLocalMealTypesOption: Boolean,
+    isSignedIn: Boolean,
+    isFamilyOwner: Boolean,
     onBack: () -> Unit,
+    onUseLocalMealTypesChanged: (Boolean) -> Unit,
     onAddMealType: (name: String, targetCarbs: Double, hourOfDay: Int) -> Unit,
     onEditMealType: (id: Long, name: String, targetCarbs: Double, hourOfDay: Int) -> Unit,
     onDeleteMealType: (id: Long) -> Unit,
@@ -54,8 +64,10 @@ fun MealTypesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddMealTypeDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = Strings.addMealType())
+            if (canManageMealTypes) {
+                FloatingActionButton(onClick = { showAddMealTypeDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = Strings.addMealType())
+                }
             }
         },
         modifier = modifier
@@ -66,16 +78,46 @@ fun MealTypesScreen(
                 .fillMaxSize()
         ) {
             item {
+                if (showLocalMealTypesOption) {
+                    ListItem(
+                        headlineContent = { Text(Strings.useLocalMealTypes()) },
+                        supportingContent = { Text(Strings.useLocalMealTypesDescription()) },
+                        trailingContent = {
+                            Switch(
+                                checked = useLocalMealTypes,
+                                onCheckedChange = onUseLocalMealTypesChanged
+                            )
+                        },
+                        modifier = Modifier.clickable { onUseLocalMealTypesChanged(!useLocalMealTypes) }
+                    )
+                    HorizontalDivider()
+                }
                 ListItem(
                     headlineContent = { Text(Strings.mealTypes()) },
                     supportingContent = {
-                        Text(
-                            if (mealTypes.isEmpty()) {
-                                Strings.noMealTypesConfigured()
-                            } else {
-                                "${Strings.mealTypesDescription()} ${Strings.mealTypesCarePlanNote()}"
-                            }
-                        )
+                        val statusText = when {
+                            !isSignedIn -> Strings.mealTypesStatusLocal()
+                            useLocalMealTypes -> Strings.mealTypesStatusLocal()
+                            isFamilyOwner -> Strings.mealTypesStatusSynced()
+                            else -> Strings.mealTypesStatusManagedByOwner()
+                        }
+                        Column(
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text(
+                                if (mealTypes.isEmpty()) {
+                                    Strings.noMealTypesConfigured()
+                                } else {
+                                    "${Strings.mealTypesDescription()} ${Strings.mealTypesCarePlanNote()}"
+                                }
+                            )
+                            Text(
+                                text = statusText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
                     }
                 )
                 HorizontalDivider()
@@ -87,16 +129,26 @@ fun MealTypesScreen(
                         Text("${formatHour(mealType.hourOfDay.toInt())} • ${formatDecimal(mealType.targetCarbs)}g")
                     },
                     leadingContent = {
-                        IconButton(onClick = { onDeleteMealType(mealType.id) }) {
+                        IconButton(
+                            enabled = canManageMealTypes,
+                            onClick = { onDeleteMealType(mealType.id) }
+                        ) {
                             Icon(Icons.Default.Delete, contentDescription = Strings.delete())
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = { mealTypeToEdit = mealType }) {
+                        IconButton(
+                            enabled = canManageMealTypes,
+                            onClick = { mealTypeToEdit = mealType }
+                        ) {
                             Icon(Icons.Default.Edit, contentDescription = Strings.edit())
                         }
                     },
-                    modifier = Modifier.clickable { mealTypeToEdit = mealType }
+                    modifier = if (canManageMealTypes) {
+                        Modifier.clickable { mealTypeToEdit = mealType }
+                    } else {
+                        Modifier
+                    }
                 )
                 HorizontalDivider()
             }

@@ -25,7 +25,12 @@ class DatabaseDriverFactory(private val context: Context) {
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 name TEXT NOT NULL,
                                 targetCarbs REAL NOT NULL,
-                                hourOfDay INTEGER NOT NULL
+                                hourOfDay INTEGER NOT NULL,
+                                remoteKey TEXT,
+                                scope TEXT NOT NULL DEFAULT 'family',
+                                isDeleted INTEGER NOT NULL DEFAULT 0,
+                                needsSync INTEGER NOT NULL DEFAULT 0,
+                                updatedAt INTEGER NOT NULL DEFAULT 0
                             )
                             """.trimIndent()
                         )
@@ -63,7 +68,12 @@ class DatabaseDriverFactory(private val context: Context) {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     targetCarbs REAL NOT NULL,
-                    hourOfDay INTEGER NOT NULL
+                    hourOfDay INTEGER NOT NULL,
+                    remoteKey TEXT,
+                    scope TEXT NOT NULL DEFAULT 'family',
+                    isDeleted INTEGER NOT NULL DEFAULT 0,
+                    needsSync INTEGER NOT NULL DEFAULT 0,
+                    updatedAt INTEGER NOT NULL DEFAULT 0
                 )
             """.trimIndent(),
             parameters = 0
@@ -80,6 +90,7 @@ class DatabaseDriverFactory(private val context: Context) {
         )
         ensureBaseFoodSyncColumns(driver)
         ensureDishSyncColumns(driver)
+        ensureMealTypeSyncColumns(driver)
         ensureSettingSyncColumns(driver)
         ensureFamilyMemberTable(driver)
         return driver
@@ -110,6 +121,14 @@ class DatabaseDriverFactory(private val context: Context) {
             parameters = 0
         )
         safeExecute(driver, "ALTER TABLE DishComponent ADD COLUMN weightGrams REAL NOT NULL DEFAULT 0")
+    }
+
+    private fun ensureMealTypeSyncColumns(driver: SqlDriver) {
+        safeExecute(driver, "ALTER TABLE MealType ADD COLUMN remoteKey TEXT")
+        safeExecute(driver, "ALTER TABLE MealType ADD COLUMN scope TEXT NOT NULL DEFAULT 'family'")
+        safeExecute(driver, "ALTER TABLE MealType ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0")
+        safeExecute(driver, "ALTER TABLE MealType ADD COLUMN needsSync INTEGER NOT NULL DEFAULT 0")
+        safeExecute(driver, "ALTER TABLE MealType ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
     }
 
     private fun ensureSettingSyncColumns(driver: SqlDriver) {

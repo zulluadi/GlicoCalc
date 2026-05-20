@@ -74,6 +74,11 @@
     <string name="meal_types">Meal types</string>
     <string name="meal_types_description">Set the target carbs and hour for each meal.</string>
     <string name="meal_types_care_plan_note">Adjust carbs and hours to match your care plan.</string>
+    <string name="use_local_meal_types">Use local meal types</string>
+    <string name="use_local_meal_types_description">Keep a private copy on this device. Family changes will not replace it, and your edits will not sync back.</string>
+    <string name="meal_types_status_local">Meal types are currently local to this device.</string>
+    <string name="meal_types_status_synced">Meal types are synced with your family.</string>
+    <string name="meal_types_status_managed_by_owner">Meal types are managed by the family owner.</string>
     <string name="no_meal_types_configured">No meal types configured yet.</string>
     <string name="add_meal_type">Add meal type</string>
     <string name="add_meal_type_title">Add meal type</string>
