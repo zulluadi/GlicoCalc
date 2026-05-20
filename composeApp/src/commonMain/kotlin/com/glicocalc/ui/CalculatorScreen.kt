@@ -1,8 +1,6 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -17,12 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +67,11 @@ private data class SearchableFood(
     val localizedName: String,
     val normalizedRawName: String,
     val normalizedLocalizedName: String
+)
+
+private data class ActiveFoodPicker(
+    val itemId: Long,
+    val initialQuery: String
 )
 
 private enum class EditedField {
@@ -293,6 +296,7 @@ fun CalculatorScreen(
     val scope = rememberCoroutineScope()
     var selectedMealTypeId by remember { mutableStateOf<Long?>(null) }
     var dishesWithCarbs by remember(dishes, baseFoods) { mutableStateOf(emptyList<GlicoRepository.DishWithCarbs>()) }
+    var activeFoodPicker by remember { mutableStateOf<ActiveFoodPicker?>(null) }
 
     LaunchedEffect(Unit) {
         val draft = withContext(Dispatchers.IO) {
@@ -329,6 +333,23 @@ fun CalculatorScreen(
                 localizedName = localizedName,
                 normalizedRawName = food.name.removeDiacritics(),
                 normalizedLocalizedName = localizedName.removeDiacritics()
+            )
+        }
+    }
+    val foodPickerOptions = remember(searchableDishes, searchableFoods, dishCarbsMap) {
+        searchableDishes.map { searchableDish ->
+            FoodPickerOption(
+                key = "dish-${searchableDish.dish.id}",
+                title = searchableDish.dish.name,
+                detail = dishCarbsMap[searchableDish.dish.id]?.let { "${formatDecimal(it)}%" },
+                searchTerms = listOf(searchableDish.dish.name)
+            )
+        } + searchableFoods.map { searchableFood ->
+            FoodPickerOption(
+                key = "food-${searchableFood.food.id}",
+                title = searchableFood.localizedName,
+                detail = "${formatDecimal(searchableFood.food.carbsPer100g)}%",
+                searchTerms = listOf(searchableFood.food.name, searchableFood.localizedName)
             )
         }
     }
@@ -429,23 +450,23 @@ fun CalculatorScreen(
                     MealItemRow(
                         index = index,
                         item = item,
-                        dishCarbsMap = dishCarbsMap,
-                        searchableDishes = searchableDishes,
                         searchableFoods = searchableFoods,
-                        onSelectDish = onSelectDish,
-                        onSelectBaseFood = onSelectBaseFood,
                         onUpdate = { updated -> mealItems[index] = updated },
                         canDelete = mealItems.size > 1,
+                        onEditFood = {
+                            activeFoodPicker = ActiveFoodPicker(
+                                itemId = item.id,
+                                initialQuery = item.selectedDish?.dish?.name
+                                    ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
+                                    ?: item.selectedBaseFood?.name
+                                    ?: ""
+                            )
+                        },
                         onDelete = {
                             if (mealItems.size > 1) {
                                 mealItems.removeAt(index)
                             } else {
                                 mealItems[index] = MealItem()
-                            }
-                        },
-                        onExpanded = {
-                            scope.launch {
-                                listState.animateScrollToItem(index)
                             }
                         }
                     )
@@ -460,7 +481,9 @@ fun CalculatorScreen(
                 ) {
                     Button(
                         onClick = {
-                            mealItems.add(0, MealItem())
+                            val newItem = MealItem()
+                            mealItems.add(0, newItem)
+                            activeFoodPicker = ActiveFoodPicker(itemId = newItem.id, initialQuery = "")
                             scope.launch { listState.scrollToItem(0) }
                         },
                         modifier = Modifier
@@ -508,6 +531,51 @@ fun CalculatorScreen(
                     )
                 }
             }
+        }
+
+        activeFoodPicker?.let { picker ->
+            FoodSearchPickerOverlay(
+                initialQuery = picker.initialQuery,
+                options = foodPickerOptions,
+                onSelectOption = { option ->
+                    val itemIndex = mealItems.indexOfFirst { it.id == picker.itemId }
+                    val selectedDish = option.key
+                        .takeIf { it.startsWith("dish-") }
+                        ?.removePrefix("dish-")
+                        ?.toLongOrNull()
+                        ?.let(onSelectDish)
+                    val selectedFood = option.key
+                        .takeIf { it.startsWith("food-") }
+                        ?.removePrefix("food-")
+                        ?.toLongOrNull()
+                        ?.let(onSelectBaseFood)
+                    if (itemIndex >= 0 && (selectedDish != null || selectedFood != null)) {
+                        mealItems[itemIndex] = syncMealItem(
+                            item = mealItems[itemIndex].copy(weightText = "", carbsText = "", usePieces = false),
+                            selectedDish = selectedDish,
+                            selectedBaseFood = selectedFood
+                        )
+                    }
+                    activeFoodPicker = null
+                    focusManager.clearFocus()
+                },
+                onClearSelection = {
+                    val itemIndex = mealItems.indexOfFirst { it.id == picker.itemId }
+                    if (itemIndex >= 0) {
+                        mealItems[itemIndex] = mealItems[itemIndex].copy(
+                            selectedDish = null,
+                            selectedBaseFood = null,
+                            weightText = "",
+                            carbsText = "",
+                            usePieces = false
+                        )
+                    }
+                },
+                onDismiss = {
+                    activeFoodPicker = null
+                    focusManager.clearFocus()
+                }
+            )
         }
     }
 }
@@ -621,20 +689,12 @@ private fun nextMealTypeForHour(mealTypes: List<MealType>, currentHour: Int): Me
 private fun MealItemRow(
     index: Int,
     item: MealItem,
-    dishCarbsMap: Map<Long, Double>,
-    searchableDishes: List<SearchableDish>,
     searchableFoods: List<SearchableFood>,
-    onSelectDish: (Long) -> DishWithComposition?,
-    onSelectBaseFood: (Long) -> BaseFood?,
     onUpdate: (MealItem) -> Unit,
     canDelete: Boolean,
-    onDelete: () -> Unit,
-    onExpanded: () -> Unit
+    onEditFood: () -> Unit,
+    onDelete: () -> Unit
 ) {
-    val focusManager = LocalFocusManager.current
-    var expanded by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf(item.displayName) }
-    var textFieldState by remember { mutableStateOf(TextFieldValue(item.displayName)) }
     val currentOnDelete by rememberUpdatedState(onDelete)
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
@@ -646,56 +706,13 @@ private fun MealItemRow(
             }
         }
     )
-    
-    LaunchedEffect(expanded) {
-        if (expanded) {
-            // Removed aggressive scroll
-        }
-    }
-
-    LaunchedEffect(item.selectedDish, item.selectedBaseFood, searchableFoods) {
-        val newDisplayName = item.selectedDish?.dish?.name
-            ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
-            ?: item.selectedBaseFood?.name
-            ?: ""
-        if (newDisplayName != searchQuery) {
-            searchQuery = newDisplayName
-            textFieldState = TextFieldValue(newDisplayName)
-        }
-    }
-
-    val normalizedQuery = searchQuery.removeDiacritics()
-    val filteredResults by remember(searchQuery, searchableDishes, searchableFoods) {
-        derivedStateOf {
-            val matchingDishes = if (searchQuery.isBlank()) {
-                searchableDishes.take(50).map { it.dish }
-            } else {
-                searchableDishes
-                    .asSequence()
-                    .filter { it.normalizedName.contains(normalizedQuery, ignoreCase = true) }
-                    .map { it.dish }
-                    .take(20)
-                    .toList()
-            }
-            val matchingFoods = if (searchQuery.isBlank()) {
-                searchableFoods.take(50)
-            } else {
-                searchableFoods
-                    .asSequence()
-                    .filter {
-                        it.normalizedRawName.contains(normalizedQuery, ignoreCase = true) ||
-                            it.normalizedLocalizedName.contains(normalizedQuery, ignoreCase = true)
-                    }
-                    .take(24)
-                    .toList()
-            }
-            matchingDishes to matchingFoods
-        }
-    }
-    val (filteredDishList, filteredFoodList) = filteredResults
 
     val selectedBaseFood = item.selectedBaseFood
     val isPackedFood = selectedBaseFood != null && selectedBaseFood.isPacked != 0L
+    val displayName = item.selectedDish?.dish?.name
+        ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
+        ?: item.selectedBaseFood?.name
+        ?: ""
 
     SwipeToDismissBox(
         state = dismissState,
@@ -771,130 +788,40 @@ private fun MealItemRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = textFieldState,
-                            onValueChange = { newValue ->
-                                textFieldState = newValue
-                                searchQuery = newValue.text
-                                expanded = true
-                            },
-                            label = {
-                                Text(
-                                    if (carbsInfo != null) carbsInfo
-                                    else Strings.mealItemLabel(index + 1)
-                                )
-                            },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            singleLine = true,
-                            suffix = {
-                                if (searchQuery.isNotBlank()) {
-                                    ClearTextButton {
-                                        searchQuery = ""
-                                        textFieldState = TextFieldValue("")
-                                        onUpdate(item.copy(selectedDish = null, selectedBaseFood = null, weightText = "", carbsText = "", usePieces = false))
-                                    }
+                    OutlinedTextField(
+                        value = displayName,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text(
+                                if (carbsInfo != null) carbsInfo
+                                else Strings.mealItemLabel(index + 1)
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = onEditFood) {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = false)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    onEditFood()
                                 }
                             }
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier
-                                .exposedDropdownSize()
-                                .heightIn(max = 250.dp)
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            if (filteredDishList.isEmpty() && filteredFoodList.isEmpty()) {
-                                if (searchQuery.isNotBlank()) {
-                                    DropdownMenuItem(
-                                        text = { Text(Strings.noResultsFound(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline) },
-                                        onClick = { },
-                                        enabled = false
-                                    )
-                                } else {
-                                    // Keep empty or show a hint
-                                }
-                            } else {
-                                filteredDishList.forEach { dish ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = dish.name,
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                                dishCarbsMap[dish.id]?.let { carbs ->
-                                                    Text(
-                                                        text = "${formatDecimal(carbs)}%",
-                                                        style = MaterialTheme.typography.labelMedium,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                            }
-                                        },
-                                        onClick = {
-                                            searchQuery = dish.name
-                                            textFieldState = TextFieldValue(dish.name)
-                                            onUpdate(
-                                                syncMealItem(
-                                                    item = item.copy(weightText = "", carbsText = "", usePieces = false),
-                                                    selectedDish = onSelectDish(dish.id),
-                                                    selectedBaseFood = null
-                                                )
-                                            )
-                                            expanded = false
-                                            focusManager.clearFocus()
-                                        }
-                                    )
-                                }
-                                filteredFoodList.forEach { searchableFood ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = searchableFood.localizedName,
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                                Text(
-                                                    text = "${formatDecimal(searchableFood.food.carbsPer100g)}%",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        },
-                                        onClick = {
-                                            searchQuery = searchableFood.localizedName
-                                            textFieldState = TextFieldValue(searchableFood.localizedName)
-                                            onUpdate(
-                                                syncMealItem(
-                                                    item = item.copy(weightText = "", carbsText = "", usePieces = false),
-                                                    selectedDish = null,
-                                                    selectedBaseFood = onSelectBaseFood(searchableFood.food.id)
-                                                )
-                                            )
-                                            expanded = false
-                                            focusManager.clearFocus()
-                                        }
-                                    )
+                            .pointerInput(item.id) {
+                                detectTapGestures { onEditFood() }
+                            },
+                        singleLine = true,
+                        suffix = {
+                            if (displayName.isNotBlank()) {
+                                ClearTextButton {
+                                    onUpdate(item.copy(selectedDish = null, selectedBaseFood = null, weightText = "", carbsText = "", usePieces = false))
                                 }
                             }
                         }
-                    }
+                    )
                 }
 
                 if (isPackedFood) {

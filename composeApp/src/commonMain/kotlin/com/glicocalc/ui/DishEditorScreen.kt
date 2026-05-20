@@ -1,8 +1,7 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -11,17 +10,29 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.glicocalc.database.BaseFood
-import com.glicocalc.logic.removeDiacritics
 import kotlinx.coroutines.launch
+
+data class ComponentState(
+    val foodId: Long? = null,
+    val weightGrams: String = "",
+    val searchQuery: String = ""
+)
+
+private data class ActiveIngredientPicker(
+    val componentIndex: Int,
+    val initialQuery: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,8 +47,10 @@ fun DishEditorScreen(
     val resolveFoodName = rememberBaseFoodNameResolver()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
     var dishName by remember { mutableStateOf(initialName) }
     var totalCookedWeightText by remember { mutableStateOf(initialTotalCookedWeight?.toString() ?: "") }
+    var activeIngredientPicker by remember { mutableStateOf<ActiveIngredientPicker?>(null) }
     val components = remember { mutableStateListOf<ComponentState>().apply { 
         if (initialComponents.isEmpty()) add(ComponentState()) 
         else addAll(initialComponents.map { (foodId, weightGrams) -> 
@@ -48,47 +61,59 @@ fun DishEditorScreen(
             ) 
         })
     } }
+    val foodPickerOptions = remember(allBaseFoods, resolveFoodName) {
+        allBaseFoods.map { food ->
+            val localizedName = resolveFoodName(food.name)
+            FoodPickerOption(
+                key = food.id.toString(),
+                title = localizedName,
+                detail = "${formatDecimal(food.carbsPer100g)}%",
+                searchTerms = listOf(food.name, localizedName)
+            )
+        }
+    }
 
     val canSave = dishName.isNotBlank() && totalCookedWeightText.toDoubleOrNull() != null && totalCookedWeightText.toDoubleOrNull()!! > 0.0 && components.any { it.foodId != null && it.weightGrams.toDoubleOrNull() != null }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(if (initialName.isEmpty()) Strings.newDishTitle() else Strings.editDishTitle()) },
-                navigationIcon = {
-                    IconButton(onClick = onCancel) {
-                        Icon(Icons.Default.Close, contentDescription = Strings.close())
-                    }
-                },
-                actions = {
-                    TextButton(
-                        enabled = canSave,
-                        onClick = {
-                            val validComponents = components.mapNotNull {
-                                val w = it.weightGrams.toDoubleOrNull()
-                                if (it.foodId != null && w != null) it.foodId to w else null
-                            }
-                            val cookedWeight = totalCookedWeightText.toDoubleOrNull()
-                            onSave(dishName, cookedWeight, validComponents)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(if (initialName.isEmpty()) Strings.newDishTitle() else Strings.editDishTitle()) },
+                    navigationIcon = {
+                        IconButton(onClick = onCancel) {
+                            Icon(Icons.Default.Close, contentDescription = Strings.close())
                         }
-                    ) {
-                        Text(
-                            text = Strings.save().uppercase(),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canSave) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                        )
+                    },
+                    actions = {
+                        TextButton(
+                            enabled = canSave,
+                            onClick = {
+                                val validComponents = components.mapNotNull {
+                                    val w = it.weightGrams.toDoubleOrNull()
+                                    if (it.foodId != null && w != null) it.foodId to w else null
+                                }
+                                val cookedWeight = totalCookedWeightText.toDoubleOrNull()
+                                onSave(dishName, cookedWeight, validComponents)
+                            }
+                        ) {
+                            Text(
+                                text = Strings.save().uppercase(),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = if (canSave) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                            )
+                        }
                     }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
             OutlinedTextField(
                 value = dishName,
                 onValueChange = { dishName = it },
@@ -112,97 +137,61 @@ fun DishEditorScreen(
             
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                state = listState
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 itemsIndexed(components) { index, component ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = { components.removeAt(index) }) {
                             Icon(Icons.Default.Delete, contentDescription = Strings.deleteRow(), tint = MaterialTheme.colorScheme.error)
                         }
 
-                        var expanded by remember { mutableStateOf(false) }
-                        
-                        LaunchedEffect(expanded) {
-                            if (expanded) {
-                                // Removed aggressive scroll
-                            }
-                        }
-                        
                         Box(modifier = Modifier.weight(1.5f)) {
-                            ExposedDropdownMenuBox(
-                                expanded = expanded,
-                                onExpandedChange = { expanded = !expanded }
-                            ) {
-                                val filteredFoods by remember(component.searchQuery, allBaseFoods) {
-                                    val normalizedQuery = component.searchQuery.removeDiacritics()
-                                    derivedStateOf {
-                                        if (component.searchQuery.isEmpty() || allBaseFoods.any {
-                                                val localizedName = resolveFoodName(it.name)
-                                                it.name.removeDiacritics().equals(normalizedQuery, ignoreCase = true) ||
-                                                    localizedName.removeDiacritics().equals(normalizedQuery, ignoreCase = true)
-                                            }) {
-                                            allBaseFoods.take(50)
-                                        } else {
-                                            allBaseFoods.filter { food ->
-                                                matchesBaseFoodQuery(
-                                                    rawName = food.name,
-                                                    localizedName = resolveFoodName(food.name),
-                                                    query = component.searchQuery
-                                                )
+                            OutlinedTextField(
+                                value = component.searchQuery,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(Strings.ingredient()) },
+                                trailingIcon = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (component.searchQuery.isNotBlank()) {
+                                            IconButton(
+                                                onClick = {
+                                                    components[index] = component.copy(foodId = null, searchQuery = "")
+                                                }
+                                            ) {
+                                                Icon(Icons.Default.Close, contentDescription = Strings.clearText())
                                             }
                                         }
-                                    }
-                                }
-
-                                OutlinedTextField(
-                                    value = component.searchQuery,
-                                    onValueChange = { 
-                                        components[index] = component.copy(searchQuery = it)
-                                        expanded = true
-                                    },
-                                    label = { Text(Strings.ingredient()) },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                                )
-                                
-                                    ExposedDropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier
-                                            .exposedDropdownSize()
-                                            .heightIn(max = 280.dp)
-                                            .verticalScroll(rememberScrollState())
-                                    ) {
-                                            if (filteredFoods.isEmpty()) {
-                                                if (component.searchQuery.isNotBlank()) {
-                                                    DropdownMenuItem(
-                                                        text = { Text(Strings.noResultsFound(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline) },
-                                                        onClick = { },
-                                                        enabled = false
-                                                    )
-                                                } else {
-                                                    // Keep empty
-                                                }
-                                            } else {
-                                                filteredFoods.forEach { food ->
-                                                    DropdownMenuItem(
-                                                        text = { Text(resolveFoodName(food.name)) },
-                                                        onClick = {
-                                                            components[index] = component.copy(
-                                                                foodId = food.id,
-                                                                searchQuery = resolveFoodName(food.name)
-                                                            )
-                                                            expanded = false
-                                                        }
-                                                    )
-                                                }
+                                        IconButton(
+                                            onClick = {
+                                                activeIngredientPicker = ActiveIngredientPicker(index, component.searchQuery)
+                                            }
+                                        ) {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = false)
                                         }
                                     }
-                                }
-                            }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) {
+                                            activeIngredientPicker = ActiveIngredientPicker(index, component.searchQuery)
+                                        }
+                                    }
+                                    .pointerInput(component.foodId, component.searchQuery) {
+                                        detectTapGestures {
+                                            activeIngredientPicker = ActiveIngredientPicker(index, component.searchQuery)
+                                        }
+                                    },
+                                singleLine = true
+                            )
+                        }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
@@ -218,7 +207,12 @@ fun DishEditorScreen(
 
                 item {
                     TextButton(
-                        onClick = { components.add(ComponentState()) },
+                        onClick = {
+                            components.add(ComponentState())
+                            val newIndex = components.lastIndex
+                            activeIngredientPicker = ActiveIngredientPicker(newIndex, "")
+                            scope.launch { listState.scrollToItem(newIndex) }
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
@@ -232,11 +226,37 @@ fun DishEditorScreen(
                 }
             }
         }
+        }
+
+        activeIngredientPicker?.let { picker ->
+            FoodSearchPickerOverlay(
+                initialQuery = picker.initialQuery,
+                options = foodPickerOptions,
+                onSelectOption = { option ->
+                    val index = picker.componentIndex
+                    val food = option.key.toLongOrNull()?.let { foodId ->
+                        allBaseFoods.firstOrNull { it.id == foodId }
+                    }
+                    if (index in components.indices && food != null) {
+                        components[index] = components[index].copy(
+                            foodId = food.id,
+                            searchQuery = resolveFoodName(food.name)
+                        )
+                    }
+                    activeIngredientPicker = null
+                    focusManager.clearFocus()
+                },
+                onClearSelection = {
+                    val index = picker.componentIndex
+                    if (index in components.indices) {
+                        components[index] = components[index].copy(foodId = null, searchQuery = "")
+                    }
+                },
+                onDismiss = {
+                    activeIngredientPicker = null
+                    focusManager.clearFocus()
+                }
+            )
+        }
     }
 }
-
-data class ComponentState(
-    val foodId: Long? = null,
-    val weightGrams: String = "",
-    val searchQuery: String = ""
-)
