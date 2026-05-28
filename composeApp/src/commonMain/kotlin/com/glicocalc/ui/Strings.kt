@@ -138,6 +138,10 @@ import glicocalc.composeapp.generated.resources.use_pieces
 import glicocalc.composeapp.generated.resources.pieces
 import glicocalc.composeapp.generated.resources.pcs
 import glicocalc.composeapp.generated.resources.total_cooked_weight
+import glicocalc.composeapp.generated.resources.use_portions
+import glicocalc.composeapp.generated.resources.total_portions
+import glicocalc.composeapp.generated.resources.portions
+import glicocalc.composeapp.generated.resources.carbs_per_portion
 import glicocalc.composeapp.generated.resources.system_default
 
 object Strings {
@@ -243,6 +247,10 @@ object Strings {
     @Composable fun pieces() = stringResource(Res.string.pieces)
     @Composable fun pcs() = stringResource(Res.string.pcs)
     @Composable fun totalCookedWeight() = stringResource(Res.string.total_cooked_weight)
+    @Composable fun usePortions() = stringResource(Res.string.use_portions)
+    @Composable fun totalPortions() = stringResource(Res.string.total_portions)
+    @Composable fun portions() = stringResource(Res.string.portions)
+    @Composable fun carbsPerPortion(value: String) = stringResource(Res.string.carbs_per_portion, value)
 
     @Composable fun familyAndSync() = stringResource(Res.string.family_and_sync)
     @Composable fun familyTitle() = stringResource(Res.string.family_title)

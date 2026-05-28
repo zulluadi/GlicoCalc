@@ -39,9 +39,10 @@ private data class ActiveIngredientPicker(
 fun DishEditorScreen(
     initialName: String = "",
     initialTotalCookedWeight: Double? = null,
+    initialTotalPortions: Double? = null,
     initialComponents: List<Pair<Long, Double>> = emptyList(),
     allBaseFoods: List<BaseFood>,
-    onSave: (String, Double?, List<Pair<Long, Double>>) -> Unit,
+    onSave: (String, Double?, Double?, List<Pair<Long, Double>>) -> Unit,
     onCancel: () -> Unit
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
@@ -49,7 +50,10 @@ fun DishEditorScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var dishName by remember { mutableStateOf(initialName) }
-    var totalCookedWeightText by remember { mutableStateOf(initialTotalCookedWeight?.toString() ?: "") }
+    var usePortions by remember { mutableStateOf(initialTotalCookedWeight == null && initialTotalPortions != null) }
+    var totalAmountText by remember {
+        mutableStateOf((initialTotalCookedWeight ?: initialTotalPortions)?.toString() ?: "")
+    }
     var activeIngredientPicker by remember { mutableStateOf<ActiveIngredientPicker?>(null) }
     val components = remember { mutableStateListOf<ComponentState>().apply { 
         if (initialComponents.isEmpty()) add(ComponentState()) 
@@ -73,7 +77,11 @@ fun DishEditorScreen(
         }
     }
 
-    val canSave = dishName.isNotBlank() && totalCookedWeightText.toDoubleOrNull() != null && totalCookedWeightText.toDoubleOrNull()!! > 0.0 && components.any { it.foodId != null && it.weightGrams.toDoubleOrNull() != null }
+    val totalAmount = totalAmountText.toDoubleOrNull()
+    val canSave = dishName.isNotBlank() &&
+        totalAmount != null &&
+        totalAmount > 0.0 &&
+        components.any { it.foodId != null && it.weightGrams.toDoubleOrNull() != null }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -93,8 +101,13 @@ fun DishEditorScreen(
                                     val w = it.weightGrams.toDoubleOrNull()
                                     if (it.foodId != null && w != null) it.foodId to w else null
                                 }
-                                val cookedWeight = totalCookedWeightText.toDoubleOrNull()
-                                onSave(dishName, cookedWeight, validComponents)
+                                val amount = totalAmountText.toDoubleOrNull()
+                                onSave(
+                                    dishName,
+                                    if (usePortions) null else amount,
+                                    if (usePortions) amount else null,
+                                    validComponents
+                                )
                             }
                         ) {
                             Text(
@@ -123,12 +136,24 @@ fun DishEditorScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(Strings.usePortions())
+                Switch(checked = usePortions, onCheckedChange = { usePortions = it })
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             OutlinedTextField(
-                value = totalCookedWeightText,
-                onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) totalCookedWeightText = it },
-                label = { Text(Strings.totalCookedWeight()) },
+                value = totalAmountText,
+                onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) totalAmountText = it },
+                label = { Text(if (usePortions) Strings.totalPortions() else Strings.totalCookedWeight()) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                suffix = { Text(if (usePortions) Strings.pcs() else "g") }
             )
 
             Spacer(modifier = Modifier.height(12.dp))

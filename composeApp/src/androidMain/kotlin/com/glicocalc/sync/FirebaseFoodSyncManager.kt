@@ -688,6 +688,7 @@ class FirebaseFoodSyncManager(
                     mapOf(
                         "name" to dish.name,
                         "totalCookedWeight" to dish.totalCookedWeight,
+                        "totalPortions" to dish.totalPortions,
                         "isDeleted" to dish.isDeleted,
                         "updatedAt" to dish.updatedAt,
                         "components" to dish.components.map { c ->
@@ -770,11 +771,13 @@ class FirebaseFoodSyncManager(
                 RemoteDishComponentRecord(foodRemoteKey = foodRemoteKey, weightGrams = weightGrams)
             }.orEmpty()
             val totalCookedWeight = (data["totalCookedWeight"] as? Number)?.toDouble()
+            val totalPortions = (data["totalPortions"] as? Number)?.toDouble()
 
             RemoteDishRecord(
                 remoteKey = document.id,
                 name = name,
                 totalCookedWeight = totalCookedWeight,
+                totalPortions = totalPortions,
                 isDeleted = isDeleted,
                 updatedAt = updatedAt,
                 components = components
@@ -828,6 +831,7 @@ class FirebaseFoodSyncManager(
             mapOf(
                 "name" to remoteDish.name,
                 "totalCookedWeight" to remoteDish.totalCookedWeight,
+                "totalPortions" to remoteDish.totalPortions,
                 "isDeleted" to remoteDish.isDeleted,
                 "updatedAt" to remoteDish.updatedAt,
                 "components" to remoteDish.components.map { component ->

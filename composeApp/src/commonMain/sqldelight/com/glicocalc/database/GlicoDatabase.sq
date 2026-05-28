@@ -19,7 +19,8 @@ CREATE TABLE Dish (
     isDeleted INTEGER NOT NULL DEFAULT 0,
     needsSync INTEGER NOT NULL DEFAULT 0,
     updatedAt INTEGER NOT NULL DEFAULT 0,
-    totalCookedWeight REAL
+    totalCookedWeight REAL,
+    totalPortions REAL
 );
 
 CREATE TABLE DishComponent (
@@ -108,10 +109,10 @@ SET name = ?, carbsPer100g = ?, isPacked = ?, packWeight = ?, packCount = ?, isD
 WHERE id = ?;
 
 insertDish:
-INSERT INTO Dish(name, remoteKey, isDeleted, needsSync, updatedAt, totalCookedWeight) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO Dish(name, remoteKey, isDeleted, needsSync, updatedAt, totalCookedWeight, totalPortions) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 updateDish:
-UPDATE Dish SET name = ?, totalCookedWeight = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
+UPDATE Dish SET name = ?, totalCookedWeight = ?, totalPortions = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
 
 deleteDish:
 UPDATE Dish SET isDeleted = 1, needsSync = ?, updatedAt = ? WHERE id = ?;
@@ -147,7 +148,7 @@ updateDishSyncMetadata:
 UPDATE Dish SET remoteKey = ?, needsSync = ?, updatedAt = ? WHERE id = ?;
 
 applyRemoteDish:
-UPDATE Dish SET name = ?, totalCookedWeight = ?, isDeleted = ?, needsSync = 0, updatedAt = ? WHERE id = ?;
+UPDATE Dish SET name = ?, totalCookedWeight = ?, totalPortions = ?, isDeleted = ?, needsSync = 0, updatedAt = ? WHERE id = ?;
 
 insertDishComponent:
 INSERT INTO DishComponent(dishId, baseFoodId, percentage, weightGrams) VALUES (?, ?, 0, ?);

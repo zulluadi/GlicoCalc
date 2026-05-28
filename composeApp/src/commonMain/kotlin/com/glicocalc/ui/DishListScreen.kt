@@ -49,9 +49,15 @@ fun DishListScreen(
 
             LazyColumn {
                 items(dishesWithCarbs, key = { it.dish.id }) { dishWithCarbs ->
+                    val carbsText = formatDecimal((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0)
+                    val supportingText = if ((dishWithCarbs.dish.totalPortions ?: 0.0) > 0.0) {
+                        Strings.carbsPerPortion(carbsText)
+                    } else {
+                        Strings.carbsPer100g(carbsText)
+                    }
                     ListItem(
                         headlineContent = { Text(dishWithCarbs.dish.name) },
-                        supportingContent = { Text(Strings.carbsPer100g(((dishWithCarbs.carbsPer100g * 10).toInt() / 10.0).toString())) },
+                        supportingContent = { Text(supportingText) },
                         leadingContent = {
                             IconButton(onClick = {
                                 deletedDishId.value = dishWithCarbs.dish.id

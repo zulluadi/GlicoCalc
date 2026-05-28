@@ -115,6 +115,7 @@ class DatabaseDriverFactory(private val context: Context) {
         safeExecute(driver, "ALTER TABLE Dish ADD COLUMN needsSync INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE Dish ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE Dish ADD COLUMN totalCookedWeight REAL")
+        safeExecute(driver, "ALTER TABLE Dish ADD COLUMN totalPortions REAL")
         driver.execute(
             identifier = null,
             sql = "CREATE UNIQUE INDEX IF NOT EXISTS idx_dish_remote_key ON Dish(remoteKey)",

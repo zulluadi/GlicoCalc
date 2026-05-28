@@ -189,10 +189,21 @@ private fun ClearTextButton(
 }
 
 private fun MealItem.carbsPer100g(): Double? {
-    val dishCarbs = selectedDish?.let { CarbCalculator.calculateCarbsPercentage(it.components, it.dish.totalCookedWeight) }
+    val dishCarbs = selectedDish?.let {
+        if (it.isPortionBased()) {
+            CarbCalculator.calculateCarbsPerPortion(it.components, it.dish.totalPortions)
+        } else {
+            CarbCalculator.calculateCarbsPercentage(it.components, it.dish.totalCookedWeight)
+        }
+    }
     val baseFoodCarbs = selectedBaseFood?.carbsPer100g
     val carbsPer100g = dishCarbs ?: baseFoodCarbs
     return carbsPer100g?.takeIf { it > 0.0 }
+}
+
+private fun DishWithComposition.isPortionBased(): Boolean {
+    val totalPortions = dish.totalPortions ?: return false
+    return totalPortions > 0.0
 }
 
 private fun syncMealItem(
@@ -206,6 +217,27 @@ private fun syncMealItem(
         selectedBaseFood = selectedBaseFood
     )
     val carbsPer100g = updatedItem.carbsPer100g() ?: return updatedItem
+
+    if (updatedItem.selectedDish?.isPortionBased() == true) {
+        val portions = updatedItem.weightText.toDoubleOrNull()
+        val carbs = updatedItem.carbsText.toDoubleOrNull()
+
+        return when (editedField) {
+            EditedField.Weight -> {
+                val syncedCarbs = portions?.let { formatDecimal(it * carbsPer100g) }.orEmpty()
+                updatedItem.copy(carbsText = syncedCarbs, usePieces = true)
+            }
+            EditedField.Carbs -> {
+                val syncedPortions = carbs?.let { formatDecimal(it / carbsPer100g) }.orEmpty()
+                updatedItem.copy(weightText = syncedPortions, usePieces = true)
+            }
+            null -> when {
+                portions != null -> updatedItem.copy(carbsText = formatDecimal(portions * carbsPer100g), usePieces = true)
+                carbs != null -> updatedItem.copy(weightText = formatDecimal(carbs / carbsPer100g), usePieces = true)
+                else -> updatedItem.copy(usePieces = true)
+            }
+        }
+    }
 
     if (updatedItem.usePieces) {
         val baseFood = updatedItem.selectedBaseFood
@@ -346,10 +378,17 @@ fun CalculatorScreen(
     }
     val foodPickerOptions = remember(searchableDishes, searchableFoods, dishCarbsMap) {
         searchableDishes.map { searchableDish ->
+            val dishCarbs = dishCarbsMap[searchableDish.dish.id]
             FoodPickerOption(
                 key = "dish-${searchableDish.dish.id}",
                 title = searchableDish.dish.name,
-                detail = dishCarbsMap[searchableDish.dish.id]?.let { "${formatDecimal(it)}%" },
+                detail = dishCarbs?.let {
+                    if ((searchableDish.dish.totalPortions ?: 0.0) > 0.0) {
+                        "${formatDecimal(it)} g/portion"
+                    } else {
+                        "${formatDecimal(it)}%"
+                    }
+                },
                 searchTerms = listOf(searchableDish.dish.name)
             )
         } + searchableFoods.map { searchableFood ->
@@ -899,6 +938,7 @@ private fun MealItemRow(
 
     val selectedBaseFood = item.selectedBaseFood
     val isPackedFood = selectedBaseFood != null && selectedBaseFood.isPacked != 0L
+    val isPortionDish = item.selectedDish?.isPortionBased() == true
     val displayName = item.selectedDish?.dish?.name
         ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
         ?: item.selectedBaseFood?.name
@@ -955,7 +995,11 @@ private fun MealItemRow(
         modifier = Modifier.fillMaxWidth()
     ) {
         val carbsInfo = item.selectedDish?.let { composition ->
-            Strings.carbsPercent(formatDecimal(CarbCalculator.calculateCarbsPercentage(composition.components, composition.dish.totalCookedWeight)))
+            if (composition.isPortionBased()) {
+                Strings.carbsPerPortion(formatDecimal(CarbCalculator.calculateCarbsPerPortion(composition.components, composition.dish.totalPortions)))
+            } else {
+                Strings.carbsPercent(formatDecimal(CarbCalculator.calculateCarbsPercentage(composition.components, composition.dish.totalCookedWeight)))
+            }
         } ?: item.selectedBaseFood?.let { food ->
             Strings.carbsPercent(formatDecimal(food.carbsPer100g))
         }
@@ -1075,10 +1119,10 @@ private fun MealItemRow(
                                 onUpdate(syncMealItem(item.copy(weightText = it), EditedField.Weight))
                             }
                         },
-                        label = { Text(if (item.usePieces && isPackedFood) Strings.pieces() else Strings.weight()) },
+                        label = { Text(if (isPortionDish) Strings.portions() else if (item.usePieces && isPackedFood) Strings.pieces() else Strings.weight()) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
-                        suffix = { Text(if (item.usePieces && isPackedFood) Strings.pcs() else "g") },
+                        suffix = { Text(if (isPortionDish || item.usePieces && isPackedFood) Strings.pcs() else "g") },
                         singleLine = true,
                         trailingIcon = {
                             if (item.weightText.isNotBlank()) {

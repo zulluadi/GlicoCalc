@@ -227,16 +227,17 @@ fun MainApp(
                         DishEditorScreen(
                             initialName = initialDish?.dish?.name ?: "",
                             initialTotalCookedWeight = initialDish?.dish?.totalCookedWeight,
+                            initialTotalPortions = initialDish?.dish?.totalPortions,
                             initialComponents = initialDish?.components?.map { it.baseFoodId to it.weightGrams } ?: emptyList(),
                             allBaseFoods = baseFoods,
                             onCancel = { currentScreen = Screen.Dishes },
-                            onSave = { name, totalCookedWeight, components ->
+                            onSave = { name, totalCookedWeight, totalPortions, components ->
                                 telemetry.action("dish_saved")
                                 scope.launch {
                                     if (editingDishId == null) {
-                                        repository.insertDishWithComponents(name, totalCookedWeight, components)
+                                        repository.insertDishWithComponents(name, totalCookedWeight, totalPortions, components)
                                     } else {
-                                        repository.updateDishWithComponents(editingDishId!!, name, totalCookedWeight, components)
+                                        repository.updateDishWithComponents(editingDishId!!, name, totalCookedWeight, totalPortions, components)
                                     }
                                     currentScreen = Screen.Dishes
                                 }

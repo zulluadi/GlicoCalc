@@ -105,6 +105,10 @@
     <string name="pieces">Pieces</string>
     <string name="pcs">pcs</string>
     <string name="total_cooked_weight">Total cooked weight (g)</string>
+    <string name="use_portions">Use portions</string>
+    <string name="total_portions">Total portions</string>
+    <string name="portions">Portions</string>
+    <string name="carbs_per_portion">%1$s g/portion</string>
 
     <!-- Family & Sync -->
     <string name="family_and_sync">Family &amp; Sync</string>

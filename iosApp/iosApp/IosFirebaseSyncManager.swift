@@ -254,6 +254,7 @@ final class IosFirebaseSyncManager {
                 remoteKey: doc.documentID,
                 name: name,
                 totalCookedWeight: (data["totalCookedWeight"] as? Double).map { KotlinDouble(value: $0) },
+                totalPortions: (data["totalPortions"] as? Double).map { KotlinDouble(value: $0) },
                 isDeleted: data["isDeleted"] as? Bool ?? false,
                 updatedAt: data["updatedAt"] as? Int64 ?? 0,
                 components: components
@@ -289,6 +290,7 @@ final class IosFirebaseSyncManager {
         try await collection.document(dish.remoteKey).setData([
             "name": dish.name,
             "totalCookedWeight": dish.totalCookedWeight ?? NSNull(),
+            "totalPortions": dish.totalPortions ?? NSNull(),
             "isDeleted": dish.isDeleted,
             "updatedAt": dish.updatedAt,
             "components": components
