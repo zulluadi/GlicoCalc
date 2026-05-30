@@ -58,6 +58,7 @@ kotlin {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
+                implementation(compose.animation)
                 implementation(compose.material3)
                 implementation(compose.components.resources)
                 implementation("com.squareup.sqldelight:runtime:1.5.5")

@@ -1,5 +1,12 @@
 package com.glicocalc.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,6 +45,7 @@ import com.glicocalc.logic.removeDiacritics
 import com.glicocalc.models.DishWithComposition
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -335,6 +343,7 @@ fun CalculatorScreen(
     var dishesWithCarbs by remember(dishes, baseFoods) { mutableStateOf(emptyList<GlicoRepository.DishWithCarbs>()) }
     var activeFoodPicker by remember { mutableStateOf<ActiveFoodPicker?>(null) }
     var hasLoadedCalculatorDraft by remember { mutableStateOf(false) }
+    var enteringMealItemId by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(Unit) {
         val (draft, draftMealTypeId) = withContext(Dispatchers.IO) {
@@ -428,6 +437,23 @@ fun CalculatorScreen(
         repository.saveCalculatorMealTypeId(selectedMealTypeId)
     }
 
+    fun addFoodToMeal() {
+        val newItem = MealItem()
+        mealItems.add(0, newItem)
+        enteringMealItemId = newItem.id
+        scope.launch {
+            listState.animateScrollToItem(0)
+            delay(220)
+            if (mealItems.any { it.id == newItem.id }) {
+                activeFoodPicker = ActiveFoodPicker(itemId = newItem.id, initialQuery = "")
+            }
+            delay(320)
+            if (enteringMealItemId == newItem.id) {
+                enteringMealItemId = null
+            }
+        }
+    }
+
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
@@ -469,12 +495,7 @@ fun CalculatorScreen(
                         compact = isCompactHeight,
                         hasEditableMeal = hasEditableMeal,
                         stacked = true,
-                        onAddFood = {
-                            val newItem = MealItem()
-                            mealItems.add(0, newItem)
-                            activeFoodPicker = ActiveFoodPicker(itemId = newItem.id, initialQuery = "")
-                            scope.launch { listState.scrollToItem(0) }
-                        },
+                        onAddFood = ::addFoodToMeal,
                         onClearMeal = {
                             mealItems.clear()
                             mealItems.add(MealItem())
@@ -501,6 +522,7 @@ fun CalculatorScreen(
                     totalCarbs = totalCarbs,
                     listGap = listGap,
                     compact = isCompactHeight,
+                    enteringMealItemId = enteringMealItemId,
                     onEditFood = { item ->
                         activeFoodPicker = ActiveFoodPicker(
                             itemId = item.id,
@@ -545,6 +567,7 @@ fun CalculatorScreen(
                     totalCarbs = totalCarbs,
                     listGap = listGap,
                     compact = isCompactHeight,
+                    enteringMealItemId = enteringMealItemId,
                     onEditFood = { item ->
                         activeFoodPicker = ActiveFoodPicker(
                             itemId = item.id,
@@ -571,12 +594,7 @@ fun CalculatorScreen(
                         compact = isCompactHeight,
                         hasEditableMeal = hasEditableMeal,
                         stacked = false,
-                        onAddFood = {
-                            val newItem = MealItem()
-                            mealItems.add(0, newItem)
-                            activeFoodPicker = ActiveFoodPicker(itemId = newItem.id, initialQuery = "")
-                            scope.launch { listState.scrollToItem(0) }
-                        },
+                        onAddFood = ::addFoodToMeal,
                         onClearMeal = {
                             mealItems.clear()
                             mealItems.add(MealItem())
@@ -655,6 +673,7 @@ private fun MealItemsList(
     totalCarbs: Double,
     listGap: Dp,
     compact: Boolean,
+    enteringMealItemId: Long?,
     onEditFood: (MealItem) -> Unit,
     onUpdate: (index: Int, item: MealItem) -> Unit,
     onDelete: (index: Int) -> Unit,
@@ -702,17 +721,48 @@ private fun MealItemsList(
             verticalArrangement = Arrangement.spacedBy(listGap)
         ) {
             itemsIndexed(mealItems, key = { _, item -> item.id }) { index: Int, item: MealItem ->
-                MealItemRow(
-                    index = index,
-                    item = item,
-                    searchableFoods = searchableFoods,
-                    onUpdate = { updated -> onUpdate(index, updated) },
-                    canDelete = mealItems.size > 1,
-                    compact = compact,
-                    onEditFood = { onEditFood(item) },
-                    onDelete = { onDelete(index) }
-                )
+                EnteringMealItem(
+                    isEntering = item.id == enteringMealItemId
+                ) {
+                    MealItemRow(
+                        index = index,
+                        item = item,
+                        searchableFoods = searchableFoods,
+                        onUpdate = { updated -> onUpdate(index, updated) },
+                        canDelete = mealItems.size > 1,
+                        compact = compact,
+                        onEditFood = { onEditFood(item) },
+                        onDelete = { onDelete(index) }
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun EnteringMealItem(
+    isEntering: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    if (isEntering) {
+        val visibleState = remember {
+            MutableTransitionState(false).apply { targetState = true }
+        }
+        AnimatedVisibility(
+            visibleState = visibleState,
+            modifier = modifier,
+            enter = fadeIn(animationSpec = tween(durationMillis = 180)) +
+                expandVertically(animationSpec = tween(durationMillis = 260), expandFrom = Alignment.Top) +
+                slideInVertically(animationSpec = tween(durationMillis = 260)) { fullHeight -> -fullHeight / 3 },
+            exit = fadeOut(animationSpec = tween(durationMillis = 120))
+        ) {
+            content()
+        }
+    } else {
+        Box(modifier = modifier) {
+            content()
         }
     }
 }
