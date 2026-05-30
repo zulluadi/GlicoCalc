@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -344,6 +345,7 @@ fun CalculatorScreen(
     var activeFoodPicker by remember { mutableStateOf<ActiveFoodPicker?>(null) }
     var hasLoadedCalculatorDraft by remember { mutableStateOf(false) }
     var enteringMealItemId by remember { mutableStateOf<Long?>(null) }
+    var activeEditingMealItemId by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(Unit) {
         val (draft, draftMealTypeId) = withContext(Dispatchers.IO) {
@@ -440,6 +442,7 @@ fun CalculatorScreen(
     fun addFoodToMeal() {
         val newItem = MealItem()
         mealItems.add(0, newItem)
+        activeEditingMealItemId = newItem.id
         enteringMealItemId = newItem.id
         scope.launch {
             listState.animateScrollToItem(0)
@@ -523,7 +526,9 @@ fun CalculatorScreen(
                     listGap = listGap,
                     compact = isCompactHeight,
                     enteringMealItemId = enteringMealItemId,
+                    activeEditingMealItemId = activeEditingMealItemId,
                     onEditFood = { item ->
+                        activeEditingMealItemId = item.id
                         activeFoodPicker = ActiveFoodPicker(
                             itemId = item.id,
                             initialQuery = item.selectedDish?.dish?.name
@@ -533,6 +538,11 @@ fun CalculatorScreen(
                         )
                     },
                     onUpdate = { index, updated -> mealItems[index] = updated },
+                    onEditingChanged = { itemId, isEditing ->
+                        if (isEditing) {
+                            activeEditingMealItemId = itemId
+                        }
+                    },
                     onDelete = { index ->
                         if (mealItems.size > 1) {
                             mealItems.removeAt(index)
@@ -568,7 +578,9 @@ fun CalculatorScreen(
                     listGap = listGap,
                     compact = isCompactHeight,
                     enteringMealItemId = enteringMealItemId,
+                    activeEditingMealItemId = activeEditingMealItemId,
                     onEditFood = { item ->
+                        activeEditingMealItemId = item.id
                         activeFoodPicker = ActiveFoodPicker(
                             itemId = item.id,
                             initialQuery = item.selectedDish?.dish?.name
@@ -578,6 +590,11 @@ fun CalculatorScreen(
                         )
                     },
                     onUpdate = { index, updated -> mealItems[index] = updated },
+                    onEditingChanged = { itemId, isEditing ->
+                        if (isEditing) {
+                            activeEditingMealItemId = itemId
+                        }
+                    },
                     onDelete = { index ->
                         if (mealItems.size > 1) {
                             mealItems.removeAt(index)
@@ -674,8 +691,10 @@ private fun MealItemsList(
     listGap: Dp,
     compact: Boolean,
     enteringMealItemId: Long?,
+    activeEditingMealItemId: Long?,
     onEditFood: (MealItem) -> Unit,
     onUpdate: (index: Int, item: MealItem) -> Unit,
+    onEditingChanged: (itemId: Long, isEditing: Boolean) -> Unit,
     onDelete: (index: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -731,6 +750,8 @@ private fun MealItemsList(
                         onUpdate = { updated -> onUpdate(index, updated) },
                         canDelete = mealItems.size > 1,
                         compact = compact,
+                        isEditing = item.id == activeEditingMealItemId || item.id == enteringMealItemId,
+                        onEditingChanged = { isEditing -> onEditingChanged(item.id, isEditing) },
                         onEditFood = { onEditFood(item) },
                         onDelete = { onDelete(index) }
                     )
@@ -971,6 +992,8 @@ private fun MealItemRow(
     onUpdate: (MealItem) -> Unit,
     canDelete: Boolean,
     compact: Boolean,
+    isEditing: Boolean,
+    onEditingChanged: (Boolean) -> Unit,
     onEditFood: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -993,6 +1016,11 @@ private fun MealItemRow(
         ?: searchableFoods.firstOrNull { it.food.id == item.selectedBaseFood?.id }?.localizedName
         ?: item.selectedBaseFood?.name
         ?: ""
+    val cardContainerColor = if (isEditing) {
+        Color(0xFFF1E9FF)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
 
     SwipeToDismissBox(
         state = dismissState,
@@ -1057,7 +1085,7 @@ private fun MealItemRow(
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = cardContainerColor
             ),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
         ) {
@@ -1094,7 +1122,10 @@ private fun MealItemRow(
                             .fillMaxWidth()
                             .onFocusChanged { focusState ->
                                 if (focusState.isFocused) {
+                                    onEditingChanged(true)
                                     onEditFood()
+                                } else {
+                                    onEditingChanged(false)
                                 }
                             }
                             .pointerInput(item.id) {
@@ -1171,7 +1202,11 @@ private fun MealItemRow(
                         },
                         label = { Text(if (isPortionDish) Strings.portions() else if (item.usePieces && isPackedFood) Strings.pieces() else Strings.weight()) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                onEditingChanged(focusState.isFocused)
+                            },
                         suffix = { Text(if (isPortionDish || item.usePieces && isPackedFood) Strings.pcs() else "g") },
                         singleLine = true,
                         trailingIcon = {
@@ -1197,7 +1232,11 @@ private fun MealItemRow(
                             },
                             label = { Text(Strings.carbs()) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .onFocusChanged { focusState ->
+                                    onEditingChanged(focusState.isFocused)
+                                },
                             suffix = { Text("g") },
                             singleLine = true,
                             trailingIcon = {
