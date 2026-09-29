@@ -46,6 +46,7 @@ fun DishEditorScreen(
     onCancel: () -> Unit
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
+    val resolveGlycemicIndex = rememberGlycemicIndexTextResolver()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -71,7 +72,10 @@ fun DishEditorScreen(
             FoodPickerOption(
                 key = food.id.toString(),
                 title = localizedName,
-                detail = "${formatDecimal(food.carbsPer100g)}%",
+                detail = listOfNotNull(
+                    "${formatDecimal(food.carbsPer100g)}%",
+                    resolveGlycemicIndex(food.glycemicIndexLevel)
+                ).joinToString(" • "),
                 searchTerms = listOf(food.name, localizedName)
             )
         }

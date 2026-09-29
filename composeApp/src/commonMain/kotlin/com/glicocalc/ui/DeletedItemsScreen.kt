@@ -1,5 +1,6 @@
 package com.glicocalc.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.glicocalc.database.BaseFood
 import com.glicocalc.database.Dish
 import com.glicocalc.database.FoodSource
@@ -90,7 +92,12 @@ fun DeletedItemsScreen(
                 items(deletedFoods, key = { "food-${it.id}" }) { food ->
                     ListItem(
                         headlineContent = { Text(resolveFoodName(food.name)) },
-                        supportingContent = { Text(Strings.carbsPer100g(food.carbsPer100g.toString())) },
+                        supportingContent = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(Strings.carbsPer100g(food.carbsPer100g.toString()))
+                                GlycemicIndexBadge(food.glycemicIndexLevel)
+                            }
+                        },
                         trailingContent = {
                             Row {
                                 IconButton(onClick = { onRestoreFood(food.id) }) {

@@ -79,7 +79,12 @@ fun FoodListScreen(
                 items(filteredFoods, key = { it.id }) { food ->
                     ListItem(
                         headlineContent = { Text(resolveFoodName(food.name)) },
-                        supportingContent = { Text(Strings.carbsPer100g(food.carbsPer100g.toString())) },
+                        supportingContent = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(Strings.carbsPer100g(food.carbsPer100g.toString()))
+                                GlycemicIndexBadge(food.glycemicIndexLevel)
+                            }
+                        },
                         leadingContent = {
                             IconButton(
                                 onClick = {

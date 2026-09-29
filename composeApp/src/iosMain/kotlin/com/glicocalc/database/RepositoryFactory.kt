@@ -9,8 +9,8 @@ object RepositoryFactory {
         val driver = DatabaseDriverFactory().createDriver()
         return GlicoRepository(GlicoDatabase(driver), driver).also {
             it.migrateSchemaIfNeeded()
-            it.seedInitialData()
             it.prepareBaseFoodCatalog()
+            it.seedInitialData()
         }
     }
 }

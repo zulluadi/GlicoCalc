@@ -2,6 +2,7 @@ package com.glicocalc.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.glicocalc.database.DefaultFoodNames
 import com.glicocalc.logic.removeDiacritics
 
 @Composable
@@ -13,9 +14,9 @@ fun rememberBaseFoodNameResolver(): (String) -> String {
     }
     return remember(languageCode) {
         if (languageCode == "ro") {
-            { name -> name }
+            { name -> DefaultFoodNames.romanianName(name) ?: name }
         } else {
-            { name -> englishBaseFoodNames[name] ?: name }
+            { name -> DefaultFoodNames.englishName(name) ?: englishBaseFoodNames[name] ?: name }
         }
     }
 }

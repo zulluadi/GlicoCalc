@@ -108,8 +108,8 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             repository.migrateSchemaIfNeeded()
-            repository.seedInitialData()
             repository.prepareBaseFoodCatalog()
+            repository.seedInitialData()
 
             val interval = repository.getSyncIntervalMinutes()
             val language = repository.getLanguage()

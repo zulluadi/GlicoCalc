@@ -116,28 +116,53 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
 
     fun prepareBaseFoodCatalog() {
         val foods = getAllBaseFoodsIncludingDeleted()
-        val defaultCount = InitialData.seededFoods.size
         val now = PlatformTime.currentTimeMillis()
 
         database.transaction {
             foods.forEach { food ->
-                if (food.remoteKey != null) return@forEach
-
-                if (food.id in 1L..defaultCount.toLong()) {
-                    val seed = InitialData.defaultFoodByIndex(food.id.toInt() - 1) ?: return@forEach
-                    val needsSync = if (food.name != seed.name || food.carbsPer100g != seed.carbs) 1L else 0L
-                    queries.updateBaseFoodSyncMetadata(seed.remoteKey, FoodSource.DEFAULT.value, needsSync, now, food.id)
+                val seed = if (food.remoteKey == null) {
+                    // Legacy rows used their original insertion position as their identity.
+                    // The historical list must not include foods added in later releases.
+                    InitialData.legacyFoodByIndex(food.id.toInt() - 1).also { legacySeed ->
+                        if (legacySeed == null) {
+                            queries.updateBaseFoodSyncMetadata(
+                                generateCustomFoodRemoteKey(), FoodSource.CUSTOM.value, 1, now, food.id
+                            )
+                        } else {
+                            val previousValues = InitialData.previousSeedValues(legacySeed.remoteKey) + legacySeed
+                            val unchanged = previousValues.any {
+                                food.name == it.name && food.carbsPer100g == it.carbs
+                            } &&
+                                food.isDeleted == 0L && food.isPacked == 0L &&
+                                food.packWeight == null && food.packCount == null
+                            queries.updateBaseFoodSyncMetadata(
+                                legacySeed.remoteKey, FoodSource.DEFAULT.value,
+                                if (unchanged) 0 else 1, now, food.id
+                            )
+                        }
+                    }
                 } else {
-                    queries.updateBaseFoodSyncMetadata(
-                        generateCustomFoodRemoteKey(),
-                        FoodSource.CUSTOM.value,
-                        1,
-                        now,
-                        food.id
-                    )
+                    InitialData.defaultFoodByRemoteKey(food.remoteKey)
+                }
+
+                val matchesPrevious = seed?.let { current ->
+                    InitialData.previousSeedValues(current.remoteKey).any {
+                        food.name == it.name && food.carbsPer100g == it.carbs
+                    }
+                } == true
+                if (seed != null && matchesPrevious &&
+                    (food.remoteKey == null || food.source == FoodSource.DEFAULT.value) &&
+                    food.isDeleted == 0L && food.isPacked == 0L &&
+                    food.packWeight == null && food.packCount == null &&
+                    (food.name != seed.name || food.carbsPer100g != seed.carbs)
+                ) {
+                    // Only untouched bundled values move to the new wording. User edits,
+                    // deletions and custom foods retain their own names and IDs.
+                    queries.applyRemoteBaseFood(seed.name, seed.carbs, 0, null, null, 0, 0, food.id)
                 }
             }
         }
+        populateDefaultGlycemicIndexLevels()
     }
 
     fun reconcileRemoteFoods(remoteFoods: List<RemoteFoodRecord>) {
@@ -205,6 +230,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                 }
             }
         }
+        populateDefaultGlycemicIndexLevels()
     }
 
     fun getAllDishes(): Flow<List<Dish>> {
@@ -609,6 +635,11 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             // Column already exists, ignore
         }
         try {
+            d.execute(null, "ALTER TABLE BaseFood ADD COLUMN glycemicIndexLevel TEXT", 0)
+        } catch (_: Exception) {
+            // Column already exists, ignore
+        }
+        try {
             d.execute(null, "ALTER TABLE Dish ADD COLUMN totalCookedWeight REAL", 0)
         } catch (_: Exception) {
             // Column already exists, ignore
@@ -712,6 +743,26 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             }
         } else {
             prepareMealTypesForSync()
+        }
+
+        populateDefaultGlycemicIndexLevels()
+    }
+
+    private fun populateDefaultGlycemicIndexLevels() {
+        getAllBaseFoodsIncludingDeleted().forEach { food ->
+            val seed = food.remoteKey?.let(InitialData::defaultFoodByRemoteKey)
+            val level = seed?.glycemicIndexLevel
+            val isUntouchedDefault = seed != null &&
+                food.source == FoodSource.DEFAULT.value &&
+                food.name == seed.name &&
+                food.carbsPer100g == seed.carbs &&
+                food.isPacked == 0L &&
+                food.packWeight == null &&
+                food.packCount == null
+            val storedLevel = if (isUntouchedDefault) level?.value else null
+            if (food.glycemicIndexLevel != storedLevel) {
+                queries.updateBaseFoodGlycemicIndexLevel(storedLevel, food.id)
+            }
         }
     }
 

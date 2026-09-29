@@ -336,6 +336,7 @@ fun CalculatorScreen(
     modifier: Modifier = Modifier
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
+    val resolveGlycemicIndex = rememberGlycemicIndexTextResolver()
     val resolveMealTypeName = rememberMealTypeNameResolver()
     val mealItems = remember { mutableStateListOf<MealItem>() }
     val listState = rememberLazyListState()
@@ -387,7 +388,7 @@ fun CalculatorScreen(
             )
         }
     }
-    val foodPickerOptions = remember(searchableDishes, searchableFoods, dishCarbsMap) {
+    val foodPickerOptions = remember(searchableDishes, searchableFoods, dishCarbsMap, resolveGlycemicIndex) {
         searchableDishes.map { searchableDish ->
             val dishCarbs = dishCarbsMap[searchableDish.dish.id]
             FoodPickerOption(
@@ -406,7 +407,10 @@ fun CalculatorScreen(
             FoodPickerOption(
                 key = "food-${searchableFood.food.id}",
                 title = searchableFood.localizedName,
-                detail = "${formatDecimal(searchableFood.food.carbsPer100g)}%",
+                detail = listOfNotNull(
+                    "${formatDecimal(searchableFood.food.carbsPer100g)}%",
+                    resolveGlycemicIndex(searchableFood.food.glycemicIndexLevel)
+                ).joinToString(" • "),
                 searchTerms = listOf(searchableFood.food.name, searchableFood.localizedName)
             )
         }

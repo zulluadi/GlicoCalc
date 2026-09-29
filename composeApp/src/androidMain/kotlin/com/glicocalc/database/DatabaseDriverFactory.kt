@@ -102,6 +102,7 @@ class DatabaseDriverFactory(private val context: Context) {
         safeExecute(driver, "ALTER TABLE BaseFood ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE BaseFood ADD COLUMN needsSync INTEGER NOT NULL DEFAULT 0")
         safeExecute(driver, "ALTER TABLE BaseFood ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
+        safeExecute(driver, "ALTER TABLE BaseFood ADD COLUMN glycemicIndexLevel TEXT")
         driver.execute(
             identifier = null,
             sql = "CREATE UNIQUE INDEX IF NOT EXISTS idx_basefood_remote_key ON BaseFood(remoteKey)",
