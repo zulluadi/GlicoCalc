@@ -62,6 +62,25 @@ To install from Android Studio, open the project and run the `composeApp` Androi
 
 The app stores its food and dish data locally using SQLDelight. No Firebase setup is required for the public GitHub build.
 
+## Nightscout Food Export
+
+Open **Settings → Nightscout**, enter your HTTPS site URL and an access token from
+Nightscout Admin with `api:food:read`, `api:food:create`, and `api:food:update`
+permissions, then select **Export foods**. The URL is saved on this device; the
+access token stays in memory for the current app session and must be entered again
+after restarting the app.
+
+Exports use the same food names shown in the app, following **Food language**
+(including Romanian when `ro` is selected). Each food is exported with a 100 g
+portion and its carbs per 100 g. GI bands are exported as Nightscout low (1),
+medium (2), or high (3). Unspecified GI leaves any existing Nightscout GI intact. Repeating an export updates the same Nightscout
+records, including names after changing the food language. Existing unrelated
+Nightscout foods are preserved. Deleted local foods and dishes are not exported,
+and local deletions do not delete Nightscout records. Export does not import data
+or change the Firebase family sync queue.
+
+The export uses the [Nightscout food API](https://github.com/nightscout/cgm-remote-monitor/blob/master/lib/api/food/index.js).
+
 ## Open Source Notes
 
 Before using or contributing to this project, read:

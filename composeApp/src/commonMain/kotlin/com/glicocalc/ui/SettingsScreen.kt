@@ -48,7 +48,8 @@ fun SettingsScreen(
     onResetFoodList: () -> Unit,
     onReplaceSharedDefaults: (() -> Unit)? = null,
     isFamilyOwner: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nightscoutContent: @Composable () -> Unit = {}
 ) {
     var showReplaceDefaultsDialog by remember { mutableStateOf(false) }
     var showResetDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
@@ -66,7 +67,10 @@ fun SettingsScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            // ... (existing items)
+            item {
+                nightscoutContent()
+                HorizontalDivider()
+            }
             item {
                 ListItem(
                     headlineContent = { Text(Strings.language()) },

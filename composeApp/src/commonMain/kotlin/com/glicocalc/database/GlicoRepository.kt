@@ -27,6 +27,24 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         const val MAX_SYNC_INTERVAL_MINUTES = 60
     }
 
+    // Device-local values: excluded from the family settings sync allowlist.
+    fun getNightscoutUrl(): String = queries.selectSettingByKey("nightscout_url").executeAsOneOrNull()?.content.orEmpty()
+
+    fun saveNightscoutUrl(url: String) {
+        queries.applyRemoteSetting("nightscout_url", url, PlatformTime.currentTimeMillis())
+    }
+
+    fun nightscoutFoodId(site: String, food: BaseFood): String {
+        val key = "nightscout_id:$site:${food.remoteKey ?: food.id.toString()}"
+        queries.selectSettingByKey(key).executeAsOneOrNull()?.content?.let { return it }
+        val id = (1..24).map { "0123456789abcdef"[Random.nextInt(16)] }.joinToString("")
+        queries.applyRemoteSetting(key, id, PlatformTime.currentTimeMillis())
+        return id
+    }
+
+    fun foodsForNightscout(): List<BaseFood> = getAllBaseFoodsIncludingDeleted()
+        .filter { it.isDeleted == 0L && !isRetiredUntouchedDefault(it) }
+
     fun getAllBaseFoods(): Flow<List<BaseFood>> {
         return queries.selectAllBaseFoods().asFlow().mapToList().map { foods ->
             foods.filterNot(::isRetiredUntouchedDefault)

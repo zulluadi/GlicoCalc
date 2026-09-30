@@ -75,6 +75,7 @@ fun MainApp(
 
     AppEnvironment {
         val scope = rememberCoroutineScope()
+        val nightscoutToken = remember { mutableStateOf("") }
         var currentScreen by remember { mutableStateOf(Screen.Calculator) }
         var dishEditorState by remember { mutableStateOf<DishEditorState?>(null) }
         val resolveFoodName = rememberBaseFoodNameResolver()
@@ -269,6 +270,7 @@ fun MainApp(
                         )
                     }
                     Screen.Settings -> SettingsScreen(
+                        nightscoutContent = { NightscoutSettings(repository, nightscoutToken) },
                         selectedLanguage = customAppLocale,
                         selectedFoodLanguage = customFoodLocale,
                         familyMembers = familyMembers,
