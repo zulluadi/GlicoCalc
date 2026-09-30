@@ -157,4 +157,5 @@
     <string name="default_foods_reset_unavailable">Currently unavailable. Check your family sync status.</string>
     <string name="glycemic_index">Glycemic index (GI)</string>
     <string name="gi_unspecified">Unspecified</string>
+    <string name="no_results_found">No results found</string>
 </resources>

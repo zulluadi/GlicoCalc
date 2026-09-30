@@ -142,6 +142,7 @@ import glicocalc.composeapp.generated.resources.meal_types_status_local
 import glicocalc.composeapp.generated.resources.meal_types_status_synced
 import glicocalc.composeapp.generated.resources.meal_types_status_managed_by_owner
 import glicocalc.composeapp.generated.resources.weight
+import glicocalc.composeapp.generated.resources.no_results_found
 import glicocalc.composeapp.generated.resources.packed_food
 import glicocalc.composeapp.generated.resources.pack_total_weight
 import glicocalc.composeapp.generated.resources.pack_count
@@ -303,7 +304,7 @@ object Strings {
     @Composable fun joinFamilyDescription() = stringResource(Res.string.join_family_description)
     @Composable fun joinByFamilyId() = stringResource(Res.string.join_by_family_id)
     @Composable fun familyId() = stringResource(Res.string.family_id)
-    @Composable fun noResultsFound() = "No results found"
+    @Composable fun noResultsFound() = stringResource(Res.string.no_results_found)
     @Composable fun resetFoodList() = stringResource(Res.string.reset_food_list)
     @Composable fun resetFoodListDescription() = stringResource(Res.string.reset_food_list_description)
     @Composable fun resetFoodListOwnerOnly() = stringResource(Res.string.reset_food_list_owner_only)

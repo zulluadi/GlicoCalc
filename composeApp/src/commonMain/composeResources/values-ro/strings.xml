@@ -138,4 +138,24 @@
     <string name="default_foods_reset_unavailable">Momentan indisponibil. Verifică starea sincronizării familiei.</string>
     <string name="glycemic_index">Indice glicemic (IG)</string>
     <string name="gi_unspecified">Nespecificat</string>
+
+    <!-- Account, meal sync, packages, portions, and search -->
+    <string name="switch_account">Schimbă contul</string>
+    <string name="use_local_meal_types">Folosește tipuri de mese locale</string>
+    <string name="use_local_meal_types_description">Păstrează o copie privată pe acest dispozitiv. Modificările familiei nu o vor înlocui, iar modificările tale nu se vor sincroniza cu familia.</string>
+    <string name="meal_types_status_local">Tipurile de mese sunt păstrate local pe acest dispozitiv.</string>
+    <string name="meal_types_status_synced">Tipurile de mese sunt sincronizate cu familia ta.</string>
+    <string name="meal_types_status_managed_by_owner">Tipurile de mese sunt gestionate de proprietarul familiei.</string>
+    <string name="packed_food">Aliment ambalat</string>
+    <string name="pack_total_weight">Gramaj total al pachetului</string>
+    <string name="pack_count">Număr de bucăți</string>
+    <string name="use_pieces">Folosește bucăți</string>
+    <string name="pieces">Bucăți</string>
+    <string name="pcs">buc.</string>
+    <string name="total_cooked_weight">Gramaj total după gătire (g)</string>
+    <string name="use_portions">Folosește porții</string>
+    <string name="total_portions">Număr total de porții</string>
+    <string name="portions">Porții</string>
+    <string name="carbs_per_portion">%1$s g/porție</string>
+    <string name="no_results_found">Nu s-au găsit rezultate</string>
 </resources>
