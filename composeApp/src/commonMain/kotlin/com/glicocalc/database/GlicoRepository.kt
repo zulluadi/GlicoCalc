@@ -6,6 +6,7 @@ import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
@@ -27,7 +28,17 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     }
 
     fun getAllBaseFoods(): Flow<List<BaseFood>> {
-        return queries.selectAllBaseFoods().asFlow().mapToList()
+        return queries.selectAllBaseFoods().asFlow().mapToList().map { foods ->
+            foods.filterNot(::isRetiredUntouchedDefault)
+        }
+    }
+
+    // Retired entries remain in storage so saved dishes keep their ingredient IDs.
+    // Personal edits and deleted items stay visible for editing and recovery.
+    private fun isRetiredUntouchedDefault(food: BaseFood): Boolean {
+        val key = food.remoteKey ?: return false
+        if (InitialData.isActiveDefaultFood(key) || food.isDeleted != 0L) return false
+        return isDefaultFoodAtSeedValue(food)
     }
 
     fun getBaseFood(id: Long): BaseFood? {
@@ -79,7 +90,9 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
     }
 
     fun getAllBaseFoodsIncludingDeletedFlow(): Flow<List<BaseFood>> {
-        return queries.selectAllBaseFoodsIncludingDeleted().asFlow().mapToList()
+        return queries.selectAllBaseFoodsIncludingDeleted().asFlow().mapToList().map { foods ->
+            foods.filterNot(::isRetiredUntouchedDefault)
+        }
     }
 
     fun getBaseFoodsNeedingSync(): List<BaseFood> {

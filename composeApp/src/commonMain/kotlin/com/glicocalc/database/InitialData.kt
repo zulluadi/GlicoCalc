@@ -33,7 +33,7 @@ object InitialData {
         return mealTypes.firstOrNull { it.remoteKey == remoteKey }
     }
 
-    val foods = listOf(
+    private val historicalCatalogFoods = listOf(
         // Pâine și Cereale (Bread & Cereals)
         InitialFood(1, "White Bread", 48.7, "Ciqual-2025:7099"),
         InitialFood(2, "Whole Wheat Bread", 41.2, "Ciqual-2025:7110"),
@@ -74,8 +74,8 @@ object InitialData {
 
         // Legume (Vegetables)
         InitialFood(26, "Potato (boiled)", 16.8, "Ciqual-2025:4003"),
-        InitialFood(27, "Potato (home-fried)", 33.1, "CoFID-2021:13-595"),
-        InitialFood(353, "French Fries (fast food)", 33.2, "CoFID-2021:13-485"),
+        InitialFood(27, "French Fries (home-cooked)", 33.1, "CoFID-2021:13-595"),
+        InitialFood(353, "French Fries (fast food)", 39.7, "CoFID-2021:13-486"),
         InitialFood(29, "Potato (baked)", 20.1, "Ciqual-2025:4002"),
         InitialFood(32, "Carrot (raw)", 5.2, "Ciqual-2025:20009"),
         InitialFood(33, "Carrot (boiled)", 5.7, "Ciqual-2025:20352"),
@@ -425,6 +425,15 @@ object InitialData {
         InitialFood(1250, "Espresso (unsweetened)", 1.2, "Ciqual-2025:18071"),
     )
 
+    // Keep historical keys for migration and saved recipe references. Only the active
+    // list is seeded or offered as defaults: no unsourced estimates or mixed recipes.
+    private val recipeDependentFoodIds = setOf(
+        301, 1011, 1012, 297, 303, 278, 282, 280, 285, 286, 283, 1009, 319, 314, 287, 288, 279, 327, 419, 281, 316, 290, 342, 343, 418, 420, 344, 304, 250, 275, 276, 277, 307, 308, 372, 373, 1186, 1189, 1182, 1188, 1163, 1164, 1165, 1166, 1167, 1168, 1169, 1171, 1172, 1173, 1174, 1175, 1176, 1177, 147, 173, 1215, 1216, 1217, 1218, 1219, 1220, 1221, 1222, 1223, 1224, 1225, 1226, 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, 1238, 360, 358, 337, 1005, 1157, 1158, 1159, 266, 269, 268, 1010, 1004
+    )
+    val foods: List<InitialFood> = historicalCatalogFoods.filter {
+        it.sourceRef != null && it.idSuffix !in recipeDependentFoodIds
+    }
+
     // Original seed order is retained for pre-sync databases that have no remote keys.
     // It must not grow when new defaults are appended: old custom rows can have higher IDs.
     private val legacyFoodKeys = listOf(
@@ -470,7 +479,7 @@ object InitialData {
         defaultFoodRemoteKey(24) to listOf(SeedFood(defaultFoodRemoteKey(24), "Fasole verde", 5.0)),
         defaultFoodRemoteKey(25) to listOf(SeedFood(defaultFoodRemoteKey(25), "Soia (fiartă)", 9.0)),
         defaultFoodRemoteKey(26) to listOf(SeedFood(defaultFoodRemoteKey(26), "Cartofi fierți", 17.0), SeedFood(defaultFoodRemoteKey(26), "Cartof (fiert)", 17.0)),
-        defaultFoodRemoteKey(27) to listOf(SeedFood(defaultFoodRemoteKey(27), "Cartofi prăjiți (acasă)", 30.0), SeedFood(defaultFoodRemoteKey(27), "Cartof (prăjit acasă)", 30.0)),
+        defaultFoodRemoteKey(27) to listOf(SeedFood(defaultFoodRemoteKey(27), "Potato (home-fried)", 33.1), SeedFood(defaultFoodRemoteKey(27), "Cartofi (prăjiți acasă)", 33.1), SeedFood(defaultFoodRemoteKey(27), "Cartofi prăjiți (acasă)", 30.0), SeedFood(defaultFoodRemoteKey(27), "Cartof (prăjit acasă)", 30.0)),
         defaultFoodRemoteKey(28) to listOf(SeedFood(defaultFoodRemoteKey(28), "Piure de Cartofi", 14.0), SeedFood(defaultFoodRemoteKey(28), "Piure de cartof", 14.0)),
         defaultFoodRemoteKey(29) to listOf(SeedFood(defaultFoodRemoteKey(29), "Cartofi copți", 21.0), SeedFood(defaultFoodRemoteKey(29), "Cartof (copt)", 21.0)),
         defaultFoodRemoteKey(30) to listOf(SeedFood(defaultFoodRemoteKey(30), "Cartofi dulci", 20.0), SeedFood(defaultFoodRemoteKey(30), "Cartof dulce", 20.0)),
@@ -602,7 +611,7 @@ object InitialData {
         defaultFoodRemoteKey(342) to listOf(SeedFood(defaultFoodRemoteKey(342), "Chiftele", 8.0), SeedFood(defaultFoodRemoteKey(342), "Chiftea", 8.0)),
         defaultFoodRemoteKey(343) to listOf(SeedFood(defaultFoodRemoteKey(343), "Pârjoale", 10.0), SeedFood(defaultFoodRemoteKey(343), "Pârjoală", 10.0)),
         defaultFoodRemoteKey(344) to listOf(SeedFood(defaultFoodRemoteKey(344), "Șnițel", 8.0)),
-        defaultFoodRemoteKey(353) to listOf(SeedFood(defaultFoodRemoteKey(353), "Cartofi pai (fast-food)", 35.0), SeedFood(defaultFoodRemoteKey(353), "Cartof pai (fast-food)", 35.0)),
+        defaultFoodRemoteKey(353) to listOf(SeedFood(defaultFoodRemoteKey(353), "French Fries (fast food)", 33.2), SeedFood(defaultFoodRemoteKey(353), "Cartofi pai (fast-food)", 33.2), SeedFood(defaultFoodRemoteKey(353), "Cartof pai (fast-food)", 33.2), SeedFood(defaultFoodRemoteKey(353), "Cartofi pai (fast-food)", 35.0), SeedFood(defaultFoodRemoteKey(353), "Cartof pai (fast-food)", 35.0)),
         defaultFoodRemoteKey(354) to listOf(SeedFood(defaultFoodRemoteKey(354), "Porumb dulce (crud)", 19.0)),
         defaultFoodRemoteKey(355) to listOf(SeedFood(defaultFoodRemoteKey(355), "Sfeclă roșie (crudă)", 10.0)),
         defaultFoodRemoteKey(356) to listOf(SeedFood(defaultFoodRemoteKey(356), "Păstârnac (crud)", 10.0)),
@@ -773,7 +782,7 @@ object InitialData {
         )
     }
 
-    val seededFoods: List<SeedFood> = foods.map { food ->
+    private val historicalSeededFoods: List<SeedFood> = historicalCatalogFoods.map { food ->
         SeedFood(
             remoteKey = defaultFoodRemoteKey(food.idSuffix),
             name = food.name,
@@ -782,7 +791,12 @@ object InitialData {
         )
     }
 
-    fun defaultFoodByRemoteKey(remoteKey: String): SeedFood? = seededFoods.firstOrNull { it.remoteKey == remoteKey }
+    private val activeFoodKeys = foods.map { defaultFoodRemoteKey(it.idSuffix) }.toSet()
+    val seededFoods: List<SeedFood> = historicalSeededFoods.filter { it.remoteKey in activeFoodKeys }
+
+    fun isActiveDefaultFood(remoteKey: String): Boolean = remoteKey in activeFoodKeys
+
+    fun defaultFoodByRemoteKey(remoteKey: String): SeedFood? = historicalSeededFoods.firstOrNull { it.remoteKey == remoteKey }
 }
 
 private fun defaultFoodRemoteKey(idSuffix: Int): String {
