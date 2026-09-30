@@ -188,7 +188,7 @@ object DefaultFoodNames {
         "Chia Seeds" to "Semințe de chia",
         "Plain Crepe" to "Clătită simplă",
         "Fruit Compote" to "Compot de fructe",
-        "Strawberry Jam" to "Gem de căpșună",
+        "Strawberry Jam" to "Gem de căpșuni",
         "Plain Breadstick" to "Grisină simplă",
         "Cashews" to "Caju",
         "Cheese Pie" to "Plăcintă cu brânză",
