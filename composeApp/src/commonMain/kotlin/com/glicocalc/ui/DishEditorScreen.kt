@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,6 +29,23 @@ data class ComponentState(
     val searchQuery: String = ""
 )
 
+// Owned by MainApp so navigating to another tab does not discard unfinished edits.
+class DishEditorState(
+    val dishId: Long? = null,
+    initialName: String = "",
+    initialTotalCookedWeight: Double? = null,
+    initialTotalPortions: Double? = null,
+    initialComponents: List<ComponentState> = emptyList()
+) {
+    var dishName by mutableStateOf(initialName)
+    var usePortions by mutableStateOf(initialTotalCookedWeight == null && initialTotalPortions != null)
+    var totalAmountText by mutableStateOf((initialTotalCookedWeight ?: initialTotalPortions)?.toString() ?: "")
+    val components = mutableStateListOf<ComponentState>().apply {
+        if (initialComponents.isEmpty()) add(ComponentState()) else addAll(initialComponents)
+    }
+    val listState = LazyListState()
+}
+
 private data class ActiveIngredientPicker(
     val componentIndex: Int,
     val initialQuery: String
@@ -37,35 +54,21 @@ private data class ActiveIngredientPicker(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DishEditorScreen(
-    initialName: String = "",
-    initialTotalCookedWeight: Double? = null,
-    initialTotalPortions: Double? = null,
-    initialComponents: List<Pair<Long, Double>> = emptyList(),
+    state: DishEditorState,
     allBaseFoods: List<BaseFood>,
     onSave: (String, Double?, Double?, List<Pair<Long, Double>>) -> Unit,
     onCancel: () -> Unit
 ) {
     val resolveFoodName = rememberBaseFoodNameResolver()
     val resolveGlycemicIndex = rememberGlycemicIndexTextResolver()
-    val listState = rememberLazyListState()
+    val listState = state.listState
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-    var dishName by remember { mutableStateOf(initialName) }
-    var usePortions by remember { mutableStateOf(initialTotalCookedWeight == null && initialTotalPortions != null) }
-    var totalAmountText by remember {
-        mutableStateOf((initialTotalCookedWeight ?: initialTotalPortions)?.toString() ?: "")
-    }
+    var dishName by state::dishName
+    var usePortions by state::usePortions
+    var totalAmountText by state::totalAmountText
+    val components = state.components
     var activeIngredientPicker by remember { mutableStateOf<ActiveIngredientPicker?>(null) }
-    val components = remember { mutableStateListOf<ComponentState>().apply { 
-        if (initialComponents.isEmpty()) add(ComponentState()) 
-        else addAll(initialComponents.map { (foodId, weightGrams) -> 
-            ComponentState(
-                foodId = foodId, 
-                weightGrams = weightGrams.toString(),
-                searchQuery = allBaseFoods.find { it.id == foodId }?.name?.let(resolveFoodName) ?: ""
-            ) 
-        })
-    } }
     val foodPickerOptions = remember(allBaseFoods, resolveFoodName) {
         allBaseFoods.map { food ->
             val localizedName = resolveFoodName(food.name)
@@ -91,7 +94,7 @@ fun DishEditorScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(if (initialName.isEmpty()) Strings.newDishTitle() else Strings.editDishTitle()) },
+                    title = { Text(if (state.dishId == null) Strings.newDishTitle() else Strings.editDishTitle()) },
                     navigationIcon = {
                         IconButton(onClick = onCancel) {
                             Icon(Icons.Default.Close, contentDescription = Strings.close())
@@ -170,6 +173,7 @@ fun DishEditorScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 itemsIndexed(components) { index, component ->
+                    val selectedFood = allBaseFoods.firstOrNull { it.id == component.foodId }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -185,7 +189,12 @@ fun DishEditorScreen(
                                 value = component.searchQuery,
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(Strings.ingredient()) },
+                                label = {
+                                    Text(
+                                        selectedFood?.let { Strings.carbsPercent(formatDecimal(it.carbsPer100g)) }
+                                            ?: Strings.ingredient()
+                                    )
+                                },
                                 trailingIcon = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         if (component.searchQuery.isNotBlank()) {

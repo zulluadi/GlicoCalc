@@ -76,14 +76,26 @@ fun MainApp(
     AppEnvironment {
         val scope = rememberCoroutineScope()
         var currentScreen by remember { mutableStateOf(Screen.Calculator) }
-        var editingDishId by remember { mutableStateOf<Long?>(null) }
+        var dishEditorState by remember { mutableStateOf<DishEditorState?>(null) }
+        val resolveFoodName = rememberBaseFoodNameResolver()
+        val selectScreen: (Screen) -> Unit = { screen ->
+            currentScreen = if (screen == Screen.Dishes && dishEditorState != null) {
+                Screen.DishEditor
+            } else {
+                screen
+            }
+        }
+        val closeDishEditor: () -> Unit = {
+            dishEditorState = null
+            currentScreen = Screen.Dishes
+        }
         var showLanguageDialog by remember { mutableStateOf(false) }
         var showFoodLanguageDialog by remember { mutableStateOf(false) }
         var useLocalMealTypes by remember { mutableStateOf(repository.isUsingLocalMealTypes()) }
 
         BackHandler(enabled = currentScreen != Screen.Calculator) {
             when (currentScreen) {
-                Screen.DishEditor -> currentScreen = Screen.Dishes
+                Screen.DishEditor -> closeDishEditor()
                 Screen.MealTypes, Screen.DeletedItems, Screen.FamilyManager -> currentScreen = Screen.Settings
                 else -> currentScreen = Screen.Calculator
             }
@@ -126,7 +138,7 @@ fun MainApp(
                                 )
                                 NavigationBarItem(
                                     selected = currentScreen == Screen.Dishes || currentScreen == Screen.DishEditor,
-                                    onClick = { currentScreen = Screen.Dishes },
+                                    onClick = { selectScreen(Screen.Dishes) },
                                     icon = { Icon(Icons.Default.Menu, contentDescription = null) },
                                     label = { Text(Strings.navDishes()) }
                                 )
@@ -153,7 +165,7 @@ fun MainApp(
                         if (!isKeyboardVisible && useNavigationRail) {
                             AppNavigationRail(
                                 currentScreen = currentScreen,
-                                onSelectScreen = { currentScreen = it },
+                                onSelectScreen = selectScreen,
                                 modifier = Modifier.align(Alignment.CenterStart)
                             )
                         }
@@ -205,12 +217,26 @@ fun MainApp(
                             onAddDish = {
                                 telemetry.action("dish_editor_opened_new")
                                 currentScreen = Screen.DishEditor
-                                editingDishId = null
+                                dishEditorState = DishEditorState()
                             },
-                            onEditDish = { id ->
+                            onEditDish = editDish@{ id ->
+                                val initialDish = repository.getDishWithComposition(id) ?: return@editDish
                                 telemetry.action("dish_editor_opened_existing")
                                 currentScreen = Screen.DishEditor
-                                editingDishId = id
+                                dishEditorState = DishEditorState(
+                                    dishId = id,
+                                    initialName = initialDish.dish.name,
+                                    initialTotalCookedWeight = initialDish.dish.totalCookedWeight,
+                                    initialTotalPortions = initialDish.dish.totalPortions,
+                                    initialComponents = initialDish.components.map { component ->
+                                        ComponentState(
+                                            foodId = component.baseFoodId,
+                                            weightGrams = component.weightGrams.toString(),
+                                            searchQuery = baseFoods.firstOrNull { it.id == component.baseFoodId }
+                                                ?.name?.let(resolveFoodName) ?: ""
+                                        )
+                                    }
+                                )
                             },
                             onDeleteDish = {
                                 telemetry.action("dish_deleted")
@@ -224,23 +250,20 @@ fun MainApp(
                         )
                     }
                     Screen.DishEditor -> {
-                        val initialDish = editingDishId?.let { repository.getDishWithComposition(it) }
+                        val editorState = dishEditorState ?: return@Box
                         DishEditorScreen(
-                            initialName = initialDish?.dish?.name ?: "",
-                            initialTotalCookedWeight = initialDish?.dish?.totalCookedWeight,
-                            initialTotalPortions = initialDish?.dish?.totalPortions,
-                            initialComponents = initialDish?.components?.map { it.baseFoodId to it.weightGrams } ?: emptyList(),
+                            state = editorState,
                             allBaseFoods = baseFoods,
-                            onCancel = { currentScreen = Screen.Dishes },
+                            onCancel = closeDishEditor,
                             onSave = { name, totalCookedWeight, totalPortions, components ->
                                 telemetry.action("dish_saved")
                                 scope.launch {
-                                    if (editingDishId == null) {
+                                    if (editorState.dishId == null) {
                                         repository.insertDishWithComponents(name, totalCookedWeight, totalPortions, components)
                                     } else {
-                                        repository.updateDishWithComponents(editingDishId!!, name, totalCookedWeight, totalPortions, components)
+                                        repository.updateDishWithComponents(editorState.dishId, name, totalCookedWeight, totalPortions, components)
                                     }
-                                    currentScreen = Screen.Dishes
+                                    closeDishEditor()
                                 }
                             }
                         )
