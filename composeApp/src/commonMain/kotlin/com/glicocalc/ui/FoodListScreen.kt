@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun FoodListScreen(
     foods: List<BaseFood>,
-    onAddFood: (String, Double, Boolean, Double?, Int?) -> Unit,
-    onEditFood: (Long, String, Double, Boolean, Double?, Int?) -> Unit,
+    onAddFood: (String, Double, Boolean, Double?, Int?, String?) -> Unit,
+    onEditFood: (Long, String, Double, Boolean, Double?, Int?, String?) -> Unit,
     onDeleteFood: (Long) -> Unit,
     onUndeleteFood: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -123,8 +123,8 @@ fun FoodListScreen(
         if (showAddDialog) {
             FoodEditorDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, carbs, isPacked, packWeight, packCount ->
-                    onAddFood(name, carbs, isPacked, packWeight, packCount)
+                onConfirm = { name, carbs, isPacked, packWeight, packCount, gi ->
+                    onAddFood(name, carbs, isPacked, packWeight, packCount, gi)
                 }
             )
         }
@@ -132,13 +132,14 @@ fun FoodListScreen(
         foodToEdit?.let { food ->
             FoodEditorDialog(
                 initialName = food.name,
+                initialGlycemicIndexLevel = food.glycemicIndexLevel,
                 initialCarbs = food.carbsPer100g.toString(),
                 initialIsPacked = food.isPacked != 0L,
                 initialPackWeight = food.packWeight?.let { it.toString() }.orEmpty(),
                 initialPackCount = food.packCount?.let { it.toString() }.orEmpty(),
                 onDismiss = { foodToEdit = null },
-                onConfirm = { name, carbs, isPacked, packWeight, packCount ->
-                    onEditFood(food.id, name, carbs, isPacked, packWeight, packCount)
+                onConfirm = { name, carbs, isPacked, packWeight, packCount, gi ->
+                    onEditFood(food.id, name, carbs, isPacked, packWeight, packCount, gi)
                 }
             )
         }

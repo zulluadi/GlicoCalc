@@ -9,7 +9,8 @@ data class InitialMealType(val remoteKey: String, val name: String, val hourOfDa
 enum class GlycemicIndexLevel(val value: String) {
     LOW("low"),
     MEDIUM("medium"),
-    HIGH("high")
+    HIGH("high"),
+    UNSPECIFIED("unspecified")
 }
 
 data class SeedFood(

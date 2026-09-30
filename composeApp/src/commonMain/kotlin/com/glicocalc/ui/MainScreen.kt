@@ -175,13 +175,13 @@ fun MainApp(
                         )
                     Screen.FoodList -> FoodListScreen(
                         foods = baseFoods,
-                        onAddFood = { name, carbs, isPacked, packWeight, packCount ->
+                        onAddFood = { name, carbs, isPacked, packWeight, packCount, gi ->
                             telemetry.action("food_added")
-                            scope.launch { repository.insertBaseFood(name, carbs, isPacked, packWeight, packCount) }
+                            scope.launch { repository.insertBaseFood(name, carbs, isPacked, packWeight, packCount, gi) }
                         },
-                        onEditFood = { id, name, carbs, isPacked, packWeight, packCount ->
+                        onEditFood = { id, name, carbs, isPacked, packWeight, packCount, gi ->
                             telemetry.action("food_edited")
-                            scope.launch { repository.updateBaseFood(id, name, carbs, isPacked, packWeight, packCount) }
+                            scope.launch { repository.updateBaseFood(id, name, carbs, isPacked, packWeight, packCount, gi) }
                         },
                         onDeleteFood = {
                             telemetry.action("food_deleted")

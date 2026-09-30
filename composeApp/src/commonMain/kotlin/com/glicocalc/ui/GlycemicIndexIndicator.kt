@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -35,9 +36,9 @@ fun GlycemicIndexBadge(level: String?, modifier: Modifier = Modifier) {
     val resolveText = rememberGlycemicIndexTextResolver()
     val text = resolveText(level) ?: return
     val colors = when (level) {
-        "low" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        "medium" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        "low" -> Color(0xFFC8E6C9) to Color(0xFF1B5E20)
+        "medium" -> Color(0xFFFFE0B2) to Color(0xFF8C3900)
+        else -> MaterialTheme.colorScheme.error to MaterialTheme.colorScheme.onError
     }
     Surface(
         modifier = modifier,

@@ -1,6 +1,8 @@
 package com.glicocalc.ui
 
 import androidx.compose.runtime.Composable
+import glicocalc.composeapp.generated.resources.glycemic_index
+import glicocalc.composeapp.generated.resources.gi_unspecified
 import glicocalc.composeapp.generated.resources.Res
 import glicocalc.composeapp.generated.resources.add_another_food_to_meal
 import glicocalc.composeapp.generated.resources.add_ingredient
@@ -192,6 +194,8 @@ object Strings {
     @Composable fun actions() = stringResource(Res.string.actions)
     @Composable fun addMealTypeTitle() = stringResource(Res.string.add_meal_type_title)
     @Composable fun editMealTypeTitle() = stringResource(Res.string.edit_meal_type_title)
+    @Composable fun glycemicIndex() = stringResource(Res.string.glycemic_index)
+    @Composable fun giUnspecified() = stringResource(Res.string.gi_unspecified)
     @Composable fun foodName() = stringResource(Res.string.food_name)
     @Composable fun foodLanguage() = stringResource(Res.string.food_language)
     @Composable fun mealTypeName() = stringResource(Res.string.meal_type_name)

@@ -136,4 +136,6 @@
     <string name="reset_default_foods_summary">Actualizează alimentele implicite comune. Păstrează alimentele adăugate. Necesită autentificarea administratorului familiei.</string>
     <string name="reset_all_foods_summary">Resetează alimentele implicite și mută alimentele adăugate în Elemente șterse.</string>
     <string name="default_foods_reset_unavailable">Momentan indisponibil. Verifică starea sincronizării familiei.</string>
+    <string name="glycemic_index">Indice glicemic (IG)</string>
+    <string name="gi_unspecified">Nespecificat</string>
 </resources>

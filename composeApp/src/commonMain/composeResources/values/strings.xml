@@ -155,4 +155,6 @@
     <string name="reset_default_foods_summary">Update shared defaults. Keeps user-added foods. Requires a signed-in family admin.</string>
     <string name="reset_all_foods_summary">Reset defaults and move user-added foods to Deleted items.</string>
     <string name="default_foods_reset_unavailable">Currently unavailable. Check your family sync status.</string>
+    <string name="glycemic_index">Glycemic index (GI)</string>
+    <string name="gi_unspecified">Unspecified</string>
 </resources>

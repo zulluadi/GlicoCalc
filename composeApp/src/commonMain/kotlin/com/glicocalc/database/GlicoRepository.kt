@@ -45,26 +45,34 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         return queries.selectBaseFoodById(id).executeAsOneOrNull()
     }
 
-    fun insertBaseFood(name: String, carbs: Double, isPacked: Boolean = false, packWeight: Double? = null, packCount: Int? = null) {
+    fun insertBaseFood(name: String, carbs: Double, isPacked: Boolean = false, packWeight: Double? = null, packCount: Int? = null, glycemicIndexLevel: String? = null) {
         val now = PlatformTime.currentTimeMillis()
-        queries.insertBaseFood(
-            name = name,
-            carbsPer100g = carbs,
-            remoteKey = generateCustomFoodRemoteKey(),
-            source = FoodSource.CUSTOM.value,
-            isDeleted = 0,
-            needsSync = 1,
-            updatedAt = now,
-            isPacked = if (isPacked) 1 else 0,
-            packWeight = packWeight,
-            packCount = packCount?.toLong()
-        )
+        val remoteKey = generateCustomFoodRemoteKey()
+        database.transaction {
+            queries.insertBaseFood(
+                name = name,
+                carbsPer100g = carbs,
+                remoteKey = remoteKey,
+                source = FoodSource.CUSTOM.value,
+                isDeleted = 0,
+                needsSync = 1,
+                updatedAt = now,
+                isPacked = if (isPacked) 1 else 0,
+                packWeight = packWeight,
+                packCount = packCount?.toLong()
+            )
+            val inserted = queries.selectBaseFoodByRemoteKey(remoteKey).executeAsOne()
+            queries.updateBaseFoodGlycemicIndexLevel(validGlycemicIndexLevel(glycemicIndexLevel) ?: GlycemicIndexLevel.UNSPECIFIED.value, inserted.id)
+        }
         notifyLocalDataChanged()
     }
 
-    fun updateBaseFood(id: Long, name: String, carbs: Double, isPacked: Boolean = false, packWeight: Double? = null, packCount: Int? = null) {
+    fun updateBaseFood(id: Long, name: String, carbs: Double, isPacked: Boolean = false, packWeight: Double? = null, packCount: Int? = null, glycemicIndexLevel: String? = null) {
         val now = PlatformTime.currentTimeMillis()
-        queries.updateBaseFood(name, carbs, if (isPacked) 1 else 0, packWeight, packCount?.toLong(), 1, now, id)
+        database.transaction {
+            queries.updateBaseFood(name, carbs, if (isPacked) 1 else 0, packWeight, packCount?.toLong(), 1, now, id)
+            queries.updateBaseFoodGlycemicIndexLevel(validGlycemicIndexLevel(glycemicIndexLevel) ?: GlycemicIndexLevel.UNSPECIFIED.value, id)
+        }
         notifyLocalDataChanged()
     }
 
@@ -137,7 +145,8 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
             baseFood.isDeleted == 0L &&
             baseFood.name == seed.name &&
             baseFood.carbsPer100g == seed.carbs &&
-            baseFood.isPacked == 0L
+            baseFood.isPacked == 0L &&
+            (baseFood.glycemicIndexLevel == null || baseFood.glycemicIndexLevel == seed.glycemicIndexLevel?.value)
     }
 
     fun prepareBaseFoodCatalog() {

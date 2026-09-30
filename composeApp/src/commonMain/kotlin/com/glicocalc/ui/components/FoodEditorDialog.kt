@@ -2,6 +2,9 @@ package com.glicocalc.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.glicocalc.ui.rememberGlycemicIndexTextResolver
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,13 +16,18 @@ import com.glicocalc.ui.Strings
 @Composable
 fun FoodEditorDialog(
     initialName: String = "",
+    initialGlycemicIndexLevel: String? = null,
     initialCarbs: String = "",
     initialIsPacked: Boolean = false,
     initialPackWeight: String = "",
     initialPackCount: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (name: String, carbs: Double, isPacked: Boolean, packWeight: Double?, packCount: Int?) -> Unit
+    onConfirm: (name: String, carbs: Double, isPacked: Boolean, packWeight: Double?, packCount: Int?, glycemicIndexLevel: String?) -> Unit
 ) {
+    var gi by remember { mutableStateOf(initialGlycemicIndexLevel ?: "unspecified") }
+    var giMenuExpanded by remember { mutableStateOf(false) }
+    val resolveGiText = rememberGlycemicIndexTextResolver()
+    val unspecifiedText = Strings.giUnspecified()
     var name by remember { mutableStateOf(initialName) }
     var carbsText by remember { mutableStateOf(initialCarbs) }
     var isPacked by remember { mutableStateOf(initialIsPacked) }
@@ -33,7 +41,7 @@ fun FoodEditorDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initialName.isEmpty()) Strings.addFoodTitle() else Strings.editFoodTitle()) },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -49,6 +57,22 @@ fun FoodEditorDialog(
                     modifier = Modifier.fillMaxWidth(),
                     suffix = { Text("g") }
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(Strings.glycemicIndex(), style = MaterialTheme.typography.labelLarge)
+                Box {
+                    OutlinedButton(onClick = { giMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(resolveGiText(gi) ?: unspecifiedText)
+                    }
+                    DropdownMenu(expanded = giMenuExpanded, onDismissRequest = { giMenuExpanded = false }) {
+                        listOf("unspecified", "low", "medium", "high").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(resolveGiText(option) ?: unspecifiedText) },
+                                onClick = { gi = option; giMenuExpanded = false }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
@@ -88,7 +112,7 @@ fun FoodEditorDialog(
                 onClick = {
                     val packWeight = if (isPacked) packWeightText.toDoubleOrNull() else null
                     val packCount = if (isPacked) packCountText.toIntOrNull() else null
-                    onConfirm(name, carbsText.toDouble(), isPacked, packWeight, packCount)
+                    onConfirm(name, carbsText.toDouble(), isPacked, packWeight, packCount, gi)
                     onDismiss()
                 }
             ) {
