@@ -27,5 +27,14 @@ The classifications are based on the [University of Sydney international GI data
 
 GI depends on variety, ripeness, processing, cooking, and recipe. The indicator is therefore omitted for foods with too little available carbohydrate for a meaningful GI test, foods without a close tested equivalent, custom foods, and defaults edited by the user. A missing indicator does not mean a GI of zero. GI describes carbohydrate quality and does not account for serving size; carbohydrate amount remains necessary when estimating a meal's glucose effect.
 
+## Admin shared catalog replacement
+
+On Android, the family owner can choose **Reset default foods** in Settings, beside **Reset all foods** and confirm. This explicitly replaces edits, deletions, and package settings for all 247 active default keys with the bundled catalog. Custom food keys and saved dishes are not written by the replacement transaction. English names, available carbohydrate values, and GI categories are uploaded as complete food records, so clients can resolve newly added default keys.
+
+The Firestore transaction checks the family owner and writes the full catalog atomically. The action is available to a signed-in family admin after family permissions load, and can be repeated after confirmation. Existing completion markers do not disable it. The family document records who last performed the replacement and when. Normal sync continues afterward: later edits, including pending changes on other devices, can still change these values. Replacement happens only on an explicit request.
+
+The Firebase flow has been compiled but has not been exercised against a live family. Firebase access rules must allow the owner's transaction to update the family document and its food records.
+
+GI categories are stored in the local `BaseFood.glycemicIndexLevel` column and in Firebase food records as `glycemicIndexLevel` (`low`, `medium`, `high`, or null). The admin replacement includes this field. Downloaded categories are preserved even for foods absent from the receiving app’s bundled catalog. Older records without GI fall back to the local untouched default category when available. Editing a food clears its category to avoid retaining an unrelated classification.
 
 French fries use separate CoFID records: home-cooked fries use `13-595` (homemade, fried in corn oil; 33.1 g available carbohydrate/100 g), while fast-food fries use `13-486` (fine cut, from fast-food outlets; 39.7 g/100 g). Record `13-485` is takeaway fish-and-chip-shop chips and is not used as the fast-food French fries reference. Prior unchanged defaults using that record are migrated.

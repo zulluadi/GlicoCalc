@@ -127,6 +127,13 @@
     <string name="reset_food_list_confirm">Resetezi lista de alimente?</string>
     <string name="reset_food_list_warning">Această acțiune va șterge toate alimentele personalizate și va reseta alimentele implicite. Acțiunea se va aplica tuturor membrilor familiei.</string>
     <string name="reset">Resetează</string>
+    <string name="replace_shared_defaults">Înlocuiește alimentele implicite comune</string>
+    <string name="replace_shared_defaults_description">Înlocuiește toate alimentele implicite cu catalogul actualizat al aplicației, inclusiv modificările și ștergerile existente. Alimentele adăugate de utilizatori sunt păstrate. Ceilalți membri primesc valorile la următoarea sincronizare.</string>
     <string name="restore_all">Restaurează tot</string>
     <string name="restore_all_description">Restaurezi toate alimentele și preparatele afișate aici? Vor reveni în listele tale și se vor sincroniza cu familia.</string>
+    <string name="reset_default_foods">Resetează alimentele implicite</string>
+    <string name="reset_all_foods">Resetează toate alimentele</string>
+    <string name="reset_default_foods_summary">Actualizează alimentele implicite comune. Păstrează alimentele adăugate. Necesită autentificarea administratorului familiei.</string>
+    <string name="reset_all_foods_summary">Resetează alimentele implicite și mută alimentele adăugate în Elemente șterse.</string>
+    <string name="default_foods_reset_unavailable">Momentan indisponibil. Verifică starea sincronizării familiei.</string>
 </resources>

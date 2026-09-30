@@ -146,6 +146,13 @@
     <string name="reset_food_list_confirm">Reset food list?</string>
     <string name="reset_food_list_warning">This will delete all custom foods and reset all default foods. This action will apply to all family members.</string>
     <string name="reset">Reset</string>
+    <string name="replace_shared_defaults">Replace shared defaults</string>
+    <string name="replace_shared_defaults_description">Replace all default foods with the updated app catalog, including existing edits and deletions. User-added foods are preserved. Other members receive the values on their next sync.</string>
     <string name="restore_all">Restore all</string>
     <string name="restore_all_description">Restore all foods and dishes listed here? They will return to your lists and sync with your family.</string>
+    <string name="reset_default_foods">Reset default foods</string>
+    <string name="reset_all_foods">Reset all foods</string>
+    <string name="reset_default_foods_summary">Update shared defaults. Keeps user-added foods. Requires a signed-in family admin.</string>
+    <string name="reset_all_foods_summary">Reset defaults and move user-added foods to Deleted items.</string>
+    <string name="default_foods_reset_unavailable">Currently unavailable. Check your family sync status.</string>
 </resources>

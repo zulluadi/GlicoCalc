@@ -2,6 +2,8 @@ package com.glicocalc.sync
 
 import android.content.Context
 import android.util.Log
+import com.glicocalc.database.GlycemicIndexLevel
+import com.glicocalc.database.InitialData
 import com.glicocalc.database.BaseFood
 import com.glicocalc.database.FoodSource
 import com.glicocalc.database.GlicoRepository
@@ -23,6 +25,8 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import java.util.Locale
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +50,24 @@ class FirebaseFoodSyncManager(
     private val syncMutex = Mutex()
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
     private var periodicSyncJob: Job? = null
+    data class DefaultCatalogResetState(
+        val accountUid: String? = null,
+        val familyId: String? = null,
+        val available: Boolean = false,
+        val isFamilyOwner: Boolean = false
+    )
+    private val mutableDefaultCatalogResetState = MutableStateFlow(DefaultCatalogResetState())
+    val defaultCatalogResetState = mutableDefaultCatalogResetState.asStateFlow()
+    val canReplaceSharedDefaults: Boolean
+        get() = isEnabled && currentDefaultCatalogResetState().available
+
+    private fun currentDefaultCatalogResetState(): DefaultCatalogResetState {
+        val state = mutableDefaultCatalogResetState.value
+        return if (state.accountUid == auth?.currentUser?.uid && state.familyId == repository.getFamilyId()) {
+            state
+        } else DefaultCatalogResetState()
+    }
+
     var onAccountStateChanged: ((String?) -> Unit)? = null
     var onSyncStateChanged: ((SyncUiState) -> Unit)? = null
     @Volatile
@@ -58,6 +80,7 @@ class FirebaseFoodSyncManager(
 
     fun start() {
         authStateListener = FirebaseAuth.AuthStateListener {
+            mutableDefaultCatalogResetState.value = DefaultCatalogResetState()
             onAccountStateChanged?.invoke(currentSyncAccountLabel())
             onSyncStateChanged?.invoke(currentSyncUiState())
             requestSync()
@@ -119,6 +142,7 @@ class FirebaseFoodSyncManager(
     }
 
     suspend fun signOut() {
+        mutableDefaultCatalogResetState.value = DefaultCatalogResetState()
         auth?.signOut()
         repository.setFamilyId(null)
         repository.clearAllFamilyMembers()
@@ -149,6 +173,51 @@ class FirebaseFoodSyncManager(
                 }
             } catch (exception: Exception) {
                 Log.w(TAG, "Firebase food sync failed; will retry later.", exception)
+                onSyncStateChanged?.invoke(currentSyncUiState(status = SyncStatus.ERROR))
+            }
+        }
+    }
+
+    // Explicit admin action; ordinary sync never triggers this replacement.
+    fun replaceSharedDefaults() {
+        if (!isEnabled) return
+        scope.launch {
+            onSyncStateChanged?.invoke(currentSyncUiState(status = SyncStatus.SYNCING))
+            try {
+                syncMutex.withLock {
+                    runSync()
+                    val user = getCurrentUser() ?: error("Sign in first")
+                    val familyId = repository.getFamilyId() ?: error("No family selected")
+                    val familyDoc = firestore!!.collection("families").document(familyId)
+                    val now = System.currentTimeMillis()
+                    // Publish the entire catalog atomically on each explicit admin request.
+                    firestore!!.runTransaction { transaction ->
+                        val family = transaction.get(familyDoc)
+                        check(family.getString("ownerUid") == user.uid) { "Only the family admin can replace defaults" }
+                        InitialData.seededFoods.forEach { seed ->
+                            transaction.set(familyDoc.collection("foodDiffs").document(seed.remoteKey), mapOf(
+                                "source" to FoodSource.DEFAULT.value,
+                                "name" to seed.name,
+                                "carbsPer100g" to seed.carbs,
+                                "glycemicIndexLevel" to seed.glycemicIndexLevel?.value,
+                                "isDeleted" to false,
+                                "isPacked" to false,
+                                "updatedAt" to now
+                            ))
+                        }
+                        transaction.update(familyDoc, mapOf(
+                            "defaultCatalogReplacementCompleted" to true,
+                            "defaultCatalogReplacementAt" to now,
+                            "defaultCatalogReplacementBy" to user.uid
+                        ))
+                    }.await()
+                    repository.applyReplacedDefaultCatalog(now)
+                    runSync()
+                }
+                lastSuccessfulSyncAtMillis = System.currentTimeMillis()
+                onSyncStateChanged?.invoke(currentSyncUiState(status = SyncStatus.UP_TO_DATE))
+            } catch (exception: Exception) {
+                Log.w(TAG, "Failed to replace shared defaults", exception)
                 onSyncStateChanged?.invoke(currentSyncUiState(status = SyncStatus.ERROR))
             }
         }
@@ -189,10 +258,7 @@ class FirebaseFoodSyncManager(
         return normalizeEmail(auth?.currentUser?.email)
     }
 
-    fun isCurrentUserFamilyOwner(): Boolean {
-        val uid = auth?.currentUser?.uid ?: return false
-        return repository.getFamilyOwnerUid() == uid
-    }
+    fun isCurrentUserFamilyOwner(): Boolean = currentDefaultCatalogResetState().isFamilyOwner
 
     suspend fun pendingFamilyInviteLabel(): String? {
         return try {
@@ -674,6 +740,7 @@ class FirebaseFoodSyncManager(
                         "source" to food.source.value,
                         "name" to food.name,
                         "carbsPer100g" to food.carbsPer100g,
+            "glycemicIndexLevel" to food.glycemicIndexLevel,
                         "isDeleted" to food.isDeleted,
                         "updatedAt" to food.updatedAt,
                         "isPacked" to food.isPacked,
@@ -728,7 +795,10 @@ class FirebaseFoodSyncManager(
                 updatedAt = updatedAt,
                 isPacked = isPacked,
                 packWeight = packWeight,
-                packCount = packCount
+                packCount = packCount,
+                glycemicIndexLevel = (data["glycemicIndexLevel"] as? String)?.takeIf { value ->
+                    GlycemicIndexLevel.entries.any { it.value == value }
+                }
             )
         }
     }
@@ -872,8 +942,8 @@ class FirebaseFoodSyncManager(
         ).await()
     }
 
-    private fun foodPayload(food: BaseFood): Map<String, Any> {
-        val payload = mutableMapOf<String, Any>(
+    private fun foodPayload(food: BaseFood): Map<String, Any?> {
+        val payload = mutableMapOf<String, Any?>(
             "source" to food.source,
             "name" to food.name,
             "carbsPer100g" to food.carbsPer100g,
@@ -891,12 +961,14 @@ class FirebaseFoodSyncManager(
     }
 
     private suspend fun syncFamilyMemberProfiles(familyId: String) {
+        val accountUid = auth?.currentUser?.uid ?: return
         val snapshot = try {
             firestore!!.collection("families").document(familyId).get().await()
         } catch (_: Exception) {
             return
         }
-        val profiles = snapshot.get("memberProfiles") as? Map<*, *> ?: return
+        if (auth?.currentUser?.uid != accountUid || repository.getFamilyId() != familyId) return
+        val profiles = snapshot.get("memberProfiles") as? Map<*, *> ?: emptyMap<String, Any>()
         val ownerUid = snapshot.getString("ownerUid")
         repository.setFamilyName(snapshot.getString("name")?.trim()?.takeIf { it.isNotBlank() })
         val activeMemberUids = profiles.keys.filterIsInstance<String>().toSet()
@@ -928,6 +1000,14 @@ class FirebaseFoodSyncManager(
 
         if (ownerEmail != null) {
             repository.setFamilyOwner(ownerEmail!!)
+        }
+        if (auth?.currentUser?.uid == accountUid && repository.getFamilyId() == familyId) {
+            mutableDefaultCatalogResetState.value = DefaultCatalogResetState(
+                accountUid = accountUid,
+                familyId = familyId,
+                available = ownerUid == accountUid,
+                isFamilyOwner = ownerUid == accountUid
+            )
         }
     }
 

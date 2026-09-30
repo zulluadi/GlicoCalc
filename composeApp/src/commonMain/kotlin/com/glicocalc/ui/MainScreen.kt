@@ -46,6 +46,7 @@ fun MainApp(
     onSignOutFromSync: (() -> Unit)? = null,
     onSwitchAccount: (() -> Unit)? = null,
     onManualSync: (() -> Unit)? = null,
+    onReplaceSharedDefaults: (() -> Unit)? = null,
     onSyncIntervalChanged: ((Int) -> Unit)? = null,
     onScanFamilyQr: (() -> Unit)? = null,
     onFamilyQrDialogClosed: (() -> Unit)? = null,
@@ -262,6 +263,7 @@ fun MainApp(
                             telemetry.action("food_list_reset")
                             scope.launch { repository.resetFoodListToDefault() }
                         },
+                        onReplaceSharedDefaults = onReplaceSharedDefaults,
                         isFamilyOwner = canResetFoodList,
                         modifier = modifier
                     )

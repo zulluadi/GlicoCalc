@@ -103,6 +103,19 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         queries.markBaseFoodSynced(id)
     }
 
+    fun applyReplacedDefaultCatalog(updatedAt: Long) {
+        database.transaction {
+            InitialData.seededFoods.forEach { seed ->
+                val food = queries.selectBaseFoodByRemoteKey(seed.remoteKey).executeAsOneOrNull()
+                if (food != null && food.source == FoodSource.DEFAULT.value) {
+                    queries.applyRemoteBaseFood(seed.name, seed.carbs, 0, null, null, 0, updatedAt, food.id)
+                }
+            }
+        }
+        seedInitialData()
+        populateDefaultGlycemicIndexLevels()
+    }
+
     fun markAllSyncableDataForSync() {
         val now = PlatformTime.currentTimeMillis()
         database.transaction {
@@ -199,6 +212,8 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                         packWeight = remoteFood.packWeight,
                         packCount = remoteFood.packCount?.toLong()
                     )
+                    val inserted = queries.selectBaseFoodByRemoteKey(remoteFood.remoteKey).executeAsOne()
+                    queries.updateBaseFoodGlycemicIndexLevel(validGlycemicIndexLevel(remoteFood.glycemicIndexLevel), inserted.id)
                 } else if (local.needsSync == 0L && remoteFood.updatedAt >= local.updatedAt) {
                     queries.applyRemoteBaseFood(
                         remoteFood.name,
@@ -210,6 +225,7 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                         remoteFood.updatedAt,
                         local.id
                     )
+                    queries.updateBaseFoodGlycemicIndexLevel(validGlycemicIndexLevel(remoteFood.glycemicIndexLevel), local.id)
                 }
             }
 
@@ -774,6 +790,9 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         populateDefaultGlycemicIndexLevels()
     }
 
+    private fun validGlycemicIndexLevel(value: String?): String? =
+        value?.takeIf { candidate -> GlycemicIndexLevel.entries.any { it.value == candidate } }
+
     private fun populateDefaultGlycemicIndexLevels() {
         getAllBaseFoodsIncludingDeleted().forEach { food ->
             val seed = food.remoteKey?.let(InitialData::defaultFoodByRemoteKey)
@@ -785,7 +804,9 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
                 food.isPacked == 0L &&
                 food.packWeight == null &&
                 food.packCount == null
-            val storedLevel = if (isUntouchedDefault) level?.value else null
+            // A synced category is stored independently of this app's bundled catalog.
+            // Legacy records without GI can still inherit their untouched default category.
+            val storedLevel = food.glycemicIndexLevel ?: if (isUntouchedDefault) level?.value else null
             if (food.glycemicIndexLevel != storedLevel) {
                 queries.updateBaseFoodGlycemicIndexLevel(storedLevel, food.id)
             }
@@ -1027,7 +1048,8 @@ data class RemoteFoodRecord(
     val updatedAt: Long,
     val isPacked: Boolean = false,
     val packWeight: Double? = null,
-    val packCount: Int? = null
+    val packCount: Int? = null,
+    val glycemicIndexLevel: String? = null
 )
 
 data class RemoteSettingRecord(

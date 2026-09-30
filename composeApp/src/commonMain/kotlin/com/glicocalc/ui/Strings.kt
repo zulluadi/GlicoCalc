@@ -81,6 +81,13 @@ import glicocalc.composeapp.generated.resources.sync_last_synced
 import glicocalc.composeapp.generated.resources.sync_interval
 import glicocalc.composeapp.generated.resources.sync_interval_description
 import glicocalc.composeapp.generated.resources.sync_interval_value
+import glicocalc.composeapp.generated.resources.reset_default_foods
+import glicocalc.composeapp.generated.resources.reset_all_foods
+import glicocalc.composeapp.generated.resources.reset_default_foods_summary
+import glicocalc.composeapp.generated.resources.reset_all_foods_summary
+import glicocalc.composeapp.generated.resources.default_foods_reset_unavailable
+import glicocalc.composeapp.generated.resources.replace_shared_defaults
+import glicocalc.composeapp.generated.resources.replace_shared_defaults_description
 import glicocalc.composeapp.generated.resources.sync_now
 import glicocalc.composeapp.generated.resources.sync_signed_in_as
 import glicocalc.composeapp.generated.resources.sync_signed_in_google
@@ -220,6 +227,13 @@ object Strings {
     @Composable fun syncInterval() = stringResource(Res.string.sync_interval)
     @Composable fun syncIntervalValue(value: Int) = stringResource(Res.string.sync_interval_value, value)
     @Composable fun syncIntervalDescription() = stringResource(Res.string.sync_interval_description)
+    @Composable fun defaultFoodsResetUnavailable() = stringResource(Res.string.default_foods_reset_unavailable)
+    @Composable fun resetDefaultFoods() = stringResource(Res.string.reset_default_foods)
+    @Composable fun resetAllFoods() = stringResource(Res.string.reset_all_foods)
+    @Composable fun resetDefaultFoodsSummary() = stringResource(Res.string.reset_default_foods_summary)
+    @Composable fun resetAllFoodsSummary() = stringResource(Res.string.reset_all_foods_summary)
+    @Composable fun replaceSharedDefaults() = stringResource(Res.string.replace_shared_defaults)
+    @Composable fun replaceSharedDefaultsDescription() = stringResource(Res.string.replace_shared_defaults_description)
     @Composable fun syncNow() = stringResource(Res.string.sync_now)
     @Composable fun syncSignedInGoogle() = stringResource(Res.string.sync_signed_in_google)
     @Composable fun signInWithGoogle() = stringResource(Res.string.sign_in_with_google)

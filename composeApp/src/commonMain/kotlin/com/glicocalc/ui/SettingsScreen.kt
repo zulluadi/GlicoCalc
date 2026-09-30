@@ -1,6 +1,12 @@
 package com.glicocalc.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
@@ -40,9 +46,11 @@ fun SettingsScreen(
     onOpenMealTypes: () -> Unit,
     onOpenDeletedItems: () -> Unit,
     onResetFoodList: () -> Unit,
+    onReplaceSharedDefaults: (() -> Unit)? = null,
     isFamilyOwner: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var showReplaceDefaultsDialog by remember { mutableStateOf(false) }
     var showResetDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     Scaffold(
@@ -176,47 +184,56 @@ fun SettingsScreen(
                 HorizontalDivider()
             }
             item {
-                val disabledTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                val disabledSupportingTextColor =
-                    androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                val resetTextColor = if (isFamilyOwner) {
-                    androidx.compose.material3.MaterialTheme.colorScheme.error
-                } else {
-                    disabledTextColor
-                }
-                val supportingTextColor = if (isFamilyOwner) {
-                    androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-                } else {
-                    disabledSupportingTextColor
-                }
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            text = Strings.resetFoodList(),
-                            color = resetTextColor
-                        )
-                    },
-                    supportingContent = {
-                        Column {
-                            Text(
-                                text = Strings.resetFoodListDescription(),
-                                color = supportingTextColor
-                            )
-                            if (!isFamilyOwner) {
-                                Text(
-                                    text = Strings.resetFoodListOwnerOnly(),
-                                    color = supportingTextColor
-                                )
-                            }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        OutlinedButton(
+                            onClick = { showReplaceDefaultsDialog = true },
+                            enabled = isFamilyOwner && isSignedIn && onReplaceSharedDefaults != null,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(Strings.resetDefaultFoods()) }
+                        Text(Strings.resetDefaultFoodsSummary(), style = MaterialTheme.typography.bodySmall)
+                        if (isFamilyOwner && isSignedIn && onReplaceSharedDefaults == null) {
+                            Text(Strings.defaultFoodsResetUnavailable(), style = MaterialTheme.typography.bodySmall)
                         }
-                    },
-                    modifier = Modifier.clickable(enabled = isFamilyOwner) {
-                        showResetDialog = true
                     }
-                )
+                    Column(modifier = Modifier.weight(1f)) {
+                        OutlinedButton(
+                            onClick = { showResetDialog = true },
+                            enabled = isFamilyOwner,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(Strings.resetAllFoods()) }
+                        Text(Strings.resetAllFoodsSummary(), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (!isFamilyOwner) {
+                    Text(Strings.resetFoodListOwnerOnly(), modifier = Modifier.padding(horizontal = 16.dp))
+                }
                 HorizontalDivider()
             }
         }
+    }
+
+    if (showReplaceDefaultsDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showReplaceDefaultsDialog = false },
+            title = { Text(Strings.resetDefaultFoods()) },
+            text = { Text(Strings.replaceSharedDefaultsDescription()) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showReplaceDefaultsDialog = false
+                    onReplaceSharedDefaults?.invoke()
+                }) { Text(Strings.resetDefaultFoods()) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReplaceDefaultsDialog = false }) { Text(Strings.cancel()) }
+            }
+        )
     }
 
     if (showResetDialog) {

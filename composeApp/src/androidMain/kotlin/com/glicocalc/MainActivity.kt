@@ -16,6 +16,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -130,6 +131,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val defaultResetState by foodSyncManager.defaultCatalogResetState.collectAsState()
+            val defaultResetStateIsCurrent = defaultResetState.accountUid == foodSyncManager.currentUser()?.uid &&
+                defaultResetState.familyId == foodSyncManager.getCurrentFamilyId()
             MainApp(
                 repository = repository,
                 telemetry = NoopTelemetry,
@@ -137,7 +141,7 @@ class MainActivity : ComponentActivity() {
                 familyId = foodSyncManager.getCurrentFamilyId(),
                 familyName = familyName,
                 currentUserEmail = foodSyncManager.currentUserEmail(),
-                isFamilyOwner = foodSyncManager.isCurrentUserFamilyOwner(),
+                isFamilyOwner = defaultResetStateIsCurrent && defaultResetState.isFamilyOwner,
                 pendingFamilyInviteLabel = pendingFamilyInviteLabel,
                 isSignedIn = syncUiState.isSignedIn,
                 syncStatusMessage = syncStatusMessage(),
@@ -147,6 +151,7 @@ class MainActivity : ComponentActivity() {
                 onSignOutFromSync = if (canOfferGoogleSignIn()) ::signOutFromSync else null,
                 onSwitchAccount = if (canOfferGoogleSignIn() && syncUiState.isSignedIn) ::switchAccount else null,
                 onManualSync = if (foodSyncManager.isEnabled) foodSyncManager::requestSync else null,
+                onReplaceSharedDefaults = if (defaultResetStateIsCurrent && defaultResetState.available && foodSyncManager.isEnabled) foodSyncManager::replaceSharedDefaults else null,
                 onSyncIntervalChanged = ::updateSyncIntervalMinutes,
                 onScanFamilyQr = ::scanFamilyQr,
                 onFamilyQrDialogClosed = foodSyncManager::requestSync,
