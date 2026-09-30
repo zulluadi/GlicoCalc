@@ -1004,7 +1004,9 @@ private fun MealItemRow(
     val currentOnDelete by rememberUpdatedState(onDelete)
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
-            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart ||
+                dismissValue == SwipeToDismissBoxValue.StartToEnd
+            ) {
                 currentOnDelete()
                 true
             } else {
@@ -1028,7 +1030,8 @@ private fun MealItemRow(
 
     SwipeToDismissBox(
         state = dismissState,
-        enableDismissFromStartToEnd = false,
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = true,
         backgroundContent = {
             Box(
                 modifier = Modifier
@@ -1050,7 +1053,11 @@ private fun MealItemRow(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.End,
+                        horizontalArrangement = if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                            Arrangement.Start
+                        } else {
+                            Arrangement.End
+                        },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
