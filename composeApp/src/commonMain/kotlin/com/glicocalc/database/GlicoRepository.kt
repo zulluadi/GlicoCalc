@@ -492,6 +492,19 @@ class GlicoRepository(val database: GlicoDatabase, private val driver: SqlDriver
         notifyLocalDataChanged()
     }
 
+    fun restoreAllDeletedItems() {
+        val now = PlatformTime.currentTimeMillis()
+        database.transaction {
+            queries.selectAllBaseFoodsIncludingDeleted().executeAsList()
+                .filter { it.isDeleted != 0L }
+                .forEach { queries.restoreBaseFood(1, now, it.id) }
+            getAllDishesIncludingDeleted()
+                .filter { it.isDeleted != 0L }
+                .forEach { queries.restoreDish(1, now, it.id) }
+        }
+        notifyLocalDataChanged()
+    }
+
     fun permanentlyDeleteAllDeletedItems() {
         database.transaction {
             queries.deleteDeletedDishComponentsPermanently()

@@ -280,6 +280,10 @@ fun MainApp(
                             telemetry.action("dish_restored")
                             scope.launch { repository.restoreDish(id) }
                         },
+                        onRestoreAll = {
+                            telemetry.action("all_items_restored")
+                            scope.launch { repository.restoreAllDeletedItems() }
+                        },
                         onPermanentlyDeleteFood = { id ->
                             telemetry.action("food_permanently_deleted")
                             onPermanentlyDeleteFood?.invoke(id)

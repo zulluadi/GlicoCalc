@@ -146,4 +146,6 @@
     <string name="reset_food_list_confirm">Reset food list?</string>
     <string name="reset_food_list_warning">This will delete all custom foods and reset all default foods. This action will apply to all family members.</string>
     <string name="reset">Reset</string>
+    <string name="restore_all">Restore all</string>
+    <string name="restore_all_description">Restore all foods and dishes listed here? They will return to your lists and sync with your family.</string>
 </resources>

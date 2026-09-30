@@ -38,6 +38,7 @@ fun DeletedItemsScreen(
     deletedDishes: List<Dish>,
     onRestoreFood: (Long) -> Unit,
     onRestoreDish: (Long) -> Unit,
+    onRestoreAll: () -> Unit,
     onPermanentlyDeleteFood: (Long) -> Unit,
     onPermanentlyDeleteDish: (Long) -> Unit,
     onPermanentlyDeleteAll: () -> Unit,
@@ -47,6 +48,7 @@ fun DeletedItemsScreen(
     val resolveFoodName = rememberBaseFoodNameResolver()
     var foodToDeletePermanently by remember { mutableStateOf<BaseFood?>(null) }
     var dishToDeletePermanently by remember { mutableStateOf<Dish?>(null) }
+    var showRestoreAllConfirm by remember { mutableStateOf(false) }
     var showDeleteAllConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -60,6 +62,9 @@ fun DeletedItemsScreen(
                 },
                 actions = {
                     if (deletedFoods.isNotEmpty() || deletedDishes.isNotEmpty()) {
+                        IconButton(onClick = { showRestoreAllConfirm = true }) {
+                            Icon(Icons.Default.Refresh, contentDescription = Strings.restoreAll())
+                        }
                         IconButton(onClick = { showDeleteAllConfirm = true }) {
                             Icon(Icons.Default.Delete, contentDescription = Strings.deleteAllPermanently())
                         }
@@ -145,6 +150,23 @@ fun DeletedItemsScreen(
                     HorizontalDivider()
                 }
             }
+        }
+
+        if (showRestoreAllConfirm) {
+            AlertDialog(
+                onDismissRequest = { showRestoreAllConfirm = false },
+                title = { Text(Strings.restoreAll()) },
+                text = { Text(Strings.restoreAllDescription()) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showRestoreAllConfirm = false
+                        onRestoreAll()
+                    }) { Text(Strings.restoreAll()) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRestoreAllConfirm = false }) { Text(Strings.cancel()) }
+                }
+            )
         }
 
         foodToDeletePermanently?.let { food ->

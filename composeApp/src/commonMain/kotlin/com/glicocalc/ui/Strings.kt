@@ -64,6 +64,8 @@ import glicocalc.composeapp.generated.resources.nav_foods
 import glicocalc.composeapp.generated.resources.new_dish_title
 import glicocalc.composeapp.generated.resources.save
 import glicocalc.composeapp.generated.resources.search_food_placeholder
+import glicocalc.composeapp.generated.resources.restore_all
+import glicocalc.composeapp.generated.resources.restore_all_description
 import glicocalc.composeapp.generated.resources.restore
 import glicocalc.composeapp.generated.resources.sign_in_with_google
 import glicocalc.composeapp.generated.resources.sign_out
@@ -165,6 +167,8 @@ object Strings {
     @Composable fun deletedFoods() = stringResource(Res.string.deleted_foods)
     @Composable fun deletedDishes() = stringResource(Res.string.deleted_dishes)
     @Composable fun noDeletedItems() = stringResource(Res.string.no_deleted_items)
+    @Composable fun restoreAll() = stringResource(Res.string.restore_all)
+    @Composable fun restoreAllDescription() = stringResource(Res.string.restore_all_description)
     @Composable fun restore() = stringResource(Res.string.restore)
     @Composable fun deletePermanently() = stringResource(Res.string.delete_permanently)
     @Composable fun deletePermanentlyConfirm() = stringResource(Res.string.delete_permanently_confirm)

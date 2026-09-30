@@ -127,4 +127,6 @@
     <string name="reset_food_list_confirm">Resetezi lista de alimente?</string>
     <string name="reset_food_list_warning">Această acțiune va șterge toate alimentele personalizate și va reseta alimentele implicite. Acțiunea se va aplica tuturor membrilor familiei.</string>
     <string name="reset">Resetează</string>
+    <string name="restore_all">Restaurează tot</string>
+    <string name="restore_all_description">Restaurezi toate alimentele și preparatele afișate aici? Vor reveni în listele tale și se vor sincroniza cu familia.</string>
 </resources>
