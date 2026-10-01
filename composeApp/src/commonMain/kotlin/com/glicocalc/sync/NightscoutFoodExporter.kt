@@ -9,6 +9,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
+import kotlin.math.roundToInt
 
 object NightscoutFoodExporter {
     fun normalizeUrl(input: String): String {
@@ -42,10 +43,16 @@ object NightscoutFoodExporter {
                     previous?.forEach { (key, value) -> put(key, value) }
                     put("_id", id)
                     put("type", "food")
+                    // AAPS hides foods with null category/subcategory, including missing fields.
+                    // Empty strings keep uncategorized foods visible without inventing categories.
+                    put("category", previous?.get("category")?.jsonPrimitive?.contentOrNull.orEmpty())
+                    put("subcategory", previous?.get("subcategory")?.jsonPrimitive?.contentOrNull.orEmpty())
                     put("name", resolveFoodName(food.name))
                     put("portion", 100)
                     put("unit", "g")
-                    put("carbs", food.carbsPer100g)
+                    // AAPS NSClientV3 parses carbs as Int; fractional numbers fail import.
+                    // Round only the exported 100 g portion, leaving local nutrition untouched.
+                    put("carbs", food.carbsPer100g.roundToInt())
                     // Nightscout stores GI bands as 1/2/3, rather than numeric GI scores.
                     // It has no unspecified band; do not invent one or overwrite a remote value.
                     when (food.glycemicIndexLevel) {
@@ -55,7 +62,10 @@ object NightscoutFoodExporter {
                     }
                 }
                 val result = client.request("$base/api/v1/food") {
-                    method = if (previous == null) HttpMethod.Post else HttpMethod.Put
+                    // PUT normalizes supplied IDs to MongoDB ObjectId and upserts.
+                    // POST stores supplied IDs as strings on some Nightscout versions,
+                    // creating a second document when a later PUT uses the same ID text.
+                    method = HttpMethod.Put
                     parameter("token", token.trim())
                     contentType(ContentType.Application.Json)
                     setBody(payload.toString())
@@ -63,6 +73,19 @@ object NightscoutFoodExporter {
                 checkResponse(result.status)
                 exported++
             }
+            val verification = client.get("$base/api/v1/food") { parameter("token", token.trim()) }
+            checkResponse(verification.status)
+            val saved = Json.parseToJsonElement(verification.bodyAsText()).jsonArray
+                .map { it.jsonObject }.associateBy { it["_id"]?.jsonPrimitive?.content }
+            val mismatches = records.count { (food, id) ->
+                val record = saved[id]
+                record?.get("carbs")?.jsonPrimitive?.doubleOrNull != food.carbsPer100g.roundToInt().toDouble() ||
+                    record["category"]?.jsonPrimitive?.contentOrNull == null ||
+                    record["subcategory"]?.jsonPrimitive?.contentOrNull == null
+            }
+            if (mismatches > 0) throw NightscoutException(
+                "Nightscout did not retain the expected whole-gram carbs or categories for $mismatches foods. Check write permissions and read-only records."
+            )
             return exported
         } catch (e: CancellationException) {
             throw e

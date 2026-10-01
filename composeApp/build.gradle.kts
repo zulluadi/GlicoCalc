@@ -73,6 +73,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit"))
                 implementation("io.ktor:ktor-client-mock:2.3.9")
+                implementation("com.google.code.gson:gson:2.10.1")
                 implementation("com.squareup.sqldelight:sqlite-driver:1.5.5")
             }
         }
