@@ -75,7 +75,10 @@ fun MainApp(
 
     AppEnvironment {
         val scope = rememberCoroutineScope()
-        val nightscoutToken = remember { mutableStateOf("") }
+        val nightscoutTokenStore = com.glicocalc.sync.rememberNightscoutTokenStore()
+        val nightscoutToken = remember(repository, nightscoutTokenStore) {
+            mutableStateOf(runCatching { nightscoutTokenStore.read(repository.getNightscoutUrl()) }.getOrDefault(""))
+        }
         var currentScreen by remember { mutableStateOf(Screen.Calculator) }
         var dishEditorState by remember { mutableStateOf<DishEditorState?>(null) }
         val resolveFoodName = rememberBaseFoodNameResolver()
@@ -270,7 +273,7 @@ fun MainApp(
                         )
                     }
                     Screen.Settings -> SettingsScreen(
-                        nightscoutContent = { NightscoutSettings(repository, nightscoutToken) },
+                        nightscoutContent = { NightscoutSettings(repository, nightscoutToken, nightscoutTokenStore) },
                         selectedLanguage = customAppLocale,
                         selectedFoodLanguage = customFoodLocale,
                         familyMembers = familyMembers,
