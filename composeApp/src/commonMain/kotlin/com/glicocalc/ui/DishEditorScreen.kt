@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.glicocalc.database.BaseFood
+import com.glicocalc.logic.removeDiacritics
 import kotlinx.coroutines.launch
 
 data class ComponentState(
@@ -81,7 +82,7 @@ fun DishEditorScreen(
                 ).joinToString(" • "),
                 searchTerms = listOf(food.name, localizedName)
             )
-        }
+        }.sortedBy { it.title.removeDiacritics().lowercase() }
     }
 
     val totalAmount = totalAmountText.toDoubleOrNull()

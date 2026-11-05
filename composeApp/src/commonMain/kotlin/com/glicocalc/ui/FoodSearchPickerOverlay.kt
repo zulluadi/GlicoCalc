@@ -19,7 +19,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.glicocalc.logic.removeDiacritics
+import com.glicocalc.logic.matchesSearchQuery
 
 internal data class FoodPickerOption(
     val key: String,
@@ -66,20 +66,18 @@ internal fun FoodSearchPickerOverlay(
     }
 
     val query = queryState.text
-    val normalizedQuery = query.removeDiacritics()
     val filteredOptions by remember(query, options) {
         derivedStateOf {
             if (query.isBlank()) {
-                options.take(100)
+                options
             } else {
                 options
                     .asSequence()
                     .filter { option ->
                         option.searchTerms.any { term ->
-                            term.removeDiacritics().contains(normalizedQuery, ignoreCase = true)
+                            matchesSearchQuery(term, query)
                         }
                     }
-                    .take(100)
                     .toList()
             }
         }

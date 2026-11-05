@@ -15,3 +15,11 @@ fun String.removeDiacritics(): String {
     
     return this.map { diacriticsMap[it] ?: it }.joinToString("")
 }
+
+/** Matches every query fragment anywhere in the name, regardless of order. */
+fun matchesSearchQuery(name: String, query: String): Boolean {
+    val normalizedName = name.removeDiacritics()
+    return query.removeDiacritics().split(Regex("\\s+"))
+        .filter { it.isNotEmpty() }
+        .all { normalizedName.contains(it, ignoreCase = true) }
+}

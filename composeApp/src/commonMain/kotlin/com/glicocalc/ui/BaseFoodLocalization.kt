@@ -3,7 +3,7 @@ package com.glicocalc.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.glicocalc.database.DefaultFoodNames
-import com.glicocalc.logic.removeDiacritics
+import com.glicocalc.logic.matchesSearchQuery
 
 @Composable
 fun rememberBaseFoodNameResolver(): (String) -> String {
@@ -30,9 +30,7 @@ fun matchesBaseFoodQuery(
     localizedName: String,
     query: String
 ): Boolean {
-    val normalizedQuery = query.removeDiacritics()
-    return rawName.removeDiacritics().contains(normalizedQuery, ignoreCase = true) ||
-        localizedName.removeDiacritics().contains(normalizedQuery, ignoreCase = true)
+    return matchesSearchQuery(rawName, query) || matchesSearchQuery(localizedName, query)
 }
 
 private val englishBaseFoodNames = mapOf(

@@ -38,8 +38,8 @@ fun FoodListScreen(
     val deletedFood = remember { mutableStateOf<BaseFood?>(null) }
     val scope = rememberCoroutineScope()
 
-    val filteredFoods = remember(searchQuery, foods) {
-        if (searchQuery.isBlank()) foods
+    val filteredFoods = remember(searchQuery, foods, resolveFoodName) {
+        val matchingFoods = if (searchQuery.isBlank()) foods
         else {
             foods.filter { food ->
                 matchesBaseFoodQuery(
@@ -49,6 +49,7 @@ fun FoodListScreen(
                 )
             }
         }
+        matchingFoods.sortedBy { resolveFoodName(it.name).removeDiacritics().lowercase() }
     }
 
     Scaffold(
